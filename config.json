@@ -1,0 +1,13 @@
+{
+    "port":  8788,
+    "adminPassword":  "Habiba2026",
+    "siteName":  "Habiba teacher",
+    "maxUploadMb":  1024,
+    "telegram":  "https://t.me/Qobuljon_91",
+    "phone":  "+998 93 568 00 91",
+    "telegramBotToken":  "9097632194:AAGFgCZODgGs7QZyqVHwbqRJf7K6RqlmF80",
+    "telegramBotUsername":  "HabibateacherBot",
+    "telegramChatId":  "1097025987",
+    "notifyOnFinish":  true,
+    "appUrl":  "https://habibateacher.uz"
+}
