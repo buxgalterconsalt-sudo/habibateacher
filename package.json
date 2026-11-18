@@ -1,0 +1,13 @@
+{
+  "name": "habiba-platform",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Habiba teacher online learning platform (Node.js + SQLite)",
+  "engines": {
+    "node": "24.x"
+  },
+  "scripts": {
+    "start": "node server.mjs"
+  }
+}
