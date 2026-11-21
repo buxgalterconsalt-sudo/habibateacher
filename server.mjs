@@ -838,6 +838,18 @@ function botStartLink(payload) {
   return `${base}?start=${encodeURIComponent(payload)}`;
 }
 
+function duelBotStartLink(code) {
+  const username = String(config.telegramBotUsername || "").replace(/^@/, "");
+  return username ? `https://t.me/${username}?start=duel_${encodeURIComponent(code)}` : "";
+}
+
+function duelTelegramShareUrl(code, inviterName = "") {
+  const base = platformPublicUrl() || "https://habibateacher.uz";
+  const duelUrl = `${base}/duel/${encodeURIComponent(code)}`;
+  const text = `${inviterName ? `${inviterName} sizni ` : "Sizni "}Habiba Teacher platformasida duelga chaqiryapti! Havolani ochib, taklifni qabul qiling.`;
+  return `https://t.me/share/url?url=${encodeURIComponent(duelUrl)}&text=${encodeURIComponent(text)}`;
+}
+
 function resolveTelegramChatId(userRow) {
   if (!userRow) return "";
   if (userRow.telegram_id) return String(userRow.telegram_id);
@@ -1022,7 +1034,7 @@ ${seoTags}
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%2312b5a6'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='18' font-weight='bold' text-anchor='middle' fill='%2303211d'%3EH%3C/text%3E%3C/svg%3E">
 <script async src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>try{document.documentElement.dataset.theme=localStorage.getItem('ht_theme')||'${isStudentPage ? "dark" : "light"}';}catch(e){document.documentElement.dataset.theme='${isStudentPage ? "dark" : "light"}';}</script>
-<link rel="stylesheet" href="/assets/platform.css?v=20261121b">
+<link rel="stylesheet" href="/assets/platform.css?v=20261121c">
 </head>
 <body${isStudentPage ? ` class="student-page${isDashboard ? " is-dashboard" : ""}"` : ""}>
 <header class="topbar">
@@ -1721,7 +1733,90 @@ async function sendBotWelcome(chatId, name) {
   });
 }
 
+async function handleDuelInviteStart(chatId, rawCode) {
+  const code = String(rawCode || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
+  const duel = getDuel(code);
+  if (!duel || duel.status !== "waiting" || duel.opponent_id) {
+    await telegramApi("sendMessage", { chat_id: chatId, text: "Bu duel taklifi eskirgan yoki raqib topilgan. Platformada yangi duel yarating." });
+    return;
+  }
+  const creator = db.prepare("SELECT id, name, telegram_id, telegram_username FROM users WHERE id = ?").get(duel.creator_id);
+  const creatorChatId = resolveTelegramChatId(creator);
+  if (!creator || !creatorChatId || String(creatorChatId) !== String(chatId)) {
+    await telegramApi("sendMessage", {
+      chat_id: chatId,
+      text: "Telegram akkauntingiz Habiba Teacher profilingizga ulanmagan. Platformada ko'rsatilgan Telegram username yoki ID ni tekshirib, botga /start yuboring."
+    });
+    return;
+  }
+  const duelUrl = `${platformPublicUrl() || "https://habibateacher.uz"}/duel/${encodeURIComponent(code)}`;
+  const response = await telegramApi("sendMessage", {
+    chat_id: chatId,
+    text: `Duel tayyor, ${creator.name || "o'quvchi"}! Raqibingizni kontaktlardan tanlang. Telegram xabarni bot nomidan yuborish uchun keyingi oynada taklif natijasini tanlab jo'nating.`,
+    reply_markup: {
+      inline_keyboard: [
+        [{
+          text: "Telegram kontaktini tanlash",
+          switch_inline_query_chosen_chat: { query: `duel_${code}`, allow_user_chats: true }
+        }],
+        [{ text: "Duel xonasini ochish", url: duelUrl }]
+      ]
+    },
+    disable_web_page_preview: true
+  });
+  if (!response || !response.ok) {
+    await telegramApi("sendMessage", {
+      chat_id: chatId,
+      text: `Taklif havolasi: ${duelUrl}\nBot kontakt tanlashi ishlamasa, @BotFather orqali botning Inline Mode sozlamasini yoqing.`,
+      disable_web_page_preview: true
+    });
+  }
+}
+
+async function handleDuelInlineQuery(inlineQuery) {
+  const match = String(inlineQuery.query || "").trim().match(/^duel_([A-Z0-9]{6})$/i);
+  const results = [];
+  if (match) {
+    const code = match[1].toUpperCase();
+    const duel = getDuel(code);
+    const creator = duel && db.prepare("SELECT id, telegram_id, telegram_username FROM users WHERE id = ?").get(duel.creator_id);
+    const creatorChatId = resolveTelegramChatId(creator);
+    if (
+      duel && duel.status === "waiting" && !duel.opponent_id && creator &&
+      String(creatorChatId || "") === String(inlineQuery.from?.id || "")
+    ) {
+      const duelUrl = `${platformPublicUrl() || "https://habibateacher.uz"}/duel/${encodeURIComponent(code)}`;
+      const questionCount = Math.min(10, Number(duel.total_questions) || 10);
+      const inviteText = `⚔️ <b>${h(duel.creator_name || "O'quvchi")}</b> sizni Habiba Teacher'da duelga chaqiryapti!\n\n📚 Test: <b>${h(duel.lesson_title || "Aralash test")}</b>\n🔢 Savollar: ${questionCount}\n\nTaklifni qabul qilish uchun havolani oching.`;
+      results.push({
+        type: "article",
+        id: `duel_${code}`,
+        title: `${duel.creator_name || "O'quvchi"} sizni duelga chaqiryapti`,
+        description: `${duel.lesson_title || "Aralash test"} · ${questionCount} ta savol`,
+        input_message_content: {
+          message_text: inviteText,
+          parse_mode: "HTML",
+          disable_web_page_preview: true
+        },
+        reply_markup: {
+          inline_keyboard: [[{ text: "Taklifni qabul qilish", url: duelUrl }]]
+        }
+      });
+    }
+  }
+  await telegramApi("answerInlineQuery", {
+    inline_query_id: inlineQuery.id,
+    results,
+    cache_time: 0,
+    is_personal: true
+  });
+}
+
 async function handleBotUpdate(update) {
+  if (update.inline_query) {
+    await handleDuelInlineQuery(update.inline_query);
+    return;
+  }
   const message = update.message || update.edited_message;
   if (!message) return;
   const chatId = message.chat?.id;
@@ -1748,6 +1843,11 @@ async function handleBotUpdate(update) {
 
   if ((cmd === "/start" || cmd === "/login") && payload.startsWith("login_")) {
     await handleTelegramLoginLink(chatId, payload.slice(6), message.from);
+    return;
+  }
+
+  if (cmd === "/start" && payload.startsWith("duel_")) {
+    await handleDuelInviteStart(chatId, payload.slice(5));
     return;
   }
 
@@ -1826,8 +1926,13 @@ function startPlatformBot() {
   const loop = async () => {
   while (true) {
   try {
+  const params = new URLSearchParams({
+    timeout: "25",
+    offset: String(offset),
+    allowed_updates: JSON.stringify(["message", "inline_query"])
+  });
   const res = await fetch(
-  `https://api.telegram.org/bot${config.telegramBotToken}/getUpdates?timeout=25&offset=${offset}`,
+  `https://api.telegram.org/bot${config.telegramBotToken}/getUpdates?${params}`,
   { signal: AbortSignal.timeout(35000) }
   );
   const data = await res.json().catch(() => null);
@@ -2083,6 +2188,14 @@ function duelRoomPage(duel, user) {
   const isCreator = duel.creator_id === user.id;
   const opponentId = isCreator ? duel.opponent_id: duel.creator_id;
   if (!isCreator && duel.opponent_id !== user.id) {
+  if (duel.status === "waiting" && !duel.opponent_id) {
+  return `<section class="page-hero center duel-accept-hero">
+    <span class="eyebrow">Duel taklifi</span>
+    <h1>${h(duel.creator_name || "Do'stingiz")} sizni duelga chaqiryapti</h1>
+    <p class="lead">${h(duel.lesson_title || "Aralash test")} · ${Math.min(10, Number(duel.total_questions) || 10)} ta savol</p>
+    <form method="post" action="/duel/${h(duel.code)}/accept"><button class="btn btn-primary btn-lg" type="submit">Taklifni qabul qilish</button></form>
+  </section>`;
+  }
   return `<section class="page-hero center"><h1>Bu duel sizga tegishli emas</h1><p class="lead">Maxsus kod bilan yangi duelga qo'shiling.</p><a class="btn btn-primary" href="/duel">Duel sahifasi</a></section>`;
   }
 
@@ -2111,16 +2224,21 @@ function duelRoomPage(duel, user) {
 
   let action = "";
   if (duel.status === "waiting" || !duel.opponent_id) {
+  const botInvite = config.telegramBotToken && config.telegramBotUsername;
+  const inviteUrl = botInvite
+    ? duelBotStartLink(duel.code)
+    : duelTelegramShareUrl(duel.code, duel.creator_name || user.name);
+  const duelUrl = `${platformPublicUrl() || "https://habibateacher.uz"}/duel/${encodeURIComponent(duel.code)}`;
   action = `<div class="duel-invite card">
   <span class="eyebrow">Taklif kodi</span>
   <div class="duel-code">
   <b>${h(duel.code)}</b>
   <button class="btn btn-sm" type="button" data-copy="${h(duel.code)}">Nusxalash</button>
-  <button class="btn btn-sm btn-primary" type="button" data-share="Duel kodi: ${h(
-  duel.code
-  )}   Habiba teacher platformasida duelga qo'shiling!">Do'stga yuborish</button>
+  <button class="btn btn-sm" type="button" data-copy="${h(duelUrl)}">Havolani nusxalash</button>
   </div>
-  <p class="muted small">Do'stingiz <b>/duel</b> sahifasida shu kodni kiritib qo'shiladi.</p>
+  ${isCreator ? `<a class="btn btn-primary duel-invite-telegram" href="${h(inviteUrl)}" target="_blank" rel="noopener">${botInvite ? "Telegram botda raqibni tanlash" : "Telegramda raqibni tanlash"} &#8599;</a>` : ""}
+  <p class="muted small">${botInvite ? "Telegram bot kontakt tanlash oynasini ochadi. Taklif xabarini yuborish uchun Telegram'da bot natijasini tanlang." : "Telegram ulashish oynasida do'stingizni tanlab taklif havolasini yuboring."}</p>
+  ${isCreator && !botInvite ? `<p class="muted small duel-bot-note">Bot nomi va tokeni sozlangach, taklif bot nomidan yuboriladi.</p>` : ""}
   ${
   isCreator
   ? `<form method="post" action="/duel/${h(duel.code)}/delete" onsubmit="return confirm('Duel bekor qilinsinmi?')">
@@ -3303,7 +3421,7 @@ function dashboardPage(user) {
   </section>`;
 }
 
-function duelDashboardPage(user) {
+function duelDashboardPage(user, error = "") {
   if (!user) {
   return `<section class="duel-hero">
   <div class="wrap">
@@ -3316,6 +3434,7 @@ function duelDashboardPage(user) {
   }
 
   const poolCount = db.prepare("SELECT COUNT(*) AS n FROM questions").get().n;
+  const botReady = !!(config.telegramBotToken && config.telegramBotUsername);
 
   const rows = db
 .prepare(
@@ -3387,14 +3506,16 @@ function duelDashboardPage(user) {
   </section>
   <section class="section tight">
   <div class="wrap">
+  ${error === "test" ? alertBox("Duel uchun test savollari topilmadi. Avval kursga savol qo'shing.", "error") : ""}
   <div class="duel-actions">
   <div class="card duel-create">
   <h2>Yangi duel</h2>
-  <p class="muted small">10 ta aralash savol. Barcha test va mavzulardan tasodifiy tanlanadi.</p>
+  <p class="muted small">${Math.min(10, poolCount)} ta aralash savol. Duel yaratilgach Telegram'da raqibni tanlaysiz.</p>
   <form method="post" action="/duel/create" class="form">
-  <div class="field"><div class="duel-pool">Savollar bazasi: <b>${poolCount}</b> ta · duelda <b>10</b> ta</div></div>
-  <button class="btn btn-primary" type="submit" ${poolCount ? "": "disabled"}>Duel yaratish ⚔</button>
+  <div class="field"><div class="duel-pool">Savollar bazasi: <b>${poolCount}</b> ta · duelda <b>${Math.min(10, poolCount)}</b> ta</div></div>
+  <button class="btn btn-primary" type="submit" ${poolCount ? "": "disabled"}>Duel yaratish va Telegramga o'tish &#9876;</button>
   </form>
+  ${!botReady ? `<p class="muted small duel-bot-note">Botdan yuborish uchun Railway'da <code>TELEGRAM_BOT_TOKEN</code> va <code>TELEGRAM_BOT_USERNAME</code> sozlanishi kerak. Hozircha Telegram ulashish oynasi ochiladi.</p>` : ""}
   </div>
   <div class="card duel-join">
   <h2>Kod bilan kirish</h2>
@@ -3556,7 +3677,7 @@ function testDocument({ title, body }) {  return `<!DOCTYPE html>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%231e40af'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='18' font-weight='bold' text-anchor='middle' fill='white'%3EH%3C/text%3E%3C/svg%3E">
 <script async src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>try{document.documentElement.dataset.theme=localStorage.getItem('ht_theme')||'dark';}catch(e){document.documentElement.dataset.theme='dark';}</script>
-<link rel="stylesheet" href="/assets/platform.css?v=20261121b">
+<link rel="stylesheet" href="/assets/platform.css?v=20261121c">
 </head>
 <body class="test-body student-page">
 ${body}
@@ -5012,7 +5133,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (p === "/duel" && method === "GET") {
-  send(res, 200, layout({ title: "Duel", body: duelDashboardPage(user), user, admin }));
+  send(res, 200, layout({ title: "Duel", body: duelDashboardPage(user, url.searchParams.get("err")), user, admin }));
   return;
   }
 
@@ -5036,13 +5157,12 @@ const server = http.createServer(async (req, res) => {
     "INSERT OR IGNORE INTO duel_questions (duel_id, question_id, position) VALUES (?, ?, ?)"
   );
   picked.forEach((q, i) => insertQ.run(duelId, q.id, i + 1));
-  sendUserMessage(
-    user.id,
-    `⚔️ <b>Duel yaratildi</b>\nTest: Aralash test · 10 savol\nKod: <b>${code}</b>\nDo'stingizga kodni yuboring yoki havolani ulashing.`,
-    `/duel/${code}`,
-    "Duelni ochish"
-  ).catch(() => {});
-  redirect(res, `/duel/${code}`);
+  const botInviteLink = config.telegramBotToken ? duelBotStartLink(code) : "";
+  if (botInviteLink) {
+    redirect(res, botInviteLink);
+  } else {
+    redirect(res, duelTelegramShareUrl(code, user.name));
+  }
   return;
   }
 
@@ -5244,7 +5364,7 @@ const server = http.createServer(async (req, res) => {
   }
   }
 
-  const duelMatch = p.match(/^\/duel\/([A-Z0-9]{6})(\/start|\/submit|\/delete)?$/i);
+  const duelMatch = p.match(/^\/duel\/([A-Z0-9]{6})(\/start|\/submit|\/delete|\/accept)?$/i);
   if (duelMatch) {
   if (!user) return redirect(res, `/login?next=${encodeURIComponent(p)}`);
   const code = duelMatch[1].toUpperCase();
@@ -5254,6 +5374,30 @@ const server = http.createServer(async (req, res) => {
   const isCreator = duel.creator_id === user.id;
   const isOpponent = duel.opponent_id === user.id;
   const participant = isCreator || isOpponent;
+
+  if (action === "/accept" && method === "POST") {
+  if (isCreator || duel.status !== "waiting" || duel.opponent_id) {
+  redirect(res, `/duel/${code}`);
+  return;
+  }
+  const joined = db.prepare(
+    "UPDATE duels SET opponent_id = ?, status = 'active' WHERE id = ? AND status = 'waiting' AND opponent_id IS NULL"
+  ).run(user.id, duel.id).changes;
+  if (!joined) {
+  redirect(res, `/duel/${code}`);
+  return;
+  }
+  for (const playerId of [duel.creator_id, user.id]) {
+  sendUserMessage(
+    playerId,
+    `⚔️ <b>Duel boshlandi</b>\nRaqib: <b>${h(playerId === duel.creator_id ? user.name : duel.creator_name)}</b>\nKod: <b>${code}</b>\nTestga kirib boshlang.`,
+    `/duel/${code}`,
+    "Duelni ochish"
+  ).catch(() => {});
+  }
+  redirect(res, `/duel/${code}`);
+  return;
+  }
 
   if (action === "/delete" && method === "POST") {
   if (!isCreator || duel.status !== "waiting") {

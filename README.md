@@ -125,6 +125,7 @@ kerak (`notifyOnFinish: false` qilsangiz o'chadi).
   "siteName": "Habiba teacher",
   "maxUploadMb": 60,
   "telegram": "https://t.me/Qobuljon_91",
+  "telegramBotUsername": "your_bot_username",
   "phone": "+998 93 568 00 91",
   "telegramBotToken": "123456789:AA...",
   "telegramChatId": "123456789",
@@ -136,6 +137,10 @@ kerak (`notifyOnFinish: false` qilsangiz o'chadi).
 - `telegramBotToken` — @BotFather'dan olingan bot tokeni; `telegramChatId` —
   natijalar boradigan chat (adminning Telegram ID si). Bo'sh bo'lsa, test
   yakunlanganda Telegram xabari yuborilmaydi.
+- Duel takliflarini bot nomidan yuborish uchun Railway'da `TELEGRAM_BOT_TOKEN`
+  va `TELEGRAM_BOT_USERNAME` ni kiriting. @BotFather'da `/setinline` orqali
+  botning Inline Mode rejimini yoqing. Duel yaratuvchi kontaktni tanlagach,
+  Telegram'da bot taklifini jo'natishni tasdiqlaydi.
 - Katta videolarni serverga yuklamang — YouTube (unlisted) ishlatsangiz, disk tejaladi.
 - PDF hajmi `maxUploadMb` dan oshsa, rad etiladi.
 
