@@ -88,6 +88,29 @@ function metaSet(key, value) {
   ).run(key, String(value));
 }
 
+const DEFAULT_PLANS = [
+  { id: "month", title: "1 oy", days: 30, price: 99000, description: "Barcha kurs va testlarga 1 oy kirish." },
+  { id: "quarter", title: "3 oy", days: 90, price: 299000, description: "Barcha kurs va testlarga 3 oy kirish." },
+  { id: "year", title: "12 oy", days: 365, price: 799000, description: "Barcha kurs va testlarga 12 oy kirish." }
+];
+
+function getPlans() {
+  try {
+    const saved = JSON.parse(metaGet("plans_json", "[]"));
+    return DEFAULT_PLANS.map((plan) => {
+      const override = saved.find((item) => item.id === plan.id) || {};
+      return { ...plan, price: Math.max(0, Math.round(Number(override.price ?? plan.price))) };
+    });
+  } catch (e) {
+    return DEFAULT_PLANS;
+  }
+}
+
+function hasPlanAccess(userId) {
+  return !!db.prepare("SELECT 1 FROM plan_subscriptions WHERE user_id = ? AND status = 'active' AND expires_at > ? LIMIT 1")
+    .get(userId, nowISO());
+}
+
 const DEFAULT_CONTRACT_TEXT = `1. Umumiy qoidalar
 1.1. Ushbu shartnoma "Habiba teacher" onlayn ta'lim platformasidan foydalanish tartibini belgilaydi.
 1.2. Platformadan foydalanishni boshlash orqali siz ushbu shartlar bilan tanishganingizni va ularga rozilik bildirganingizni tasdiqlaysiz.
@@ -325,6 +348,9 @@ if (!userCols3.some((c) => c.name === "last_login_at")) {
 if (!userCols3.some((c) => c.name === "last_nudge_at")) {
   db.exec("ALTER TABLE users ADD COLUMN last_nudge_at TEXT NOT NULL DEFAULT ''");
 }
+if (!userCols3.some((c) => c.name === "is_blocked")) {
+  db.exec("ALTER TABLE users ADD COLUMN is_blocked INTEGER NOT NULL DEFAULT 0");
+}
 db.exec(`CREATE TABLE IF NOT EXISTS telegram_users (
   username TEXT PRIMARY KEY,
   chat_id TEXT NOT NULL,
@@ -424,6 +450,36 @@ db.exec(`CREATE TABLE IF NOT EXISTS video_watch (
   updated_at TEXT NOT NULL,
   PRIMARY KEY (user_id, lesson_id)
 )`);
+
+db.exec(`CREATE TABLE IF NOT EXISTS payment_requests (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  plan_id TEXT NOT NULL,
+  amount INTEGER NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending',
+  created_at TEXT NOT NULL,
+  reviewed_at TEXT NOT NULL DEFAULT ''
+);
+CREATE TABLE IF NOT EXISTS plan_subscriptions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  plan_id TEXT NOT NULL,
+  starts_at TEXT NOT NULL,
+  expires_at TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'active'
+);
+CREATE INDEX IF NOT EXISTS idx_plan_subscriptions_user ON plan_subscriptions(user_id, status, expires_at);
+CREATE TABLE IF NOT EXISTS test_attempts (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  lesson_id INTEGER NOT NULL,
+  question_ids TEXT NOT NULL,
+  answers_json TEXT NOT NULL DEFAULT '{}',
+  score INTEGER,
+  created_at TEXT NOT NULL,
+  completed_at TEXT NOT NULL DEFAULT ''
+);
+`);
 
 // Eski bazalarga ustun qo'shish
 const lessonCols = db.prepare("PRAGMA table_info(lessons)").all();
@@ -823,6 +879,15 @@ function validPhone(digits) {
   return /^998\d{9}$/.test(digits);
 }
 
+function validPhoneInput(value) {
+  const raw = String(value || "").trim();
+  if (!raw || !/^[+\d\s()-]+$/.test(raw)) return false;
+  let digits = raw.replace(/\D/g, "");
+  if (digits.startsWith("998")) digits = digits.slice(3);
+  else if (digits.length === 10 && digits.startsWith("8")) digits = digits.slice(1);
+  return /^\d{9}$/.test(digits);
+}
+
 function normalizeTelegramUsername(value) {
   return String(value || "")
     .trim()
@@ -879,12 +944,12 @@ function currentUser(req) {
   if (!token) return null;
   const row = db
 .prepare(
-  `SELECT u.id, u.name, u.phone, u.created_at, u.contract_accepted_at
+  `SELECT u.id, u.name, u.phone, u.created_at, u.contract_accepted_at, u.is_blocked
   FROM sessions s JOIN users u ON u.id = s.user_id
   WHERE s.token = ? AND s.expires_at > ?`
   )
 .get(token, Date.now());
-  return row || null;
+  return row && !Number(row.is_blocked) ? row : null;
 }
 
 function isAdmin(req) {
@@ -898,7 +963,7 @@ function isAdmin(req) {
 
 function createUserSession(res, userId, req) {
   const token = randomBytes(32).toString("hex");
-  const maxAge = 30 * 24 * 60 * 60;
+  const maxAge = 3 * 24 * 60 * 60;
   db.prepare("INSERT INTO sessions (token, user_id, expires_at) VALUES (?, ?, ?)").run(
   token,
   userId,
@@ -916,7 +981,7 @@ function createDeviceSession(res, userId, req) {
     nowISO(),
     nowISO()
   );
-  const value = cookie("ht_device", token, 365 * 24 * 60 * 60, req);
+  const value = cookie("ht_device", token, 3 * 24 * 60 * 60, req);
   const prev = res.getHeader("Set-Cookie");
   res.setHeader("Set-Cookie", prev ? [].concat(prev, value) : value);
 }
@@ -1331,16 +1396,14 @@ function typeBadge(type) {
   return `<span class="badge type-${h(type)}">${TYPE_LABEL[type] || h(type)}</span>`;
 }
 
-function videoEmbed(url) {
+function videoEmbed(url, videoId = "") {
   const m = String(url).match(
   /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/|live\/))([A-Za-z0-9_-]{6,})/
   );
   if (m) {
-  return `<div class="video"><iframe src="https://www.youtube.com/embed/${h(
-  m[1]
-  )}" title="Video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`;
+  return `<div class="video youtube-video"><div id="lessonYoutube" data-video-id="${h(m[1])}"></div></div>`;
   }
-  return `<video class="video" controls src="${h(url)}"></video>`;
+  return `<video id="${h(videoId)}" class="video" controls preload="metadata" controlsList="nodownload" src="${h(url)}"></video>`;
 }
 
 /* ------------------------------------------------------------- form parser */
@@ -1409,7 +1472,7 @@ function courseProgress(userId, courseId) {
   `SELECT
   (SELECT COUNT(*) FROM lessons WHERE course_id = ?) AS total,
   (SELECT COUNT(*) FROM progress p JOIN lessons l ON l.id = p.lesson_id
-  WHERE l.course_id = ? AND p.user_id = ?) AS done`
+  WHERE l.course_id = ? AND p.user_id = ? AND (l.type <> 'test' OR p.score >= 80)) AS done`
   )
 .get(courseId, courseId, userId);
   return { total: row.total || 0, done: row.done || 0 };
@@ -1448,7 +1511,7 @@ const formatSum = (value) => String(Number(value) || 0).replace(/\B(?=(\d{3})+(?
 
 /* --------------------------------------------------------------------- AI */
 function testOwned(userId, lessonId) {
-  return !!db.prepare("SELECT 1 FROM purchases WHERE user_id = ? AND lesson_id = ?").get(userId, lessonId);
+  return hasPlanAccess(userId) || !!db.prepare("SELECT 1 FROM purchases WHERE user_id = ? AND lesson_id = ?").get(userId, lessonId);
 }
 
 function moduleHref(lesson) {
@@ -3231,7 +3294,7 @@ function dashboardPage(user) {
        ORDER BY c.id, l.position, l.id`
     )
     .all();
-  const doneRows = db.prepare("SELECT lesson_id FROM progress WHERE user_id = ?").all(user.id);
+  const doneRows = db.prepare("SELECT p.lesson_id FROM progress p JOIN lessons l ON l.id = p.lesson_id WHERE p.user_id = ? AND (l.type <> 'test' OR p.score >= 80)").all(user.id);
   const done = new Set(doneRows.map((r) => r.lesson_id));
   const total = lessons.length;
   const completed = lessons.filter((l) => done.has(l.id)).length;
@@ -3259,11 +3322,30 @@ function dashboardPage(user) {
     .all(weekStart);
 
   const quotes = [
-    "Beshikdan to qabrgacha ilm izlang. — Xalq maqoli",
-    "Bilim — bu eng yaxshi boylik.",
-    "Har kuni bir qadam bo'lsa ham, olg'a intiling.",
-    "Mehnat qilgan — murodga yetadi.",
-    "O'z ustida ishlash — eng katta sarmoya."
+    "Ilm izlash uchun yo'lga chiqqan kishiga Alloh jannat yo'lini oson qiladi. — Sahih Muslim, 2699a",
+    "Sizlarning yaxshilaringiz Qur'onni o'rganib, uni o'rgatganlaringizdir. — Sahih al-Buxoriy, 5027",
+    "Amallar niyatlarga bog'liq. — Sahih al-Buxoriy, 1",
+    "Yaxshi gap aytsin yoki sukut saqlasin. — Sahih al-Buxoriy, 6136",
+    "Ikki ne'mat: sog'lik va bo'sh vaqt. — Sahih al-Buxoriy, 6412",
+    "Ilm — insonni yuksaltiradigan nur. — Hikmatli so'z",
+    "Ustoz bergan saboq — umrga yo'ldosh. — Xalq maqoli",
+    "Mehnat qilgan — murodga yetar. — O'zbek maqoli",
+    "Bugungi kichik qadam ertangi katta natijadir. — Hikmatli so'z",
+    "Vaqtni qadrlagan maqsadiga yaqinlashadi. — Hikmatli so'z",
+    "Reja — niyatni amalga eltuvchi yo'l xaritasi. — Hikmatli so'z",
+    "Takrorlash — bilimning mustahkam tayanchi. — Hikmatli so'z",
+    "Til bilgan — el biladi. — O'zbek maqoli",
+    "Shirin so'z ko'ngilni obod qiladi. — O'zbek maqoli",
+    "Tinglash ham muloqotning muhim qismidir. — Hikmatli so'z",
+    "Savol berishdan uyalmang: bilmaganini so'rash ilm eshigidir. — Hikmatli so'z",
+    "Har kuni oz-ozdan o'rganish katta maqsadga olib boradi. — Hikmatli so'z",
+    "Sabr va izchillik mahoratni shakllantiradi. — Hikmatli so'z",
+    "Bilim ulashilsa, qadri ortadi. — Hikmatli so'z",
+    "O'qish qalbga, mashq esa mahoratga yo'l ochadi. — Hikmatli so'z",
+    "Maqsadni yozing, vaqtni belgilang, bugun boshlang. — Hikmatli so'z",
+    "Ustozga hurmat — ilmga hurmat. — O'zbek maqoli",
+    "Yaxshi muomala — tilning eng go'zal tarjimasi. — Hikmatli so'z",
+    "Bugun o'rganganingiz ertaga birovga yo'l ko'rsatadi. — Hikmatli so'z"
   ];
   const dayIndex = Math.floor(new Date(clock.day + "T00:00:00+05:00").getTime() / 86400000);
   const quote = quotes[((dayIndex % quotes.length) + quotes.length) % quotes.length];
@@ -3342,7 +3424,7 @@ function dashboardPage(user) {
         </div>
         <div class="dash-streak"><span aria-hidden="true">&#9889;</span><div><b>${todayDone} dars</b><small>bugun bajarildi</small></div></div>
       </div>
-      <div class="dash-quote"><span class="dash-quote-symbol" aria-hidden="true">&#10077;</span><div><small>Bugungi hikmat</small><span>${h(quote)}</span></div><span class="dash-quote-mark" aria-hidden="true">H</span></div>
+      <div class="dash-quote"><span class="dash-quote-symbol" aria-hidden="true">&#10077;</span><div><small>BUGUNGI KUN HIKMATI</small><span>${h(quote)}</span></div><span class="dash-quote-mark" aria-hidden="true">H</span></div>
     </div>
   </section>
   <section class="section tight">
@@ -3695,7 +3777,7 @@ ${body}
 </html>`;
 }
 
-function testPage(lesson, questions, testSections = []) {
+function testPage(lesson, questions, testSections = [], attemptId = 0) {
   const duration = Number(lesson.duration_min || 30);
   const total = questions.length;
 
@@ -3824,6 +3906,7 @@ function testPage(lesson, questions, testSections = []) {
   <main class="solve-wrap">
   <div class="solve-stack">
   <form method="post" action="/test/${lesson.id}/submit" id="testForm">
+  ${attemptId ? `<input type="hidden" name="attempt_id" value="${attemptId}">` : ""}
   <div class="q-row${hasPassage ? "": " single"}">
   ${
   hasPassage
@@ -4024,9 +4107,14 @@ function testPage(lesson, questions, testSections = []) {
   return testDocument({ title: lesson.title, body });
 }
 
-function testResultPage(lesson, questions, score) {
+function testResultPage(lesson, questions, score, answers = {}, passMark = 80) {
   const total = questions.length;
   const correct = total ? Math.round((score / 100) * total): 0;
+  const passed = score >= passMark;
+  const mistakes = questions.filter((q) => String(answers[`q${q.id}`] || "") !== String(q.correct));
+  const review = Object.keys(answers).length
+    ? `<section class="answer-review"><h2>Xatolarni ko'rib chiqing</h2>${mistakes.length ? mistakes.map((q) => `<article class="answer-mistake"><b>${h(q.text)}</b><p class="wrong-answer">Sizning javobingiz: ${h(q[`o${Number(answers[`q${q.id}`])}`] || "Javob berilmadi")}</p><p class="right-answer">To'g'ri javob: ${h(q[`o${q.correct}`])}</p>${q.passage ? `<details><summary>Matnni ko'rish</summary><p>${nl2br(q.passage)}</p></details>` : ""}</article>`).join("") : `<p class="muted">Xato javob yo'q — a'lo!</p>`}</section>`
+    : "";
   const body = `
   <header class="test-header">
   <a class="test-brand" href="/courses"><span class="mark">H</span><b>${h(config.siteName)}</b></a>
@@ -4037,13 +4125,15 @@ function testResultPage(lesson, questions, score) {
   <div class="result-card">
   <span class="pill">Test yakunlandi</span>
   <div class="score-circle">${score}%</div>
-  <h1>${score >= 60 ? "Yaxshi natija!": "Yana urinib ko'ring"}</h1>
+  <h1>${passed ? "Yaxshi natija!": "Yana urinib ko'ring"}</h1>
   <p class="muted">${correct} / ${total} to'g'ri javob</p>
+  <p class="muted">O'tish uchun ${passMark}% kerak.</p>
   <div class="actions">
-  <a class="btn btn-primary" href="${moduleHref(lesson)}">Testlarga qaytish</a>
-  <a class="btn btn-ghost" href="/test/${lesson.id}?start=1">Qayta topshirish</a>
+  ${passed ? `<a class="btn btn-primary" href="${moduleHref(lesson)}">Testlarga qaytish</a>` : `<a class="btn btn-primary" href="/test/${lesson.id}?start=1">Qayta topshirish</a>`}
+  ${passed ? `<a class="btn btn-ghost" href="/test/${lesson.id}?start=1">Yana topshirish</a>` : ""}
   </div>
   </div>
+  ${review}
   </main>`;
   return testDocument({ title: "Natija", body });
 }
@@ -4514,8 +4604,8 @@ const server = http.createServer(async (req, res) => {
 
   let error = "";
   if (!/^[\p{L}\s'-]{2,}$/u.test(name)) error = "Ism faqat harflardan iborat bo'lishi kerak.";
-  else if (!validPhone(phone)) error = "Telefon +998 bilan boshlanishi va 9 ta raqamdan iborat bo'lishi kerak.";
-  else if (password.length < 6) error = "Parol kamida 6 belgi bo'lishi kerak.";
+  else if (!validPhoneInput(fields.phone) || !validPhone(phone)) error = "Telefon raqami faqat 9 ta raqamdan iborat bo'lishi kerak.";
+  else if (!/^[A-Za-z0-9]{4}$/.test(password)) error = "Parol aynan 4 ta lotin harfi yoki raqamdan iborat bo'lishi kerak.";
   else if (!telegramId && !validTelegramUsername(telegramUsername))
   error = "Telegram username (@username) yoki raqamli ID kiriting.";
   else if (telegramId && db.prepare("SELECT 1 FROM users WHERE telegram_id = ?").get(telegramId))
@@ -4535,8 +4625,8 @@ const server = http.createServer(async (req, res) => {
   <input type="hidden" name="tg_init_data" value="">
   <div class="field"><label>Ismingiz</label><input name="name" value="${h(name)}" required></div>
   <div class="field"><label>Telegram username yoki ID</label><input name="telegram_id" value="${h(telegramUsername ? "@" + telegramUsername : telegramId)}" required placeholder="@username yoki 1097025987"></div>
-  <div class="field"><label>Telefon</label><input name="phone" data-phone value="${h(fields.phone || "")}" required></div>
-  <div class="field"><label>Parol</label><input name="password" type="password" required minlength="6"></div>
+  <div class="field"><label>Telefon</label><input name="phone" data-phone value="${h(fields.phone || "")}" required inputmode="numeric" maxlength="17" autocomplete="tel-national" placeholder="+998 90 123 45 67"></div>
+  <div class="field"><label>Parol (4 ta harf yoki raqam)</label><input name="password" type="password" required minlength="4" maxlength="4" pattern="[A-Za-z0-9]{4}" autocomplete="new-password"></div>
   <button class="btn btn-primary" type="submit">Ro'yxatdan o'tish</button>
   </form>`,
   `<p class="alt">Akkountingiz bormi? <a href="/login${next ? `?next=${encodeURIComponent(next)}`: ""}">Kirish</a></p>`,
@@ -4567,13 +4657,14 @@ const server = http.createServer(async (req, res) => {
   const startNext = safeNext(fields.next || url.searchParams.get("next"));
   const startNextJoin = startNext ? `&next=${encodeURIComponent(startNext)}` : "";
   const phone = normalizePhone(fields.phone);
-  if (!validPhone(phone)) {
+  if (!validPhoneInput(fields.phone) || !validPhone(phone)) {
     return redirect(res, `/login?err=phone&phone=${encodeURIComponent(formatLocalPhone(fields.phone))}${startNextJoin}`);
   }
-  const userRow = db.prepare("SELECT id, telegram_id, telegram_username FROM users WHERE phone = ?").get(phone);
+  const userRow = db.prepare("SELECT id, telegram_id, telegram_username, is_blocked FROM users WHERE phone = ?").get(phone);
   if (!userRow) {
   return redirect(res, `/login?err=notfound&phone=${encodeURIComponent(phone)}${startNextJoin}`);
   }
+  if (Number(userRow.is_blocked)) return redirect(res, `/login?err=blocked&phone=${encodeURIComponent(phone)}${startNextJoin}`);
   const loginChatId = resolveTelegramChatId(userRow);
   if (!loginChatId) {
   const linkToken = randomBytes(24).toString("hex");
@@ -4625,8 +4716,9 @@ const server = http.createServer(async (req, res) => {
   return redirect(res, `${back}&err=wrong`);
   }
   db.prepare("DELETE FROM login_codes WHERE phone = ?").run(phone);
-  const userRow = db.prepare("SELECT id FROM users WHERE phone = ?").get(phone);
+  const userRow = db.prepare("SELECT id, is_blocked FROM users WHERE phone = ?").get(phone);
   if (!userRow) return redirect(res, "/login?err=notfound");
+  if (Number(userRow.is_blocked)) return redirect(res, "/login?err=blocked");
   clearFailures(clientIp(req));
   createUserSession(res, userRow.id, req);
   createDeviceSession(res, userRow.id, req);
@@ -4651,13 +4743,15 @@ const server = http.createServer(async (req, res) => {
     const deviceToken = parseCookies(req).ht_device;
     if (deviceToken) {
       const deviceUser = db
-        .prepare("SELECT u.id FROM device_sessions d JOIN users u ON u.id = d.user_id WHERE d.token = ?")
+      .prepare("SELECT u.id, u.is_blocked, d.last_seen FROM device_sessions d JOIN users u ON u.id = d.user_id WHERE d.token = ?")
         .get(deviceToken);
-      if (deviceUser) {
+      if (deviceUser && !Number(deviceUser.is_blocked) && Date.now() - Date.parse(deviceUser.last_seen) < 3 * 24 * 60 * 60 * 1000) {
         db.prepare("UPDATE device_sessions SET last_seen = ? WHERE token = ?").run(nowISO(), deviceToken);
         createUserSession(res, deviceUser.id, req);
         return redirect(res, pageNext || "/dashboard");
       }
+      db.prepare("DELETE FROM device_sessions WHERE token = ?").run(deviceToken);
+      clearCookie(res, "ht_device");
     }
   }
   if (user) return redirect(res, pageNext || "/courses");
@@ -4666,7 +4760,7 @@ const server = http.createServer(async (req, res) => {
   const step = Math.min(3, Math.max(1, Number(url.searchParams.get("step")) || 1));
   const phoneRaw = formatLocalPhone(url.searchParams.get("phone") || "");
   const err = String(url.searchParams.get("err") || "");
-  const pwMode = url.searchParams.get("pw") === "1";
+  const pwMode = false;
   const nextQs = pageNext ? `?next=${encodeURIComponent(pageNext)}` : "";
   const nextJoin = pageNext ? `&next=${encodeURIComponent(pageNext)}` : "";
   const nextHidden = pageNext ? `<input type="hidden" name="next" value="${h(pageNext)}">` : "";
@@ -4693,6 +4787,7 @@ const server = http.createServer(async (req, res) => {
   <p class="login-sub">Telefon raqamingizni kiriting</p>
   ${err === "phone" ? alertBox("+998 dan keyin telefon raqamining 9 ta raqamini kiriting.", "error") : ""}
   ${err === "notfound" ? alertBox("Bu raqam ro'yxatdan o'tmagan.", "error") : ""}
+  ${err === "blocked" ? alertBox("Akkauntga kirish vaqtincha cheklangan. Administrator bilan bog'laning.", "error") : ""}
   ${err === "notelegram" ? alertBox("Bu akkauntga Telegram bog'lanmagan. Parol bilan kiring.", "error") : ""}
   ${err === "startbot" ? alertBox("Avval Telegram botga /start yozing. Shundan keyin kirish kodi shu botga keladi.", "error") : ""}
   ${err === "startbot" ? `<div class="actions" style="margin-bottom:16px"><a class="btn btn-primary" href="${botLink()}" target="_blank" rel="noopener">Botni ochish</a></div>` : ""}
@@ -4813,6 +4908,9 @@ const server = http.createServer(async (req, res) => {
 
   const next = safeNext(fields.next || url.searchParams.get("next"));
 
+  // Platform logins must always begin with Telegram OTP, including legacy password forms.
+  return redirect(res, `/login?phone=${encodeURIComponent(formatLocalPhone(fields.phone))}${next ? `&next=${encodeURIComponent(next)}` : ""}`);
+
   const ip = clientIp(req);
   const lock = lockedFor(ip);
   if (lock) {
@@ -4822,11 +4920,12 @@ const server = http.createServer(async (req, res) => {
 
   const phone = normalizePhone(fields.phone);
   const password = String(fields.password || "");
-  if (!validPhone(phone)) {
+  if (!validPhoneInput(fields.phone) || !validPhone(phone)) {
     return redirect(res, `/login?pw=1&err=phone&phone=${encodeURIComponent(formatLocalPhone(fields.phone))}${next ? `&next=${encodeURIComponent(next)}` : ""}`);
   }
   const row = db.prepare("SELECT * FROM users WHERE phone = ?").get(phone);
 
+  if (row && Number(row.is_blocked)) return redirect(res, `/login?err=blocked&phone=${encodeURIComponent(formatLocalPhone(fields.phone))}${next ? `&next=${encodeURIComponent(next)}` : ""}`);
   if (!row || !verifyPassword(password, row.pass)) {
   noteFailure(ip);
   const body = authCard(
@@ -4968,29 +5067,47 @@ const server = http.createServer(async (req, res) => {
   }
 
   /* -------------------------------------------------------------- plans */
+  if (p === "/plans/request" && method === "POST") {
+  if (!user) return redirect(res, "/login?next=/plans");
+  const plan = getPlans().find((item) => item.id === String(fields.plan_id || ""));
+  if (!plan) return redirect(res, "/plans?err=plan");
+  const info = db.prepare(
+    "INSERT INTO payment_requests (user_id, plan_id, amount, status, created_at) VALUES (?, ?, ?, 'pending', ?)"
+  ).run(user.id, plan.id, plan.price, nowISO());
+  const requestId = Number(info.lastInsertRowid);
+  await notifyTelegram(
+    `<b>Yangi tarif/to'lov so'rovi #${requestId}</b>\nO'quvchi: <b>${h(user.name)}</b>\nTelefon: <code>${h(user.phone)}</code>\nTarif: <b>${h(plan.title)}</b>\nSumma: <b>${formatSum(plan.price)} so'm</b>\n\nTo'lovni tekshirish uchun o'quvchi yuborgan chek skrinshoti va tranzaksiya raqamini so'rang. Tasdiqlash: /admin/payments`,
+    null,
+    true
+  );
+  const target = config.telegram || "";
+  const body = `<div class="card"><h1>So'rovingiz adminga yuborildi</h1><p>To'lovni amalga oshirgach, adminning Telegram lichkasiga <b>to'lov cheki skrinshoti</b>, <b>tranzaksiya ID/raqami</b>, telefon raqamingiz va tanlangan tarifni yuboring.</p><p class="muted small">Karta PIN-kodi, SMS tasdiqlash kodi va CVV raqamini hech kimga yubormang.</p>${target ? `<a class="btn btn-primary" href="${h(target)}" target="_blank" rel="noopener">Chekni adminga Telegramda yuborish</a>` : ""}<p class="muted small">So'rov raqami: #${requestId}. Admin to'lovni tekshirib, tarifni ochadi.</p></div>`;
+  send(res, 200, layout({ title: "To'lov so'rovi", body, user, admin }));
+  return;
+  }
+
   if (p === "/plans" && method === "GET") {
+  const plans = getPlans();
+  const planCards = plans.map((plan, index) => `<article class="plan-card">
+    ${index === 1 ? `<span class="plan-badge">Tavsiya etiladi</span>` : ""}
+    <h2>${h(plan.title)}</h2><p class="muted">${h(plan.description)}</p>
+    <div class="plan-price"><b>${formatSum(plan.price)} so'm</b><span>/ ${Math.round(plan.days / 30)} oy</span></div>
+    <ul class="check-list"><li>Barcha kurslarga kirish</li><li>Video darslar va materiallar</li><li>Testlar va natijalar</li></ul>
+    ${user ? `<form method="post" action="/plans/request"><input type="hidden" name="plan_id" value="${h(plan.id)}"><button class="btn btn-orange" type="submit">Sotib olish</button></form>` : `<a class="btn btn-orange" href="/login?next=/plans">Kirish va sotib olish</a>`}
+  </article>`).join("");
   const body = `
   <section class="page-hero center">
   <span class="eyebrow">Tariflar</span>
   <h1>Tariflar</h1>
-  <p class="lead">Bitta to'lov bilan barcha kurs va materiallarga kirish.</p>
+  <p class="lead">O'zingizga mos muddatni tanlang; narxlarni admin boshqaradi.</p>
   </section>
   <section class="section tight">
   <div class="wrap plans-wrap">
-  <div class="plan-card">
-  <span class="plan-badge">Tavsiya etiladi</span>
-  <h2>To'liq kirish</h2>
-  <p class="muted">Barcha kurslar, PDF materiallar, testlar va yangilanishlar.</p>
-  <div class="plan-price"><s>399 000 so'm</s><b>299 000 so'm</b><span>/ 3 oy</span></div>
-  <ul class="check-list">
-  <li>Barcha kurslarga kirish</li>
-  <li>PDF darslik va qo'llanmalar</li>
-  <li>Mock testlar va natijalar</li>
-  <li>Yangi materiallar bepul</li>
-  </ul>
-  <a class="btn btn-orange" href="${h(config.telegram || "#")}" target="_blank" rel="noopener">Sotib olish</a>
-  </div>
-  <p class="muted small center">To'lov Telegram orqali amalga oshiriladi. Savollar uchun: ${h(config.phone || "")}</p>
+  ${url.searchParams.get("err") === "plan" ? alertBox("Tarif topilmadi. Qayta tanlang.", "error") : ""}
+  ${url.searchParams.get("requested") === "1" ? alertBox("So'rov yuborildi. Admin to'lovni tekshiradi.", "success") : ""}
+  <div class="plans-grid">${planCards}</div>
+  <div class="card payment-help"><h2>To'lovdan keyin adminga nimalar yuboriladi?</h2><ol><li>To'lov chekining skrinshoti</li><li>Tranzaksiya ID yoki to'lov raqami</li><li>Ro'yxatdan o'tgan telefon raqamingiz</li><li>Tanlangan tarif nomi</li></ol><p class="muted small">Karta PIN-kodi, SMS tasdiqlash kodi yoki CVV raqamini yubormang. Admin to'lovni tekshirib, tarifni faollashtiradi.</p></div>
+  <p class="muted small center">Savollar uchun: ${h(config.phone || "")}</p>
   </div>
   </section>`;
   send(res, 200, layout({ title: "Kurs va testlar tariflari", body, user, admin, seo: { path: "/plans", title: "Kurs va testlar tariflari | Habiba teacher", description: "Attestatsiya va TKT kurslari, onlayn testlar va o'quv materiallariga kirish tariflarini ko'ring.", keywords: "attestatsiya kursi, TKT kursi, o'qituvchilar uchun kurs narxi, attestatsiya testlari, TKT testlari" } }));
@@ -5574,7 +5691,8 @@ const server = http.createServer(async (req, res) => {
   const rows = lessons.length
   ? lessons
 .map((l, i) => {
-  const finished = Object.prototype.hasOwnProperty.call(progress, l.id);
+  const hasProgress = Object.prototype.hasOwnProperty.call(progress, l.id);
+  const finished = hasProgress && (l.type !== "test" || Number(progress[l.id]) >= 80);
   return `<a class="lesson-row" href="/lesson/${l.id}">
   <span class="num">${i + 1}</span>
   <span class="lesson-main">
@@ -5616,23 +5734,43 @@ const server = http.createServer(async (req, res) => {
   db.prepare("UPDATE lessons SET views = views + 1 WHERE id = ?").run(lesson.id);
   }
 
-  const questions = db
+  const previousLesson = db.prepare("SELECT id, type FROM lessons WHERE course_id = ? AND (position < ? OR (position = ? AND id < ?)) ORDER BY position DESC, id DESC LIMIT 1")
+    .get(lesson.course_id, lesson.position, lesson.position, lesson.id);
+  const videoFollowup = !!(previousLesson && previousLesson.type === "video");
+  let questions = db
 .prepare("SELECT * FROM questions WHERE lesson_id = ? ORDER BY id")
 .all(lesson.id);
+  let attempt = null;
+  if (isSubmit && user) {
+    attempt = db.prepare("SELECT * FROM test_attempts WHERE id = ? AND user_id = ? AND lesson_id = ? AND score IS NULL")
+      .get(Number(fields.attempt_id) || 0, user.id, lesson.id);
+    if (!attempt) return redirect(res, startHref);
+    let ids = [];
+    try { ids = JSON.parse(attempt.question_ids); } catch (e) {}
+    const found = ids.length ? db.prepare(`SELECT * FROM questions WHERE lesson_id = ? AND id IN (${ids.map(() => "?").join(",")})`).all(lesson.id, ...ids) : [];
+    const byId = new Map(found.map((q) => [q.id, q]));
+    questions = ids.map((id) => byId.get(Number(id))).filter(Boolean);
+    if (!questions.length || questions.length !== ids.length || (videoFollowup && questions.length !== 20)) return redirect(res, startHref);
+  }
 
   if (isSubmit && method === "POST") {
   if (!user) return redirect(res, `/login?next=${encodeURIComponent(startHref)}`);
   if (!owned) return redirect(res, `/test/${lesson.id}`);
+  let answers = {};
+  for (const q of questions) answers[`q${q.id}`] = String(fields[`q${q.id}`] || "");
 
   let correct = 0;
   questions.forEach((q) => {
   if (String(fields[`q${q.id}`]) === String(q.correct)) correct += 1;
   });
   const score = questions.length ? Math.round((correct / questions.length) * 100): 0;
+  const completedAt = nowISO();
+  db.prepare("UPDATE test_attempts SET answers_json = ?, score = ?, completed_at = ? WHERE id = ? AND user_id = ?")
+    .run(JSON.stringify(answers), score, completedAt, attempt.id, user.id);
   db.prepare(
   `INSERT INTO progress (user_id, lesson_id, score, completed_at) VALUES (?, ?, ?, ?)
   ON CONFLICT(user_id, lesson_id) DO UPDATE SET score = excluded.score, completed_at = excluded.completed_at`
-  ).run(user.id, lesson.id, score, nowISO());
+  ).run(user.id, lesson.id, score, completedAt);
 
   const maxScore = Number(lesson.max_score) || 0;
   const shown = maxScore > 0 ? `${Math.round((score / 100) * maxScore)} / ${maxScore}`: `${score}%`;
@@ -5642,7 +5780,7 @@ const server = http.createServer(async (req, res) => {
   )}\nS& Natija: <b>${score}%</b> (${shown})\nx"  ${new Date().toLocaleString("uz-UZ")}`
   ).catch(() => {});
 
-  redirect(res, `/test/${lesson.id}?result=${score}`);
+  redirect(res, `/test/${lesson.id}?result=${score}&attempt=${attempt.id}`);
   return;
   }
 
@@ -5651,6 +5789,9 @@ const server = http.createServer(async (req, res) => {
   if (!owned) {
   redirect(res, `/test/${lesson.id}`);
   return;
+  }
+  if (videoFollowup && previousLesson && !db.prepare("SELECT 1 FROM progress WHERE user_id = ? AND lesson_id = ? AND score IS NULL").get(user.id, previousLesson.id)) {
+    return redirect(res, `/lesson/${previousLesson.id}`);
   }
   if (!questions.length) {
   send(
@@ -5664,22 +5805,44 @@ const server = http.createServer(async (req, res) => {
   );
   return;
   }
+  if (videoFollowup && questions.length < 20) {
+    send(res, 200, layout({ title: lesson.title, body: `<div class="card empty"><h2>20 ta test savoli kerak</h2><p>Bu video darsga biriktirilgan testda hozir ${questions.length} ta savol bor. Admin panelida kamida 20 ta savol qo'shilgach test ochiladi.</p><a class="btn btn-ghost" href="/lesson/${previousLesson.id}">Videoga qaytish</a></div>`, user, admin }));
+    return;
+  }
+  const chosenQuestions = videoFollowup
+    ? db.prepare("SELECT * FROM questions WHERE lesson_id = ? ORDER BY RANDOM() LIMIT 20").all(lesson.id)
+    : questions;
+  const attemptInfo = db.prepare("INSERT INTO test_attempts (user_id, lesson_id, question_ids, created_at) VALUES (?, ?, ?, ?)")
+    .run(user.id, lesson.id, JSON.stringify(chosenQuestions.map((q) => q.id)), nowISO());
+  questions = chosenQuestions;
   const result = url.searchParams.get("result");
   if (result !== null) {
   const score = Math.max(0, Math.min(100, Number(result) || 0));
-  send(res, 200, testResultPage(lesson, questions, score));
+  send(res, 200, testPage(lesson, questions, [], Number(attemptInfo.lastInsertRowid)));
   } else {
   const testSections = db
 .prepare("SELECT * FROM test_sections WHERE lesson_id = ? ORDER BY position, id")
 .all(lesson.id);
-  send(res, 200, testPage(lesson, questions, testSections));
+  send(res, 200, testPage(lesson, questions, testSections, Number(attemptInfo.lastInsertRowid)));
   }
   return;
   }
 
   if (url.searchParams.has("result") && user && owned && questions.length) {
   const score = Math.max(0, Math.min(100, Number(url.searchParams.get("result")) || 0));
-  send(res, 200, testResultPage(lesson, questions, score));
+  const resultAttempt = db.prepare("SELECT * FROM test_attempts WHERE id = ? AND user_id = ? AND lesson_id = ? AND score IS NOT NULL")
+    .get(Number(url.searchParams.get("attempt")) || 0, user.id, lesson.id);
+  let resultQuestions = questions, answers = {};
+  if (resultAttempt) {
+    try {
+      const ids = JSON.parse(resultAttempt.question_ids);
+      const found = db.prepare(`SELECT * FROM questions WHERE lesson_id = ? AND id IN (${ids.map(() => "?").join(",")})`).all(lesson.id, ...ids);
+      const byId = new Map(found.map((q) => [q.id, q]));
+      resultQuestions = ids.map((id) => byId.get(Number(id))).filter(Boolean);
+      answers = JSON.parse(resultAttempt.answers_json || "{}");
+    } catch (e) {}
+  }
+  send(res, 200, testResultPage(lesson, resultQuestions, score, answers, 80));
   return;
   }
 
@@ -5696,7 +5859,7 @@ const server = http.createServer(async (req, res) => {
   return;
   }
   const watchedLesson = db.prepare("SELECT * FROM lessons WHERE id = ?").get(Number(watchMatch[1]));
-  if (!watchedLesson || watchedLesson.type !== "video" || !watchedLesson.file_id) {
+  if (!watchedLesson || watchedLesson.type !== "video") {
   res.writeHead(404, { "Content-Type": "application/json; charset=utf-8" });
   res.end(JSON.stringify({ ok: false }));
   return;
@@ -5723,6 +5886,14 @@ const server = http.createServer(async (req, res) => {
   if (!user) return redirect(res, "/login");
   const lesson = db.prepare("SELECT * FROM lessons WHERE id = ?").get(Number(lessonMatch[1]));
   if (!lesson) return notFound(res, user, admin);
+  if (!admin) {
+    const previous = db.prepare("SELECT id, type FROM lessons WHERE course_id = ? AND (position < ? OR (position = ? AND id < ?)) ORDER BY position DESC, id DESC LIMIT 1")
+      .get(lesson.course_id, lesson.position, lesson.position, lesson.id);
+    if (previous && previous.type === "test") {
+      const result = db.prepare("SELECT score FROM progress WHERE user_id = ? AND lesson_id = ?").get(user.id, previous.id);
+      if (!result || Number(result.score) < 80) return redirect(res, `/test/${previous.id}?start=1`);
+    }
+  }
   if (lesson.type === "test" && !lessonMatch[2]) {
   redirect(res, `/test/${lesson.id}`);
   return;
@@ -5731,7 +5902,7 @@ const server = http.createServer(async (req, res) => {
   const action = lessonMatch[2];
 
   if (action === "/complete" && method === "POST") {
-  if (lesson.type === "video" && lesson.file_id && !admin) {
+  if (lesson.type === "video" && !admin) {
   const watched = db
   .prepare("SELECT max_seconds, duration FROM video_watch WHERE user_id = ? AND lesson_id = ?")
   .get(user.id, lesson.id);
@@ -5815,7 +5986,7 @@ const server = http.createServer(async (req, res) => {
   const testProgress = relatedTest
     ? db.prepare("SELECT score FROM progress WHERE user_id = ? AND lesson_id = ?").get(user.id, relatedTest.id)
     : null;
-  const testDone = !!(testProgress && Number(testProgress.score) >= 60);
+  const testDone = !!(testProgress && Number(testProgress.score) >= 80);
   const hasTestStep = !!relatedTest;
   const stepsTotal = hasTestStep ? 3 : 2;
   const stepsDone =
@@ -5844,7 +6015,7 @@ const server = http.createServer(async (req, res) => {
           user ? user.id : 0
         )}"></video>`
       : lesson.video_url
-      ? videoEmbed(lesson.video_url)
+      ? videoEmbed(lesson.video_url, "lessonVideo")
       : `<div class="card empty">Video yuklanmagan yoki havola qo'shilmagan.</div>`;
   } else if (lesson.type === "test") {
     const questions = db.prepare("SELECT * FROM questions WHERE lesson_id = ?").all(lesson.id);
@@ -5875,7 +6046,7 @@ const server = http.createServer(async (req, res) => {
     url.searchParams.get("err") === "watch"
       ? alertBox("Avval videoni to'liq ko'ring — keyin dars tugaydi.", "error")
       : result !== null
-      ? alertBox(`Test yakunlandi: ${result}% to'g'ri javob.`, Number(result) >= 60 ? "success" : "error")
+      ? alertBox(`Test yakunlandi: ${result}% to'g'ri javob.`, Number(result) >= 80 ? "success" : "error")
       : progressRow && lesson.type === "test"
       ? alertBox(
           `Bu testni tugatgansiz${progressRow.score != null ? ` | natija: ${progressRow.score}%` : ""}.`,
@@ -5893,7 +6064,7 @@ const server = http.createServer(async (req, res) => {
   const testStepNote = testDone
     ? "O'tildi"
     : completed
-    ? `${testQuestionCount} ta savol | o'tish balli 60%`
+    ? `${testQuestionCount} ta savol | o'tish balli 80%`
     : "Video tugagach ochiladi";
   const nextStepNote = !completed
     ? "Dars tugagach ochiladi"
@@ -5911,8 +6082,8 @@ const server = http.createServer(async (req, res) => {
 
   const completeBlock =
     !completed && lesson.type !== "test"
-      ? videoFile
-        ? `<button class="btn btn-primary dash-next" type="button" id="completeLesson" data-lesson="${lesson.id}">Darsni tugatdim</button>`
+      ? (videoFile || lesson.type === "video")
+      ? `<button class="btn btn-primary dash-next" type="button" id="completeLesson" data-lesson="${lesson.id}">Darsni tugatdim</button>`
         : `<form method="post" action="/lesson/${lesson.id}/complete" class="js-complete" data-lesson="${lesson.id}">
             <button class="btn btn-primary" type="submit">Darsni tugatdim</button>
           </form>`
@@ -5961,6 +6132,8 @@ const server = http.createServer(async (req, res) => {
         <div class="lesson-video-card">
           ${videoHead}
           ${contentHtml}
+          ${lesson.type === "video" ? `<label class="video-speed-control" for="videoSpeed">Video tezligi <select id="videoSpeed"><option value="0.75">0.75×</option><option value="1" selected>1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2">2×</option></select></label>` : ""}
+          ${lesson.type === "video" && String(lesson.content || "").trim() ? `<details class="lesson-transcript"><summary>Video dars matni</summary><div class="prose">${nl2br(lesson.content)}</div></details>` : ""}
           ${
             lesson.type === "video"
               ? `<details class="video-help"><summary>Video ochilmayaptimi?</summary><p class="muted small">Internet aloqasini tekshiring yoki sahifani yangilang. Muammo davom etsa, Telegram guruhida yozing.</p></details>`
@@ -6007,15 +6180,18 @@ const server = http.createServer(async (req, res) => {
       </aside>
     </div>
     ${
-      lesson.type === "video" && videoFile
+      lesson.type === "video" && (videoFile || lesson.video_url)
         ? `<script>
       (function () {
         var v = document.getElementById('lessonVideo');
+        var ytNode = document.getElementById('lessonYoutube');
+        var player = null, playerState = -1;
         var btn = document.getElementById('completeLesson');
         var note = document.querySelector('.lesson-step.done small');
         var next = ${JSON.stringify(nextHref)};
         var lessonId = ${lesson.id};
         var sent = false, maxWatched = 0, duration = 0, lastSync = 0;
+        var alreadyCompleted = ${completed ? "true" : "false"};
         function percent() { return duration > 0 ? Math.min(100, Math.round((maxWatched / duration) * 100)) : 0; }
         function paint() {
           var p = percent();
@@ -6030,7 +6206,7 @@ const server = http.createServer(async (req, res) => {
           var body = new URLSearchParams();
           body.set('seconds', maxWatched.toFixed(1));
           body.set('duration', duration.toFixed(1));
-          fetch('/lesson/' + lessonId + '/watch', {
+          return fetch('/lesson/' + lessonId + '/watch', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded', Accept: 'application/json' },
             body: body.toString()
@@ -6039,8 +6215,9 @@ const server = http.createServer(async (req, res) => {
         function finish() {
           if (sent) return;
           sent = true;
-          sync(true);
-          fetch('/lesson/' + lessonId + '/complete', { method: 'POST', headers: { Accept: 'application/json' } })
+          Promise.resolve(sync(true)).then(function () {
+          return fetch('/lesson/' + lessonId + '/complete', { method: 'POST', headers: { Accept: 'application/json' } });
+          })
             .then(function (r) { return r.json(); })
             .then(function (d) {
               if (!d || !d.ok) {
@@ -6055,7 +6232,7 @@ const server = http.createServer(async (req, res) => {
         if (v) {
           v.addEventListener('loadedmetadata', function () { duration = Number(v.duration) || 0; paint(); });
           v.addEventListener('timeupdate', function () {
-            if (duration > 0 && v.currentTime > maxWatched + 1.5) { v.currentTime = maxWatched; return; }
+            if (!alreadyCompleted && duration > 0 && v.currentTime > maxWatched + 1.5) { v.currentTime = maxWatched; return; }
             if (v.currentTime > maxWatched) maxWatched = v.currentTime;
             paint();
             sync(false);
@@ -6067,6 +6244,27 @@ const server = http.createServer(async (req, res) => {
           v.addEventListener('ended', finish);
           v.addEventListener('contextmenu', function (e) { e.preventDefault(); });
           v.setAttribute('controlsList', 'nodownload');
+          var speed = document.getElementById('videoSpeed');
+          if (speed) speed.addEventListener('change', function () { v.playbackRate = Number(speed.value) || 1; });
+        }
+        if (ytNode) {
+          window.onYouTubeIframeAPIReady = function () {
+            player = new YT.Player('lessonYoutube', { videoId: ytNode.getAttribute('data-video-id'), playerVars: { controls: 1, disablekb: 1, playsinline: 1, rel: 0 }, events: {
+              onReady: function (event) { duration = Number(event.target.getDuration()) || 0; paint(); },
+              onStateChange: function (event) { playerState = event.data; }
+            }});
+            var speed = document.getElementById('videoSpeed');
+            if (speed) speed.addEventListener('change', function () { if (player && player.setPlaybackRate) player.setPlaybackRate(Number(speed.value) || 1); });
+          };
+          var api = document.createElement('script'); api.src = 'https://www.youtube.com/iframe_api'; document.head.appendChild(api);
+          setInterval(function () {
+            if (!player || playerState !== 1) return;
+            duration = Number(player.getDuration()) || duration;
+            var current = Number(player.getCurrentTime()) || 0;
+            if (!alreadyCompleted && current > maxWatched + 1.5) { player.seekTo(maxWatched, true); return; }
+            maxWatched = Math.max(maxWatched, current); paint(); sync(false);
+            if (duration > 0 && maxWatched / duration >= 0.99) finish();
+          }, 1000);
         }
         if (btn) { btn.disabled = true; btn.textContent = 'Video tugagach faollashadi'; btn.addEventListener('click', finish); }
       })();
@@ -6338,6 +6536,55 @@ const server = http.createServer(async (req, res) => {
   return redirect(res, "/admin/contract?saved=1");
   }
 
+  if (p === "/admin/plans" && method === "GET") {
+  if (!admin) return redirect(res, "/admin/login");
+  const plans = getPlans();
+  const body = `<a class="back" href="/admin">Admin panel</a><div class="page-head"><div><h1>Tarif narxlari</h1><p class="muted">Narxlar Tariflar sahifasida darhol yangilanadi.</p></div><a class="btn btn-ghost" href="/admin/payments">To'lov so'rovlari</a></div>
+  ${url.searchParams.get("saved") === "1" ? alertBox("Tarif narxlari saqlandi.", "success") : ""}
+  <div class="card"><form method="post" action="/admin/plans" class="form">${plans.map((plan) => `<div class="field"><label>${h(plan.title)} tarifi (so'm)</label><input type="number" name="${h(plan.id)}" min="0" step="1000" value="${plan.price}" required></div>`).join("")}<button class="btn btn-primary" type="submit">Narxlarni saqlash</button></form></div>`;
+  send(res, 200, layout({ title: "Tarif narxlari", body, admin }));
+  return;
+  }
+
+  if (p === "/admin/plans" && method === "POST") {
+  if (!admin) return redirect(res, "/admin/login");
+  const prices = getPlans().map((plan) => ({ id: plan.id, price: Math.min(100000000, Math.max(0, Math.round(Number(fields[plan.id]) || 0))) }));
+  metaSet("plans_json", JSON.stringify(prices));
+  return redirect(res, "/admin/plans?saved=1");
+  }
+
+  const paymentReview = p.match(/^\/admin\/payments\/(\d+)\/(approve|reject)$/);
+  if (paymentReview && method === "POST") {
+  if (!admin) return redirect(res, "/admin/login");
+  const request = db.prepare("SELECT pr.*, u.name, u.phone FROM payment_requests pr JOIN users u ON u.id = pr.user_id WHERE pr.id = ?").get(Number(paymentReview[1]));
+  if (!request || request.status !== "pending") return redirect(res, "/admin/payments");
+  if (paymentReview[2] === "approve") {
+    const plan = getPlans().find((item) => item.id === request.plan_id) || DEFAULT_PLANS.find((item) => item.id === request.plan_id);
+    const current = db.prepare("SELECT MAX(expires_at) AS expires_at FROM plan_subscriptions WHERE user_id = ? AND status = 'active' AND expires_at > ?").get(request.user_id, nowISO());
+    const startsAt = nowISO();
+    const base = current && current.expires_at ? Date.parse(current.expires_at) : Date.now();
+    const expiresAt = new Date(Math.max(base, Date.now()) + (plan ? plan.days : 30) * 86400000).toISOString();
+    db.prepare("INSERT INTO plan_subscriptions (user_id, plan_id, starts_at, expires_at, status) VALUES (?, ?, ?, ?, 'active')").run(request.user_id, request.plan_id, startsAt, expiresAt);
+    db.prepare("UPDATE payment_requests SET status = 'approved', reviewed_at = ? WHERE id = ?").run(startsAt, request.id);
+    sendUserMessage(request.user_id, `<b>To'lovingiz tasdiqlandi</b>\n${h(plan ? plan.title : request.plan_id)} tarifi ${h(expiresAt.slice(0, 10))} gacha faol.`, "/plans", "Tarifni ko'rish").catch(() => {});
+  } else {
+    db.prepare("UPDATE payment_requests SET status = 'rejected', reviewed_at = ? WHERE id = ?").run(nowISO(), request.id);
+  }
+  return redirect(res, "/admin/payments");
+  }
+
+  if (p === "/admin/payments" && method === "GET") {
+  if (!admin) return redirect(res, "/admin/login");
+  const requests = db.prepare(`SELECT pr.*, u.name, u.phone FROM payment_requests pr JOIN users u ON u.id = pr.user_id ORDER BY CASE pr.status WHEN 'pending' THEN 0 ELSE 1 END, pr.id DESC`).all();
+  const rows = requests.length ? requests.map((request) => {
+    const plan = getPlans().find((item) => item.id === request.plan_id);
+    return `<tr><td>#${request.id}</td><td><b>${h(request.name)}</b><br><small>${h(request.phone)}</small></td><td>${h(plan ? plan.title : request.plan_id)}</td><td>${formatSum(request.amount)} so'm</td><td>${request.status === "approved" ? "Tasdiqlangan" : request.status === "rejected" ? "Rad etilgan" : "Kutilmoqda"}<br><small>${h(request.created_at)}</small></td><td>${request.status === "pending" ? `<form method="post" action="/admin/payments/${request.id}/approve" class="inline"><button class="btn btn-sm btn-primary">Tasdiqlash</button></form> <form method="post" action="/admin/payments/${request.id}/reject" class="inline"><button class="btn btn-sm btn-danger">Rad etish</button></form>` : ""}</td></tr>`;
+  }).join("") : `<tr><td colspan="6" class="muted">Hozircha to'lov so'rovi yo'q.</td></tr>`;
+  const body = `<a class="back" href="/admin">Admin panel</a><div class="page-head"><div><h1>To'lov so'rovlari</h1><p class="muted">Chekni Telegramda tekshiring, keyin tarifni tasdiqlang.</p></div><a class="btn btn-ghost" href="/admin/plans">Tarif narxlari</a></div><div class="card"><div class="table-wrap"><table><thead><tr><th>So'rov</th><th>O'quvchi</th><th>Tarif</th><th>Summa</th><th>Holat</th><th></th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+  send(res, 200, layout({ title: "To'lovlar", body, admin }));
+  return;
+  }
+
   if (p === "/admin" && method === "GET") {
   if (!admin) return redirect(res, "/admin/login");
 
@@ -6378,7 +6625,7 @@ const server = http.createServer(async (req, res) => {
 : `<tr><td colspan="5" class="muted">Hozircha kurslar yo'q.</td></tr>`;
 
   const body = `
-  <div class="page-head"><div><h1>Admin panel</h1><p class="muted">Kurslar, darslar va o'quvchilar boshqaruvi.</p></div><div class="actions"><a class="btn btn-ghost btn-sm" href="/admin/password">Parolni o'zgartirish</a><a class="btn btn-ghost btn-sm" href="/admin/contract">Ta'lim shartnomasi</a></div></div>
+  <div class="page-head"><div><h1>Admin panel</h1><p class="muted">Kurslar, darslar va o'quvchilar boshqaruvi.</p></div><div class="actions"><a class="btn btn-ghost btn-sm" href="/admin/students">O'quvchilar</a><a class="btn btn-ghost btn-sm" href="/admin/plans">Tariflar</a><a class="btn btn-ghost btn-sm" href="/admin/payments">To'lovlar</a><a class="btn btn-ghost btn-sm" href="/admin/password">Parolni o'zgartirish</a><a class="btn btn-ghost btn-sm" href="/admin/contract">Ta'lim shartnomasi</a></div></div>
   <div class="stats">
   <div class="stat"><b>${stats.users}</b><span>O'quvchilar</span></div>
   <div class="stat"><b>${stats.courses}</b><span>Kurslar</span></div>
@@ -6416,15 +6663,37 @@ const server = http.createServer(async (req, res) => {
   return;
   }
 
+  const studentAction = p.match(/^\/admin\/student\/(\d+)\/(block|unblock|grant|revoke)$/);
+  if (studentAction && method === "POST") {
+  if (!admin) return redirect(res, "/admin/login");
+  const studentId = Number(studentAction[1]);
+  const action = studentAction[2];
+  if (action === "block" || action === "unblock") {
+    db.prepare("UPDATE users SET is_blocked = ? WHERE id = ?").run(action === "block" ? 1 : 0, studentId);
+    if (action === "block") {
+      db.prepare("DELETE FROM sessions WHERE user_id = ?").run(studentId);
+      db.prepare("DELETE FROM device_sessions WHERE user_id = ?").run(studentId);
+    }
+  } else if (action === "grant") {
+    const plan = getPlans().find((item) => item.id === "quarter") || getPlans()[0];
+    if (plan) db.prepare("INSERT INTO plan_subscriptions (user_id, plan_id, starts_at, expires_at, status) VALUES (?, ?, ?, ?, 'active')")
+      .run(studentId, plan.id, nowISO(), new Date(Date.now() + plan.days * 86400000).toISOString());
+  } else {
+    db.prepare("UPDATE plan_subscriptions SET status = 'revoked' WHERE user_id = ? AND status = 'active'").run(studentId);
+  }
+  return redirect(res, "/admin/students");
+  }
+
   if (p === "/admin/students" && method === "GET") {
   if (!admin) return redirect(res, "/admin/login");
   const students = db
 .prepare(
-  `SELECT u.id, u.name, u.phone, u.telegram_id, u.telegram_username, u.created_at,
-  (SELECT COUNT(*) FROM progress p WHERE p.user_id = u.id) AS done
+  `SELECT u.id, u.name, u.phone, u.telegram_id, u.telegram_username, u.created_at, u.is_blocked,
+  (SELECT COUNT(*) FROM progress p WHERE p.user_id = u.id) AS done,
+  (SELECT MAX(expires_at) FROM plan_subscriptions s WHERE s.user_id = u.id AND s.status = 'active' AND s.expires_at > ?) AS plan_expires
   FROM users u ORDER BY u.id DESC`
   )
-.all();
+.all(nowISO());
   const rows = students.length
   ? students
 .map(
@@ -6433,18 +6702,22 @@ const server = http.createServer(async (req, res) => {
   <td>${h(s.phone)}</td>
   <td>${s.telegram_username ? "@" + h(s.telegram_username) : s.telegram_id ? h(s.telegram_id) : " "}</td>
   <td>${s.done}</td>
+  <td>${s.plan_expires ? `Faol: ${h(String(s.plan_expires).slice(0, 10))}` : "Ruxsat yo'q"}</td>
+  <td>${Number(s.is_blocked) ? `<span class="badge danger">Cheklangan</span>` : `<span class="badge done">Faol</span>`}</td>
+  <td><form method="post" action="/admin/student/${s.id}/${Number(s.is_blocked) ? "unblock" : "block"}" class="inline"><button class="btn btn-sm ${Number(s.is_blocked) ? "btn-primary" : "btn-danger"}">${Number(s.is_blocked) ? "Ruxsat berish" : "Cheklash"}</button></form>
+  <form method="post" action="/admin/student/${s.id}/${s.plan_expires ? "revoke" : "grant"}" class="inline"><button class="btn btn-sm">${s.plan_expires ? "Tarifni yopish" : "3 oy tarif ochish"}</button></form></td>
   <td>${h(String(s.created_at).slice(0, 10))}</td>
   </tr>`
   )
 .join("")
-: `<tr><td colspan="4" class="muted">Hozircha o'quvchilar yo'q.</td></tr>`;
+: `<tr><td colspan="8" class="muted">Hozircha o'quvchilar yo'q.</td></tr>`;
 
   const body = `
   <div class="page-head"><div><h1>O'quvchilar</h1><p class="muted">Ro'yxatdan o'tgan foydalanuvchilar.</p></div></div>
   <div class="card">
   <div class="table-wrap">
   <table>
-  <thead><tr><th>Ism</th><th>Telefon</th><th>Telegram</th><th>Tugatgan darslari</th><th>Ro'yxatdan o'tgan</th></tr></thead>
+  <thead><tr><th>Ism</th><th>Telefon</th><th>Telegram</th><th>Tugatgan darslari</th><th>Tarif</th><th>Holat</th><th>Boshqaruv</th><th>Ro'yxatdan o'tgan</th></tr></thead>
   <tbody>${rows}</tbody>
   </table>
   </div>
@@ -6563,6 +6836,7 @@ const server = http.createServer(async (req, res) => {
   <summary>Tahrirlash</summary>
   <form method="post" action="/admin/lesson/${l.id}/update" class="form">
   <div class="field"><label>Nomi</label><input name="title" value="${h(l.title)}" required></div>
+  ${l.type === "video" ? `<div class="field"><label>Video matni / transkript</label><textarea name="content" rows="5">${h(l.content || "")}</textarea></div>` : ""}
   ${
   l.type === "test"
   ? `<div class="grid two">
@@ -6570,7 +6844,7 @@ const server = http.createServer(async (req, res) => {
   Number(l.duration_min) || 30
   }"></div>
   <div class="field"><label>Savollar soni</label><input type="number" name="question_count" min="0" max="500" value="${
-  Number(l.question_count) || 0
+  Number(l.question_count) || 20
   }"><small class="muted">0   haqiqiy savollar soni</small></div>
   <div class="field"><label>Eng yuqori ball</label><input type="number" name="max_score" min="0" max="1000" value="${
   Number(l.max_score) || 100
@@ -6670,6 +6944,7 @@ const server = http.createServer(async (req, res) => {
   <input name="video_url" placeholder="https://youtu.be/... yoki https://.../video.mp4">
   <small class="muted">YouTube'da unlisted qilib qo'ying   havola orqali ko'rinadi.</small>
   </div>
+  <div class="field" data-for="video"><label>Video dars matni / transkripti</label><textarea name="transcript" rows="6" placeholder="Videoda tushuntirilgan mavzu matni shu yerda ko'rinadi."></textarea></div>
   <div class="field" data-for="video">
   <label>Yoki video fayl yuklang (maks. 1 GB)</label>
   <input type="file" name="video" accept="video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov,.m4v,.mkv">
@@ -6691,8 +6966,8 @@ const server = http.createServer(async (req, res) => {
   </div>
   <div class="field" data-for="test">
   <label>E'lon qilinadigan savollar soni</label>
-  <input type="number" name="question_count" min="0" max="500" value="0">
-  <small class="muted">0 bo'lsa, kiritilgan savollar soni ko'rsatiladi.</small>
+  <input type="number" name="question_count" min="0" max="500" value="20">
+  <small class="muted">Video darsdan keyingi test uchun 20 ta savol kiriting.</small>
   </div>
   <button class="btn btn-primary" type="submit">Dars qo'shish</button>
   </form>
@@ -6728,6 +7003,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   let content = String(fields.content || "").trim();
+  if (type === "video") content = String(fields.transcript || "").trim();
   let videoUrl = String(fields.video_url || "").trim();
   let fileId = "";
   let fileName = "";
@@ -6790,7 +7066,7 @@ const server = http.createServer(async (req, res) => {
   const price = type === "test" ? Math.max(0, Math.round(Number(fields.price) || 0)): 0;
   const isPro = price > 0 ? 1: 0;
   const maxScore = type === "test" ? Math.min(1000, Math.max(0, Number(fields.max_score) || 100)): 0;
-  const questionCount = type === "test" ? Math.min(500, Math.max(0, Number(fields.question_count) || 0)): 0;
+  const questionCount = type === "test" ? Math.min(500, Math.max(0, Number(fields.question_count) || 20)): 0;
 
   const info = db
 .prepare(
@@ -6831,9 +7107,12 @@ const server = http.createServer(async (req, res) => {
   if ((adminLessonMatch[2] === "/rename" || adminLessonMatch[2] === "/update") && method === "POST") {
   const title = String(fields.title || "").trim();
   if (title) db.prepare("UPDATE lessons SET title = ? WHERE id = ?").run(title, lesson.id);
+  if (adminLessonMatch[2] === "/update" && lesson.type === "video") {
+    db.prepare("UPDATE lessons SET content = ? WHERE id = ?").run(String(fields.content || "").trim(), lesson.id);
+  }
   if (adminLessonMatch[2] === "/update" && lesson.type === "test") {
   const duration = Math.min(180, Math.max(1, Number(fields.duration_min) || lesson.duration_min || 30));
-  const qcount = Math.min(500, Math.max(0, Number(fields.question_count) || 0));
+  const qcount = Math.min(500, Math.max(0, Number(fields.question_count) || 20));
   const maxScore = Math.min(1000, Math.max(0, Number(fields.max_score) || 0));
   const price = Math.max(0, Math.round(Number(fields.price) || 0));
   db.prepare(
