@@ -474,6 +474,16 @@ db.exec(`CREATE TABLE IF NOT EXISTS video_watch (
   updated_at TEXT NOT NULL,
   PRIMARY KEY (user_id, lesson_id)
 )`);
+const videoWatchCols = db.prepare("PRAGMA table_info(video_watch)").all();
+if (!videoWatchCols.some((c) => c.name === "is_playing")) {
+  db.exec("ALTER TABLE video_watch ADD COLUMN is_playing INTEGER NOT NULL DEFAULT 0");
+}
+if (metaGet("video_watch_guard_version", "") !== "1") {
+  db.prepare(`UPDATE video_watch SET max_seconds = 0, duration = 0, updated_at = ?, is_playing = 0
+    WHERE NOT EXISTS (SELECT 1 FROM progress p WHERE p.user_id = video_watch.user_id AND p.lesson_id = video_watch.lesson_id AND p.score IS NULL)`)
+    .run(nowISO());
+  metaSet("video_watch_guard_version", "1");
+}
 
 db.exec(`CREATE TABLE IF NOT EXISTS lesson_viewers (
   lesson_id INTEGER NOT NULL,
@@ -6302,18 +6312,34 @@ const server = http.createServer(async (req, res) => {
   }
   const seconds = Math.max(0, Math.min(24 * 3600, Number(fields.seconds) || 0));
   const duration = Math.max(0, Math.min(24 * 3600, Number(fields.duration) || 0));
+  const now = Date.now();
+  const stamp = nowISO();
+  const currentWatch = db.prepare("SELECT max_seconds, updated_at, is_playing FROM video_watch WHERE user_id = ? AND lesson_id = ?")
+    .get(user.id, watchedLesson.id);
+  const lessonAlreadyCompleted = !!db.prepare("SELECT 1 FROM progress WHERE user_id = ? AND lesson_id = ? AND score IS NULL")
+    .get(user.id, watchedLesson.id);
+  const lastUpdate = currentWatch ? Date.parse(currentWatch.updated_at) : NaN;
+  const elapsedPlaying = currentWatch && Number(currentWatch.is_playing) && Number.isFinite(lastUpdate)
+    ? Math.max(0, Math.min(15, (now - lastUpdate) / 1000))
+    : 0;
+  const previousMax = Number(currentWatch && currentWatch.max_seconds) || 0;
+  const acceptedSeconds = lessonAlreadyCompleted
+    ? seconds
+    : Math.min(seconds, previousMax + elapsedPlaying * 2.15 + 0.75);
+  const isPlaying = fields.playing === "1" ? 1 : 0;
   db.prepare(
   `INSERT INTO video_watch (user_id, lesson_id, max_seconds, duration, updated_at)
   VALUES (?, ?, ?, ?, ?)
   ON CONFLICT(user_id, lesson_id) DO UPDATE SET
   max_seconds = MAX(video_watch.max_seconds, excluded.max_seconds),
   duration = CASE WHEN excluded.duration > 0 THEN excluded.duration ELSE video_watch.duration END,
-  updated_at = excluded.updated_at`
-  ).run(user.id, watchedLesson.id, seconds, duration, nowISO());
+  updated_at = excluded.updated_at,
+  is_playing = ?`
+  ).run(user.id, watchedLesson.id, acceptedSeconds, duration, stamp, isPlaying);
   const saved = db.prepare("SELECT max_seconds, duration FROM video_watch WHERE user_id = ? AND lesson_id = ?").get(user.id, watchedLesson.id);
   const pct = saved && saved.duration > 0 ? Math.min(100, Math.round((saved.max_seconds / saved.duration) * 100)) : 0;
   res.writeHead(200, { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" });
-  res.end(JSON.stringify({ ok: true, pct }));
+  res.end(JSON.stringify({ ok: true, pct, seconds: Number(saved && saved.max_seconds) || 0, limited: acceptedSeconds + 0.25 < seconds }));
   return;
   }
 
@@ -6495,6 +6521,11 @@ const server = http.createServer(async (req, res) => {
   const savedWatch = lesson.type === "video"
     ? db.prepare("SELECT max_seconds, duration FROM video_watch WHERE user_id = ? AND lesson_id = ?").get(user.id, lesson.id)
     : null;
+  if (lesson.type === "video" && !completed) {
+    db.prepare(`INSERT INTO video_watch (user_id, lesson_id, max_seconds, duration, updated_at, is_playing)
+      VALUES (?, ?, 0, 0, ?, 0) ON CONFLICT(user_id, lesson_id) DO NOTHING`)
+      .run(user.id, lesson.id, nowISO());
+  }
   const savedWatchDuration = Number(savedWatch && savedWatch.duration) || 0;
   const savedWatchSeconds = Number(savedWatch && savedWatch.max_seconds) || 0;
   const savedWatchPercent = savedWatchDuration > 0
@@ -6599,7 +6630,7 @@ const server = http.createServer(async (req, res) => {
           ${lesson.type === "video" ? `<label class="video-speed-control" for="videoSpeed">Video tezligi <select id="videoSpeed"><option value="0.75">0.75×</option><option value="1" selected>1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2">2×</option></select></label>` : ""}
           ${
             lesson.type === "video"
-              ? `<details class="video-help"><summary>Video ochilmayaptimi?</summary><p class="muted small">Internet aloqasini tekshiring yoki sahifani yangilang. Muammo davom etsa, Telegram guruhida yozing.</p></details>`
+              ? `<details class="video-help"><summary>Video ochilmayaptimi?</summary><ol class="muted small"><li>Sahifani yangilang.</li><li>Telegram yoki Instagram ichidagi brauzerdan emas, Chrome yoki Safari'da oching (pastdagi “...” → “Brauzerda ochish”).</li><li>Brauzerda “Kuzatuvni bloklash” yoki reklama blokerni shu sayt uchun o‘chiring.</li><li>Manzil <b>habibateacher.uz</b> ekaniga ishonch hosil qiling.</li><li>Yordam bo‘lmasa, kurator yoki qo‘llab-quvvatlashga yozing.</li></ol></details>`
               : ""
           }
         </div>
@@ -6687,16 +6718,25 @@ const server = http.createServer(async (req, res) => {
             btn.textContent = videoEnded ? 'Darsni tugatdim' : 'Video tugagach faollashadi';
           }
         }
-        function sync(force) {
+        function sync(force, playing) {
           if (!duration || (!force && Date.now() - lastSync < 8000)) return;
           lastSync = Date.now();
           var body = new URLSearchParams();
           body.set('seconds', maxWatched.toFixed(1));
           body.set('duration', duration.toFixed(1));
+          body.set('playing', playing ? '1' : '0');
           return fetch('/lesson/' + lessonId + '/watch', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded', Accept: 'application/json' },
             body: body.toString()
+          }).then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
+            if (!d || !d.ok) return;
+            if (!alreadyCompleted && Number(d.seconds) + 0.35 < maxWatched) {
+              maxWatched = Number(d.seconds) || 0;
+              if (v && Math.abs(v.currentTime - maxWatched) > 0.5) { correctingSeek = true; v.pause(); v.currentTime = maxWatched; setTimeout(function () { correctingSeek = false; }, 500); }
+              if (player && player.seekTo && Math.abs((Number(player.getCurrentTime()) || 0) - maxWatched) > 0.5) { correctingSeek = true; player.pauseVideo(); player.seekTo(maxWatched, true); setTimeout(function () { correctingSeek = false; }, 500); }
+              paint();
+            }
           }).catch(function () {});
         }
         function finish() {
@@ -6709,7 +6749,7 @@ const server = http.createServer(async (req, res) => {
             if (player && player.seekTo) player.seekTo(duration, true);
             paint();
           }
-          Promise.resolve(sync(true)).then(function () {
+          Promise.resolve(sync(true, false)).then(function () {
           return fetch('/lesson/' + lessonId + '/complete', { method: 'POST', headers: { Accept: 'application/json' } });
           })
             .then(function (r) { return r.json(); })
@@ -6735,8 +6775,10 @@ const server = http.createServer(async (req, res) => {
           v.addEventListener('timeupdate', function () {
             if (v.currentTime > maxWatched) maxWatched = v.currentTime;
             paint();
-            sync(false);
+            sync(false, !v.paused && !v.ended);
           });
+          v.addEventListener('play', function () { sync(true, true); });
+          v.addEventListener('pause', function () { sync(true, false); });
           v.addEventListener('seeking', function () {
             if (alreadyCompleted || correctingSeek || v.currentTime <= maxWatched + 0.6) return;
             correctingSeek = true;
@@ -6763,6 +6805,7 @@ const server = http.createServer(async (req, res) => {
               },
               onStateChange: function (event) {
                 playerState = event.data;
+                sync(true, event.data === 1);
                 if (event.data === 0) { videoEnded = true; maxWatched = duration || maxWatched; paint(); finish(); }
               }
             }});
