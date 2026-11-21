@@ -823,6 +823,10 @@ function detectLang(req) {
 
 const TYPE_LABEL = { text: "Matn", pdf: "PDF", video: "Video", test: "Test" };
 const CAT_LABEL = { attestation: "Attestatsiya", tkt: "TKT", other: "Boshqa" };
+function categoryLabel(category) {
+  if (category === "other") return metaGet("other_category_label", "Boshqa") || "Boshqa";
+  return CAT_LABEL[category] || "Attestatsiya";
+}
 
 function icon(name) {
   const icons = {
@@ -7130,7 +7134,7 @@ const server = http.createServer(async (req, res) => {
 .map(
   (c) => `<tr>
   <td><b>${h(c.title)}</b><br><small class="muted">${h(c.description || "")}</small></td>
-  <td><span class="badge">${h(CAT_LABEL[c.category] || "Attestatsiya")}</span></td>
+  <td><span class="badge">${h(categoryLabel(c.category))}</span></td>
   <td>${c.lesson_count}</td>
   <td>${c.student_count}</td>
   <td class="ta-right">
@@ -7154,6 +7158,15 @@ const server = http.createServer(async (req, res) => {
   <div class="stat"><b>${stats.done}</b><span>Tugatilgan darslar</span></div>
   </div>
 
+  ${url.searchParams.get("category_saved") === "1" ? alertBox("Yo'nalish nomi saqlandi.", "success") : ""}
+  <div class="card">
+  <h2>Yo'nalish nomini boshqarish</h2>
+  <form method="post" action="/admin/category-label" class="form">
+  <div class="field"><label>“Boshqa” yo'nalishining ko'rinadigan nomi</label><input name="label" value="${h(categoryLabel("other"))}" maxlength="40" required placeholder="Masalan: Metodika"></div>
+  <button class="btn btn-primary" type="submit">Nomni saqlash</button>
+  </form>
+  </div>
+
   <div class="card">
   <h2>Kurslar</h2>
   <div class="table-wrap">
@@ -7172,7 +7185,7 @@ const server = http.createServer(async (req, res) => {
   <select name="category">
   <option value="attestation">Attestatsiya</option>
   <option value="tkt">TKT</option>
-  <option value="other">Boshqa</option>
+  <option value="other">${h(categoryLabel("other"))}</option>
   </select>
   </div>
   <div class="field"><label>Kurs nomi</label><input name="title" required placeholder="Masalan: Atestatsiya testlariga tayyorlov"></div>
@@ -7284,6 +7297,14 @@ const server = http.createServer(async (req, res) => {
   if (code.length >= 4) metaSet("access_code", code);
   redirect(res, "/admin");
   return;
+  }
+
+  if (p === "/admin/category-label" && method === "POST") {
+  if (!admin) return redirect(res, "/admin/login");
+  const label = String(fields.label || "").trim().replace(/\s+/g, " ").slice(0, 40);
+  if (!label) return redirect(res, "/admin");
+  metaSet("other_category_label", label);
+  return redirect(res, "/admin?category_saved=1");
   }
 
   if (p === "/admin/course" && method === "POST") {
@@ -7434,11 +7455,11 @@ const server = http.createServer(async (req, res) => {
   ${[
   ["attestation", "Attestatsiya"],
   ["tkt", "TKT"],
-  ["other", "Boshqa"]
+  ["other", categoryLabel("other")]
   ]
 .map(
   ([value, label]) =>
-  `<option value="${value}"${(course.category || "attestation") === value ? " selected": ""}>${label}</option>`
+  `<option value="${value}"${(course.category || "attestation") === value ? " selected": ""}>${h(label)}</option>`
   )
 .join("")}
   </select>
