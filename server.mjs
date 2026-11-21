@@ -6694,6 +6694,12 @@ const server = http.createServer(async (req, res) => {
         function finish() {
           if (sent) return;
           sent = true;
+          if (duration > 0) {
+            maxWatched = duration;
+            if (v && Math.abs(v.currentTime - duration) > 0.5) v.currentTime = duration;
+            if (player && player.seekTo) player.seekTo(duration, true);
+            paint();
+          }
           Promise.resolve(sync(true)).then(function () {
           return fetch('/lesson/' + lessonId + '/complete', { method: 'POST', headers: { Accept: 'application/json' } });
           })
@@ -6709,7 +6715,14 @@ const server = http.createServer(async (req, res) => {
             .catch(function () { sent = false; });
         }
         if (v) {
-          v.addEventListener('loadedmetadata', function () { duration = Number(v.duration) || 0; paint(); });
+          v.addEventListener('loadedmetadata', function () {
+            duration = Number(v.duration) || 0;
+            if (duration > 0 && (maxWatched > 0 || alreadyCompleted)) {
+              maxWatched = alreadyCompleted ? duration : Math.min(maxWatched, duration);
+              v.currentTime = maxWatched;
+            }
+            paint();
+          });
           v.addEventListener('timeupdate', function () {
             if (!alreadyCompleted && duration > 0 && v.currentTime > maxWatched + 1.5) { v.currentTime = maxWatched; return; }
             if (v.currentTime > maxWatched) maxWatched = v.currentTime;
@@ -6729,7 +6742,14 @@ const server = http.createServer(async (req, res) => {
         if (ytNode) {
           window.onYouTubeIframeAPIReady = function () {
             player = new YT.Player('lessonYoutube', { videoId: ytNode.getAttribute('data-video-id'), playerVars: { controls: 1, disablekb: 1, playsinline: 1, rel: 0 }, events: {
-              onReady: function (event) { duration = Number(event.target.getDuration()) || 0; paint(); },
+              onReady: function (event) {
+                duration = Number(event.target.getDuration()) || 0;
+                if (duration > 0 && (maxWatched > 0 || alreadyCompleted)) {
+                  maxWatched = alreadyCompleted ? duration : Math.min(maxWatched, duration);
+                  event.target.seekTo(maxWatched, true);
+                }
+                paint();
+              },
               onStateChange: function (event) { playerState = event.data; }
             }});
             var speed = document.getElementById('videoSpeed');
