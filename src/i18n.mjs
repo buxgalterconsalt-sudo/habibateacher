@@ -1,6 +1,73 @@
 const LANG_CODES = ["uz", "ru", "en"];
 const I18N = {
   ru: {
+    "Salom,": "Здравствуйте,",
+    "Xush kelibsiz": "Добро пожаловать",
+    "O'rganishni davom eting va maqsadingizga erishing!": "Продолжайте учиться и достигайте своих целей!",
+    "kunlik streak": "дней подряд",
+    "Ilovani o'rnatish": "Установить приложение",
+    "Kurs jarayoni": "Прогресс курса",
+    "Yaxshi boshladingiz, davom eting 🚀": "Хорошее начало, продолжайте 🚀",
+    "Birinchi video darsni boshlang 🚀": "Начните первый видеоурок 🚀",
+    "Guruhda o'rningiz": "Ваше место в группе",
+    "Yutuqlar": "Достижения",
+    "Video darslar": "Видео-уроки",
+    "Darslarni qidirish...": "Поиск уроков...",
+    "Katak ko'rinishi": "В виде карточек",
+    "Ro'yxat ko'rinishi": "В виде списка",
+    "Guruh reytingi": "Рейтинг группы",
+    "Faol o'quvchilarning natijalari": "Результаты активных учеников",
+    "Haftalik": "За неделю",
+    "Bu hafta hali hech kim dars tugatmadi. Birinchi bo'ling!": "На этой неделе уроки ещё никто не завершил. Будьте первым!",
+    "Har kuni ozgina o'sish ham katta natijaga olib keladi.": "Небольшой ежедневный прогресс приводит к большим результатам.",
+    "Barcha darslar tugatilgan!": "Все уроки завершены!",
+    "Tabriklaymiz, siz barcha materiallarni o'zlashtirdingiz.": "Поздравляем, вы изучили все материалы.",
+    "Attestatsiya testlari": "Тесты аттестации",
+    "TKT testlari": "Тесты TKT",
+    "Kurs jarayon": "Прогресс курса",
+    "Parol kamida 6 belgidan iborat bo'lishi kerak.": "Пароль должен содержать не менее 6 символов.",
+    "Ism faqat harflardan iborat bo'lishi kerak.": "Имя должно содержать только буквы.",
+    "Telefon raqami faqat 9 ta raqamdan iborat bo'lishi kerak.": "Номер телефона должен содержать ровно 9 цифр.",
+    "Telegram username (@username) yoki raqamli ID kiriting.": "Введите username Telegram (@username) или числовой ID.",
+    "Bu telefon raqam allaqachon ro'yxatdan o'tgan.": "Этот номер телефона уже зарегистрирован.",
+    "Bu Telegram ID allaqachon ro'yxatdan o'tgan. Bir ID   bitta akkaunt.": "Этот ID Telegram уже зарегистрирован. Один ID — одна учётная запись.",
+    "Bu Telegram username allaqachon ro'yxatdan o'tgan.": "Этот username Telegram уже зарегистрирован.",
+    "Parol": "Пароль",
+    "Kamida 6 belgi": "Не менее 6 символов",
+    "Bosh sahifa": "Главная",
+    "Attestatsiya": "Аттестация",
+    "TKT": "TKT",
+    "Ilm izlash uchun yo'lga chiqqan kishiga Alloh jannat yo'lini oson qiladi.": "Тому, кто отправился искать знания, Аллах облегчает путь в Рай.",
+    "Sizlarning yaxshilaringiz Qur'onni o'rganib, uni o'rgatganlaringizdir.": "Лучшие из вас — те, кто изучает Коран и обучает ему других.",
+    "Amallar niyatlarga bog'liq.": "Поступки оцениваются по намерениям.",
+    "Yaxshi gap aytsin yoki sukut saqlasin.": "Пусть говорит благое или молчит.",
+    "Ikki ne'mat: sog'lik va bo'sh vaqt.": "Два блага, которые люди часто не ценят: здоровье и свободное время.",
+    "Ilm — insonni yuksaltiradigan nur.": "Знание — свет, возвышающий человека.",
+    "Ustoz bergan saboq — umrga yo'ldosh.": "Урок учителя сопровождает человека всю жизнь.",
+    "Mehnat qilgan — murodga yetar.": "Труд приводит к цели.",
+    "Bugungi kichik qadam ertangi katta natijadir.": "Маленький шаг сегодня — большой результат завтра.",
+    "Vaqtni qadrlagan maqsadiga yaqinlashadi.": "Тот, кто ценит время, приближается к своей цели.",
+    "Reja — niyatni amalga eltuvchi yo'l xaritasi.": "План — это маршрут от намерения к действию.",
+    "Takrorlash — bilimning mustahkam tayanchi.": "Повторение — надёжная опора знаний.",
+    "Til bilgan — el biladi.": "Знающий язык знает людей.",
+    "Shirin so'z ko'ngilni obod qiladi.": "Доброе слово согревает сердце.",
+    "Tinglash ham muloqotning muhim qismidir.": "Умение слушать — важная часть общения.",
+    "Savol berishdan uyalmang: bilmaganini so'rash ilm eshigidir.": "Не стесняйтесь задавать вопросы: вопрос открывает путь к знаниям.",
+    "Har kuni oz-ozdan o'rganish katta maqsadga olib keladi.": "Небольшое обучение каждый день приводит к большой цели.",
+    "Sabr va izchillik mahoratni shakllantiradi.": "Терпение и последовательность формируют мастерство.",
+    "Bilim ulashilsa, qadri ortadi.": "Когда знаниями делятся, их ценность растёт.",
+    "O'qish qalbga, mashq esa mahoratga yo'l ochadi.": "Учёба открывает путь к знаниям, а практика — к мастерству.",
+    "Maqsadni yozing, vaqtni belgilang, bugun boshlang.": "Запишите цель, назначьте время и начните сегодня.",
+    "Ustozga hurmat — ilmga hurmat.": "Уважение к учителю — уважение к знаниям.",
+    "Yaxshi muomala — tilning eng go'zal tarjimasi.": "Доброе отношение — лучший перевод слов.",
+    "Bugun o'rganganingiz ertaga birovga yo'l ko'rsatadi.": "То, чему вы научились сегодня, завтра поможет кому-то найти путь.",
+    "Haqiqiy tayyorgarlikni boshlang": "Начните подготовку",
+    "Ingliz tili attestatsiyasiga ishonch bilan tayyorlaning": "Готовьтесь к аттестации по английскому языку уверенно",
+    "Ingliz tili o'qituvchilari uchun attestatsiya testlari, TKT modullari, metodika va amaliy tayyorlov — barchasi bir platformada.": "Тесты для аттестации учителей английского языка, модули TKT, методика и практическая подготовка — всё на одной платформе.",
+    "Yo'nalishni tanlang": "Выберите направление",
+    "Username (@qobuljon) yoki raqamli ID. Kod bot orqali kelishi uchun avval botga": "Username (@qobuljon) или числовой ID. Чтобы получить код от бота, сначала отправьте ему",
+    "@username yoki 1097025987": "@username или 1097025987",
+    "Parol aynan 4 ta lotin harfi yoki raqamdan iborat bo'lishi kerak.": "Пароль должен состоять ровно из 4 латинских букв или цифр.",
     "Teaching Knowledge Test (TKT) uchun tayyorgarlik imtihon uslubidagi modul sinov testlari": "Подготовка к Teaching Knowledge Test (TKT) — модульные пробные тесты в экзаменационном формате",
     "Birgalikda natijaga": "Вместе — к результату",
     "Bitta tarif bilan barcha pullik testlarni oching ancha tejamkor.": "Один тариф открывает все платные тесты — гораздо выгоднее.",
@@ -231,6 +298,69 @@ const I18N = {
     "Barcha savollarga javob berilgan.": "Все вопросы отвечены.",
   },
   en: {
+  "Ilm izlash uchun yo'lga chiqqan kishiga Alloh jannat yo'lini oson qiladi.": "Allah makes the path to Paradise easier for the one who sets out to seek knowledge.",
+  "Sizlarning yaxshilaringiz Qur'onni o'rganib, uni o'rgatganlaringizdir.": "The best among you are those who learn the Qur'an and teach it.",
+  "Amallar niyatlarga bog'liq.": "Actions are judged by intentions.",
+  "Yaxshi gap aytsin yoki sukut saqlasin.": "Let them speak good or remain silent.",
+  "Ikki ne'mat: sog'lik va bo'sh vaqt.": "Two blessings people often take for granted are health and free time.",
+  "Ilm — insonni yuksaltiradigan nur.": "Knowledge is a light that elevates a person.",
+  "Ustoz bergan saboq — umrga yo'ldosh.": "A teacher's lesson stays with you throughout life.",
+  "Mehnat qilgan — murodga yetar.": "Hard work leads to the goal.",
+  "Bugungi kichik qadam ertangi katta natijadir.": "A small step today becomes a big result tomorrow.",
+  "Vaqtni qadrlagan maqsadiga yaqinlashadi.": "Those who value time move closer to their goals.",
+  "Reja — niyatni amalga eltuvchi yo'l xaritasi.": "A plan is a roadmap from intention to action.",
+  "Takrorlash — bilimning mustahkam tayanchi.": "Practice is a strong foundation for knowledge.",
+  "Til bilgan — el biladi.": "A person who knows a language understands its people.",
+  "Shirin so'z ko'ngilni obod qiladi.": "Kind words brighten the heart.",
+  "Tinglash ham muloqotning muhim qismidir.": "Listening is an important part of communication.",
+  "Savol berishdan uyalmang: bilmaganini so'rash ilm eshigidir.": "Do not be afraid to ask: questions open the door to learning.",
+  "Har kuni oz-ozdan o'rganish katta maqsadga olib keladi.": "Learning a little each day leads to big goals.",
+  "Sabr va izchillik mahoratni shakllantiradi.": "Patience and consistency build mastery.",
+  "Bilim ulashilsa, qadri ortadi.": "Knowledge becomes more valuable when shared.",
+  "O'qish qalbga, mashq esa mahoratga yo'l ochadi.": "Learning opens the way to knowledge; practice opens the way to mastery.",
+  "Maqsadni yozing, vaqtni belgilang, bugun boshlang.": "Write down your goal, set a time, and start today.",
+  "Ustozga hurmat — ilmga hurmat.": "Respect for a teacher is respect for knowledge.",
+  "Yaxshi muomala — tilning eng go'zal tarjimasi.": "Kindness is the finest translation of words.",
+  "Bugun o'rganganingiz ertaga birovga yo'l ko'rsatadi.": "What you learn today may guide someone tomorrow.",
+  "Haqiqiy tayyorgarlikni boshlang": "Start preparing",
+  "Ingliz tili attestatsiyasiga ishonch bilan tayyorlaning": "Prepare confidently for English teacher attestation",
+  "Ingliz tili o'qituvchilari uchun attestatsiya testlari, TKT modullari, metodika va amaliy tayyorlov — barchasi bir platformada.": "Attestation tests for English teachers, TKT modules, methodology, and practical preparation — all in one platform.",
+  "Yo'nalishni tanlang": "Choose a direction",
+  "Username (@qobuljon) yoki raqamli ID. Kod bot orqali kelishi uchun avval botga": "Username (@qobuljon) or numeric ID. To get a code from the bot, first send it",
+  "@username yoki 1097025987": "@username or 1097025987",
+  "Parol aynan 4 ta lotin harfi yoki raqamdan iborat bo'lishi kerak.": "Password must be exactly 4 Latin letters or digits.",
+  "Xush kelibsiz": "Welcome",
+  "Salom,": "Hello,",
+  "O'rganishni davom eting va maqsadingizga erishing!": "Keep learning and reach your goals!",
+  "kunlik streak": "day streak",
+  "Ilovani o'rnatish": "Install app",
+  "Kurs jarayoni": "Course progress",
+  "Yaxshi boshladingiz, davom eting 🚀": "A great start, keep going 🚀",
+  "Birinchi video darsni boshlang 🚀": "Start your first video lesson 🚀",
+  "Guruhda o'rningiz": "Your group rank",
+  "Yutuqlar": "Achievements",
+  "Video darslar": "Video lessons",
+  "Darslarni qidirish...": "Search lessons...",
+  "Katak ko'rinishi": "Grid view",
+  "Ro'yxat ko'rinishi": "List view",
+  "Guruh reytingi": "Group leaderboard",
+  "Faol o'quvchilarning natijalari": "Active learners' results",
+  "Haftalik": "Weekly",
+  "Bu hafta hali hech kim dars tugatmadi. Birinchi bo'ling!": "No lessons completed this week yet. Be the first!",
+  "Har kuni ozgina o'sish ham katta natijaga olib keladi.": "A little progress each day leads to big results.",
+  "Barcha darslar tugatilgan!": "All lessons completed!",
+  "Tabriklaymiz, siz barcha materiallarni o'zlashtirdingiz.": "Congratulations, you have completed all the material.",
+  "Attestatsiya testlari": "Attestation tests",
+  "TKT testlari": "TKT tests",
+  "Parol kamida 6 belgidan iborat bo'lishi kerak.": "Password must contain at least 6 characters.",
+  "Ism faqat harflardan iborat bo'lishi kerak.": "Name must contain letters only.",
+  "Telefon raqami faqat 9 ta raqamdan iborat bo'lishi kerak.": "Phone number must contain exactly 9 digits.",
+  "Telegram username (@username) yoki raqamli ID kiriting.": "Enter a Telegram username (@username) or numeric ID.",
+  "Bu telefon raqam allaqachon ro'yxatdan o'tgan.": "This phone number is already registered.",
+  "Bu Telegram ID allaqachon ro'yxatdan o'tgan. Bir ID   bitta akkaunt.": "This Telegram ID is already registered. One ID per account.",
+  "Bu Telegram username allaqachon ro'yxatdan o'tgan.": "This Telegram username is already registered.",
+  "Ism, telefon va parolni kiriting.": "Enter your name, phone number, and password.",
+  "Kamida 6 belgi": "At least 6 characters",
   "Bosh sahifa": "Home",
   Attestatsiya: "Attestation",
   TKT: "TKT",
@@ -494,6 +624,30 @@ function translateCore(text, lang) {
   if (cache.has(normalized)) return put(cache.get(normalized));
 
   let m;
+  if ((m = decoded.match(/^Salom,\s*(.+?)(!\s*👋)$/))) {
+    return put(`${lang === "ru" ? "Здравствуйте," : "Hello,"} ${m[1]}${m[2]}`);
+  }
+  if ((m = decoded.match(/^Salom,\s*(.+?)(!?)$/))) {
+    return put(`${lang === "ru" ? "Здравствуйте," : "Hello,"} ${m[1]}${m[2]}`);
+  }
+  if ((m = decoded.match(/^(\d+)\s*ta\s+video$/))) {
+    return put(lang === "ru" ? `${m[1]} видеоуроков` : `${m[1]} video lessons`);
+  }
+  if ((m = decoded.match(/^Sahifa\s+(\d+)\s*\/\s*(\d+)\s*\|\s*(\d+)\s*ta\s+dars$/))) {
+    return put(lang === "ru" ? `Страница ${m[1]} / ${m[2]} | уроки ${m[3]}` : `Page ${m[1]} / ${m[2]} | ${m[3]} lessons`);
+  }
+  if ((m = decoded.match(/^(\d+)\s*\/\s*(\d+)\s*dars$/))) {
+    return put(lang === "ru" ? `${m[1]} / ${m[2]} уроков` : `${m[1]} / ${m[2]} lessons`);
+  }
+  if ((m = decoded.match(/^(\d+)\s+kunlik streak$/))) {
+    return put(lang === "ru" ? `${m[1]} дней подряд` : `${m[1]} day streak`);
+  }
+  if ((m = decoded.match(/^(\d+)\s+dars\s*·\s*(\d+)\s+kun 🔥$/))) {
+    return put(lang === "ru" ? `${m[1]} уроков · ${m[2]} дней 🔥` : `${m[1]} lessons · ${m[2]} days 🔥`);
+  }
+  if ((m = decoded.match(/^#?(\d+)\s*\/\s*(\d+)$/))) {
+    return put(`${m[1]} / ${m[2]}`);
+  }
   if ((m = source.match(/^Jami qatnashganlar:\s*(\d+)\s*ta$/))) {
     return put(lang === "ru" ? `Всего участников: ${m[1]}` : `Total participants: ${m[1]}`);
   }

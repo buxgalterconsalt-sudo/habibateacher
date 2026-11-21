@@ -1129,12 +1129,14 @@ ${canonical === "https://habibateacher.uz/" ? '<meta property="og:image" content
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#080611">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/img/habiba-app-icon-192.png">
 <title>${h(title)}   ${h(config.siteName)}</title>
 ${seoTags}
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%2312b5a6'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='18' font-weight='bold' text-anchor='middle' fill='%2303211d'%3EH%3C/text%3E%3C/svg%3E">
 <script async src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>try{document.documentElement.dataset.theme=localStorage.getItem('ht_theme')||'dark';}catch(e){document.documentElement.dataset.theme='dark';}</script>
-<link rel="stylesheet" href="/assets/platform.css?v=20261121e">
+<link rel="stylesheet" href="/assets/platform.css?v=20261121f">
 </head>
 <body${isStudentPage ? ` class="student-page${isDashboard ? " is-dashboard" : ""}"` : ""}>
 <header class="topbar">
@@ -3346,40 +3348,72 @@ function dashboardPage(user) {
     .prepare(
       `SELECT l.*, c.title AS course_title, c.category AS course_category
        FROM lessons l JOIN courses c ON c.id = l.course_id
-       WHERE c.is_published = 1
+       WHERE c.is_published = 1 AND l.type = 'video'
        ORDER BY c.id, l.position, l.id`
     )
     .all();
-  const learningLessons = lessons.filter((lesson) => lesson.type !== "test");
-  const attestationTests = lessons.filter((lesson) => lesson.type === "test" && lesson.course_category === "attestation");
-  const tktTests = lessons.filter((lesson) => lesson.type === "test" && lesson.course_category === "tkt");
-  const otherTests = lessons.filter((lesson) => lesson.type === "test" && !["attestation", "tkt"].includes(lesson.course_category));
-  const doneRows = db.prepare("SELECT p.lesson_id FROM progress p JOIN lessons l ON l.id = p.lesson_id WHERE p.user_id = ? AND (l.type <> 'test' OR p.score >= 80)").all(user.id);
+  const doneRows = db.prepare("SELECT p.lesson_id FROM progress p JOIN lessons l ON l.id = p.lesson_id WHERE p.user_id = ? AND l.type = 'video'").all(user.id);
   const done = new Set(doneRows.map((r) => r.lesson_id));
   const total = lessons.length;
   const completed = lessons.filter((l) => done.has(l.id)).length;
   const pct = total ? Math.round((completed / total) * 100) : 0;
   const next = lessons.find((l) => !done.has(l.id));
   const clock = tashkentClock();
-  const todayDone = db
-    .prepare("SELECT COUNT(*) AS n FROM progress WHERE user_id = ? AND substr(completed_at, 1, 10) = ?")
-    .get(user.id, clock.day).n;
+  const activityDays = db.prepare("SELECT DISTINCT substr(completed_at, 1, 10) AS day FROM progress WHERE user_id = ? AND completed_at <> '' ORDER BY day DESC LIMIT 400").all(user.id);
+  const dayStamp = (value) => {
+    const [year, month, day] = String(value || "").split("-").map(Number);
+    return year && month && day ? Date.UTC(year, month - 1, day) : NaN;
+  };
+  const todayStamp = dayStamp(clock.day);
+  let streak = 0;
+  if (activityDays.length && todayStamp - dayStamp(activityDays[0].day) <= 86400000) {
+    let expected = dayStamp(activityDays[0].day);
+    for (const activity of activityDays) {
+      if (dayStamp(activity.day) !== expected) break;
+      streak += 1;
+      expected -= 86400000;
+    }
+  }
   const rankRow = db
     .prepare(
-      `SELECT COUNT(*) + 1 AS rank FROM (
-         SELECT user_id, COUNT(*) AS c FROM progress GROUP BY user_id
-       ) t WHERE t.c > (SELECT COUNT(*) FROM progress WHERE user_id = ?)`
+      `SELECT rank FROM (
+         SELECT user_id, COUNT(*) AS c, RANK() OVER (ORDER BY COUNT(*) DESC) AS rank
+         FROM progress WHERE lesson_id IN (SELECT id FROM lessons WHERE type = 'video') GROUP BY user_id
+       ) t WHERE user_id = ?`
     )
     .get(user.id);
-  const rank = Number(rankRow.rank) || 1;
-  const achievements = [completed >= 1, completed >= 5, completed >= 10, completed >= 25].filter(Boolean).length;
+  const classSize = Number(db.prepare("SELECT COUNT(*) AS n FROM users WHERE is_blocked = 0").get().n) || 1;
+  const rank = Number(rankRow && rankRow.rank) || classSize;
+  const achievements = [completed >= 1, completed >= 5, completed >= 10, completed >= 25, completed >= 50, completed >= 75, completed >= 100, completed >= 150, completed >= 200].filter(Boolean).length;
+  const totalAchievements = 9;
   const weekStart = new Date(Date.now() - 7 * 86400000).toISOString();
   const weekly = db
     .prepare(
-      `SELECT u.name, COUNT(*) AS c FROM progress p JOIN users u ON u.id = p.user_id
-       WHERE p.completed_at >= ? GROUP BY p.user_id ORDER BY c DESC, u.name LIMIT 5`
+      `SELECT u.id, u.name, COUNT(DISTINCT p.lesson_id) AS c
+       FROM progress p JOIN users u ON u.id = p.user_id JOIN lessons l ON l.id = p.lesson_id
+       WHERE l.type = 'video' AND p.completed_at >= ? GROUP BY p.user_id ORDER BY c DESC, u.name LIMIT 5`
     )
     .all(weekStart);
+  const weeklyIds = weekly.map((row) => Number(row.id));
+  const weeklyStreaks = new Map();
+  if (weeklyIds.length) {
+    const placeholders = weeklyIds.map(() => "?").join(",");
+    const recentDays = db.prepare(`SELECT DISTINCT user_id, substr(completed_at, 1, 10) AS day FROM progress WHERE user_id IN (${placeholders}) AND completed_at <> '' ORDER BY user_id, day DESC`).all(...weeklyIds);
+    for (const id of weeklyIds) {
+      const days = recentDays.filter((row) => Number(row.user_id) === id).map((row) => dayStamp(row.day));
+      const latest = days[0];
+      let count = 0;
+      if (Number.isFinite(latest) && todayStamp - latest <= 86400000) {
+        let expected = latest;
+        for (const day of days) {
+          if (day !== expected) break;
+          count += 1;
+          expected -= 86400000;
+        }
+      }
+      weeklyStreaks.set(id, count);
+    }
+  }
 
   const quotes = [
     "Ilm izlash uchun yo'lga chiqqan kishiga Alloh jannat yo'lini oson qiladi. — Sahih Muslim, 2699a",
@@ -3407,8 +3441,9 @@ function dashboardPage(user) {
     "Yaxshi muomala — tilning eng go'zal tarjimasi. — Hikmatli so'z",
     "Bugun o'rganganingiz ertaga birovga yo'l ko'rsatadi. — Hikmatli so'z"
   ];
-  const dayIndex = Math.floor(new Date(clock.day + "T00:00:00+05:00").getTime() / 86400000);
+  const dayIndex = Math.floor(dayStamp(clock.day) / 86400000);
   const quote = quotes[((dayIndex % quotes.length) + quotes.length) % quotes.length];
+  const [quoteText, quoteSource = ""] = quote.split(" — ");
 
   const nextCard = next
     ? `<a class="dash-hero-card" href="${
@@ -3421,22 +3456,16 @@ function dashboardPage(user) {
           <span class="muted">${TYPE_LABEL[next.type] || next.type} | ${
         next.type === "test" ? `${Number(next.duration_min) || 30} daqiqa` : "dars"
       } | ${completed}/${total} tugatilgan</span>
-        <span class="dash-hero-progress"><i><b style="width:${pct}%"></b></i><small>${pct}% kurs bajarildi</small></span>
+        <span class="dash-hero-progress"><i><b style="width:${pct}%"></b></i><small>${completed}/${total} dars tugatilgan</small></span>
         </span>
         <span class="dash-hero-go">&rarr;</span>
       </a>`
     : `<div class="dash-hero-card done"><span class="dash-hero-ico">âœ“</span><span class="dash-hero-copy"><b>Barcha darslar tugatilgan!</b><span class="muted">Tabriklaymiz, siz barcha materiallarni o'zlashtirdingiz.</span></span></div>`;
 
-  const dashboardGroups = [
-    { title: "Darslar", lessons: learningLessons },
-    { title: "Attestatsiya testlari", lessons: attestationTests },
-    { title: "TKT testlari", lessons: tktTests },
-    { title: "Boshqa testlar", lessons: otherTests },
-  ].filter((group) => group.lessons.length);
-  const lessonCards = dashboardGroups
-    .map((group) => `<section class="dl-group">
-      <div class="dl-group-head"><h3>${h(group.title)}</h3><span>${group.lessons.length} ta</span></div>
-      <div class="dl-grid">${group.lessons.map((l, i) => {
+  const lessonCards = lessons.length
+    ? `<section class="dl-group">
+      <div class="dl-group-head"><h3>Darslar</h3><span>${lessons.length} ta video</span></div>
+      <div class="dl-grid">${lessons.map((l, i) => {
         const isDone = done.has(l.id);
         const href = l.type === "test" ? `/test/${l.id}` : `/lesson/${l.id}`;
         const totalNotice = l.type === "test" ? "Test" : `${Number(l.duration_min) || 0} daq`;
@@ -3449,8 +3478,8 @@ function dashboardPage(user) {
           <span class="dl-foot"><span class="dl-time">${totalNotice}</span><span class="dl-arrow">&rarr;</span></span>
         </a>`;
       }).join("")}</div>
-    </section>`)
-    .join("");
+    </section>`
+    : "";
 
   const weeklyPodium = weekly
     .slice(0, 3)
@@ -3459,7 +3488,7 @@ function dashboardPage(user) {
         <span class="dash-podium-medal">${i + 1}</span>
         <span class="dash-podium-avatar">${h(w.name.slice(0, 1).toUpperCase())}</span>
         <b>${h(w.name)}</b>
-        <small>${w.c} dars</small>
+        <small>${w.c} dars · ${h(weeklyStreaks.get(Number(w.id)) || 0)} kun 🔥</small>
       </div>`
     )
     .join("");
@@ -3478,24 +3507,24 @@ function dashboardPage(user) {
 
   return `<section class="dash-hero">
     <div class="wrap dash-welcome-wrap">
+      <div class="dash-quote"><span class="dash-quote-symbol" aria-hidden="true">&#128172;</span><div><span>${h(quoteText)}</span><small class="dash-quote-author">— ${h(quoteSource)}</small></div></div>
       <div class="dash-welcome-row">
         <div>
           <span class="eyebrow">Xush kelibsiz</span>
           <h1>Salom, ${h(user.name.split(" ")[0])}! <span aria-hidden="true">&#128075;</span></h1>
           <p class="lead">O'rganishni davom eting va maqsadingizga erishing!</p>
         </div>
-        <div class="dash-streak"><span aria-hidden="true">&#9889;</span><div><b>${todayDone} dars</b><small>bugun bajarildi</small></div></div>
+        <div class="dash-welcome-actions"><div class="dash-streak"><span aria-hidden="true">&#128293;</span><div><b>${streak}</b><small>kunlik streak</small></div></div><button class="dash-install" id="installApp" type="button"><span aria-hidden="true">&#8681;</span> Ilovani o'rnatish</button></div>
       </div>
-      <div class="dash-quote"><span class="dash-quote-symbol" aria-hidden="true">&#10077;</span><div><small>BUGUNGI KUN HIKMATI</small><span>${h(quote)}</span></div><span class="dash-quote-mark" aria-hidden="true">H</span></div>
     </div>
   </section>
   <section class="section tight">
     <div class="wrap">
       ${nextCard}
       <div class="dash-top">
-        <div class="dash-stat dash-stat-progress"><div><span>Kurs jarayoni</span><b>${completed}<small> / ${total} dars</small></b></div><div class="dash-progress-track"><i style="width:${pct}%"></i></div><small>${pct}% bajarildi</small></div>
-        <div class="dash-stat"><span>Reytingdagi o'rningiz</span><b>#${rank}</b><small>o'quvchilar orasida</small></div>
-        <div class="dash-stat"><span>Yutuqlar</span><b>${achievements}<small> / 4</small></b><small>nishon ochildi</small></div>
+        <div class="dash-stat dash-stat-progress"><div><span>Kurs jarayoni</span><b>${completed}<small> / ${total} dars</small></b></div><div class="dash-progress-track"><i style="width:${pct}%"></i></div><small>${completed ? "Yaxshi boshladingiz, davom eting 🚀" : "Birinchi video darsni boshlang 🚀"}</small></div>
+        <div class="dash-stat dash-rank-stat"><span aria-hidden="true">&#127942;</span><b>${rank}<small> / ${classSize}</small></b><small>Guruhda o'rningiz</small></div>
+        <div class="dash-stat dash-ach-stat"><span aria-hidden="true">&#127892;</span><b>${achievements}<small> / ${totalAchievements}</small></b><small>Yutuqlar</small></div>
       </div>
       <div class="dash-cols">
         <div class="card dash-rank">
@@ -3507,7 +3536,7 @@ function dashboardPage(user) {
 
       <div class="card dash-all">
         <div class="card-head dash-all-head">
-          <div><h2>Barcha darslar</h2><p class="muted small">${total} ta dars</p></div>
+          <div><h2>Video darslar</h2><p class="muted small">${total} ta dars</p></div>
           <div class="dl-tools">
             <input id="dlSearch" class="dl-search" placeholder="Darslarni qidirish..." aria-label="Darslarni qidirish">
             <button type="button" class="dl-view active" data-view="grid" aria-label="Katak ko'rinishi">&#9638;</button>
@@ -3519,6 +3548,34 @@ function dashboardPage(user) {
       </div>
       <script>
       (function () {
+        var installButton = document.getElementById('installApp');
+        var installPrompt = null;
+        var installMessages = {
+          uz: { installed: "Ilova qurilmangizga o'rnatilgan.", help: "Brauzer menyusidan 'Ilovani o'rnatish' yoki 'Bosh ekranga qo'shish'ni tanlang." },
+          ru: { installed: "Приложение уже установлено.", help: "Откройте меню браузера и выберите «Установить приложение» или «Добавить на главный экран»." },
+          en: { installed: "The app is already installed.", help: "Open your browser menu and choose Install app or Add to Home screen." }
+        };
+        if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js').catch(function () {});
+        window.addEventListener('beforeinstallprompt', function (event) {
+          event.preventDefault();
+          installPrompt = event;
+          if (installButton) installButton.classList.add('is-ready');
+        });
+        if (installButton) installButton.addEventListener('click', async function () {
+          var msg = installMessages[document.documentElement.lang] || installMessages.uz;
+          if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
+            alert(msg.installed);
+            return;
+          }
+          if (!installPrompt) {
+            alert(msg.help);
+            return;
+          }
+          var promptEvent = installPrompt;
+          installPrompt = null;
+          await promptEvent.prompt();
+          await promptEvent.userChoice;
+        });
         var grid = document.getElementById('dlGrid');
         var pager = document.getElementById('dlPager');
         var search = document.getElementById('dlSearch');
@@ -3558,7 +3615,12 @@ function dashboardPage(user) {
           add('Â»', pages, page === pages);
           var info = document.createElement('span');
           info.className = 'dl-pageinfo';
-          info.textContent = 'Sahifa ' + page + ' / ' + pages + ' | ' + list.length + ' ta dars';
+          var lang = document.documentElement.lang;
+          info.textContent = lang === 'ru'
+            ? 'Страница ' + page + ' / ' + pages + ' | уроки ' + list.length
+            : lang === 'en'
+            ? 'Page ' + page + ' / ' + pages + ' | ' + list.length + ' lessons'
+            : 'Sahifa ' + page + ' / ' + pages + ' | ' + list.length + ' ta dars';
           pager.appendChild(info);
         }
         if (search) search.addEventListener('input', function () { page = 1; render(); });
@@ -3836,7 +3898,7 @@ function testDocument({ title, body }) {  return `<!DOCTYPE html>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%231e40af'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='18' font-weight='bold' text-anchor='middle' fill='white'%3EH%3C/text%3E%3C/svg%3E">
 <script async src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>try{document.documentElement.dataset.theme=localStorage.getItem('ht_theme')||'dark';}catch(e){document.documentElement.dataset.theme='dark';}</script>
-<link rel="stylesheet" href="/assets/platform.css?v=20261121e">
+<link rel="stylesheet" href="/assets/platform.css?v=20261121f">
 </head>
 <body class="test-body student-page">
 ${body}
@@ -4292,6 +4354,18 @@ const server = http.createServer(async (req, res) => {
   return;
   }
 
+  if (p === "/manifest.webmanifest" && method === "GET") {
+  res.writeHead(200, { "Content-Type": "application/manifest+json; charset=utf-8", "Cache-Control": "no-cache" });
+  res.end(fs.readFileSync(path.join(PUBLIC_DIR, "manifest.webmanifest")));
+  return;
+  }
+
+  if (p === "/service-worker.js" && method === "GET") {
+  res.writeHead(200, { "Content-Type": "application/javascript; charset=utf-8", "Cache-Control": "no-cache", "Service-Worker-Allowed": "/" });
+  res.end(fs.readFileSync(path.join(PUBLIC_DIR, "service-worker.js")));
+  return;
+  }
+
   /* ---------------------------------------------------------- static images */
   if (p.startsWith("/img/") && method === "GET") {
   const name = path.basename(p);
@@ -4597,12 +4671,12 @@ const server = http.createServer(async (req, res) => {
   </div>
   <div class="grid two directions">
   <a class="direction-card" href="/attestation">
-  <h3>Attestatsiya</h3>
+  <h3>Attestatsiya testlari</h3>
   <p class="muted">Ingliz tili fani o'qituvchilari uchun testlar, metodika va demo dars.</p>
   <span class="card-link">Ochish   </span>
   </a>
   <a class="direction-card" href="/tkt">
-  <h3>TKT</h3>
+  <h3>TKT testlari</h3>
   <p class="muted">Teaching Knowledge Test formatidagi metodika va sinf boshqaruvi testlari.</p>
   <span class="card-link">Ochish   </span>
   </a>
@@ -4715,7 +4789,7 @@ const server = http.createServer(async (req, res) => {
   let error = "";
   if (!/^[\p{L}\s'-]{2,}$/u.test(name)) error = "Ism faqat harflardan iborat bo'lishi kerak.";
   else if (!validPhoneInput(fields.phone) || !validPhone(phone)) error = "Telefon raqami faqat 9 ta raqamdan iborat bo'lishi kerak.";
-  else if (!/^[A-Za-z0-9]{4}$/.test(password)) error = "Parol aynan 4 ta lotin harfi yoki raqamdan iborat bo'lishi kerak.";
+  else if (password.length < 6) error = "Parol kamida 6 belgidan iborat bo'lishi kerak.";
   else if (!telegramId && !validTelegramUsername(telegramUsername))
   error = "Telegram username (@username) yoki raqamli ID kiriting.";
   else if (telegramId && db.prepare("SELECT 1 FROM users WHERE telegram_id = ?").get(telegramId))
@@ -4736,7 +4810,7 @@ const server = http.createServer(async (req, res) => {
   <div class="field"><label>Ismingiz</label><input name="name" value="${h(name)}" required></div>
   <div class="field"><label>Telegram username yoki ID</label><input name="telegram_id" value="${h(telegramUsername ? "@" + telegramUsername : telegramId)}" required placeholder="@username yoki 1097025987"></div>
   <div class="field"><label>Telefon</label><input name="phone" data-phone value="${h(fields.phone || "")}" required inputmode="numeric" maxlength="17" autocomplete="tel-national" placeholder="+998 90 123 45 67"></div>
-  <div class="field"><label>Parol (4 ta harf yoki raqam)</label><input name="password" type="password" required minlength="4" maxlength="4" pattern="[A-Za-z0-9]{4}" autocomplete="new-password"></div>
+  <div class="field"><label>Parol</label><input name="password" type="password" required minlength="6" maxlength="128" placeholder="Kamida 6 belgi" autocomplete="new-password"></div>
   <button class="btn btn-primary" type="submit">Ro'yxatdan o'tish</button>
   </form>`,
   `<p class="alt">Akkountingiz bormi? <a href="/login${next ? `?next=${encodeURIComponent(next)}`: ""}">Kirish</a></p>`,
