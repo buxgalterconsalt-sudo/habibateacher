@@ -809,6 +809,16 @@ function normalizePhone(value) {
   return "998" + digits;
 }
 
+function formatLocalPhone(value) {
+  let digits = String(value || "").replace(/\D/g, "");
+  if (digits.startsWith("998")) digits = digits.slice(3);
+  else if (digits.length === 10 && digits.startsWith("8")) digits = digits.slice(1);
+  digits = digits.slice(0, 9);
+  return [digits.slice(0, 2), digits.slice(2, 5), digits.slice(5, 7), digits.slice(7, 9)]
+    .filter(Boolean)
+    .join(" ");
+}
+
 function validPhone(digits) {
   return /^998\d{9}$/.test(digits);
 }
@@ -4557,6 +4567,9 @@ const server = http.createServer(async (req, res) => {
   const startNext = safeNext(fields.next || url.searchParams.get("next"));
   const startNextJoin = startNext ? `&next=${encodeURIComponent(startNext)}` : "";
   const phone = normalizePhone(fields.phone);
+  if (!validPhone(phone)) {
+    return redirect(res, `/login?err=phone&phone=${encodeURIComponent(formatLocalPhone(fields.phone))}${startNextJoin}`);
+  }
   const userRow = db.prepare("SELECT id, telegram_id, telegram_username FROM users WHERE phone = ?").get(phone);
   if (!userRow) {
   return redirect(res, `/login?err=notfound&phone=${encodeURIComponent(phone)}${startNextJoin}`);
@@ -4651,7 +4664,7 @@ const server = http.createServer(async (req, res) => {
 
   if (method === "GET") {
   const step = Math.min(3, Math.max(1, Number(url.searchParams.get("step")) || 1));
-  const phoneRaw = String(url.searchParams.get("phone") || "");
+  const phoneRaw = formatLocalPhone(url.searchParams.get("phone") || "");
   const err = String(url.searchParams.get("err") || "");
   const pwMode = url.searchParams.get("pw") === "1";
   const nextQs = pageNext ? `?next=${encodeURIComponent(pageNext)}` : "";
@@ -4678,6 +4691,7 @@ const server = http.createServer(async (req, res) => {
   stepHtml = `
   <h1 class="login-title">Kirish</h1>
   <p class="login-sub">Telefon raqamingizni kiriting</p>
+  ${err === "phone" ? alertBox("+998 dan keyin telefon raqamining 9 ta raqamini kiriting.", "error") : ""}
   ${err === "notfound" ? alertBox("Bu raqam ro'yxatdan o'tmagan.", "error") : ""}
   ${err === "notelegram" ? alertBox("Bu akkauntga Telegram bog'lanmagan. Parol bilan kiring.", "error") : ""}
   ${err === "startbot" ? alertBox("Avval Telegram botga /start yozing. Shundan keyin kirish kodi shu botga keladi.", "error") : ""}
@@ -4687,7 +4701,7 @@ const server = http.createServer(async (req, res) => {
   ${nextHidden}
   <div class="phone-wrap">
   <span class="phone-ico"><svg viewBox="0 0 24 24"><path d="M6.5 3h3l1.5 4-2 1.5a12 12 0 0 0 6.5 6.5L17 13l4 1.5v3A2.5 2.5 0 0 1 18.5 20 15.5 15.5 0 0 1 4 5.5 2.5 2.5 0 0 1 6.5 3Z"/></svg></span>
-  <span class="phone-prefix">+998</span><input id="phoneInput" name="phone" value="${h(phoneRaw)}" required inputmode="numeric" maxlength="12" placeholder="90 123 45 67" autocomplete="tel">
+  <span class="phone-prefix">+998</span><input id="phoneInput" name="phone" value="${h(phoneRaw)}" required inputmode="numeric" maxlength="11" placeholder="90 123 45 67" autocomplete="tel-national">
   </div>
   <div class="field"><label>Parol</label><input name="password" type="password" required autocomplete="current-password"></div>
   <button class="btn-continue" type="submit">Kirish <span>&rarr;</span></button>
@@ -4697,7 +4711,7 @@ const server = http.createServer(async (req, res) => {
   ${nextHidden}
   <div class="phone-wrap">
   <span class="phone-ico"><svg viewBox="0 0 24 24"><path d="M6.5 3h3l1.5 4-2 1.5a12 12 0 0 0 6.5 6.5L17 13l4 1.5v3A2.5 2.5 0 0 1 18.5 20 15.5 15.5 0 0 1 4 5.5 2.5 2.5 0 0 1 6.5 3Z"/></svg></span>
-  <span class="phone-prefix">+998</span><input id="phoneInput" name="phone" value="${h(phoneRaw)}" required inputmode="numeric" maxlength="12" placeholder="90 123 45 67" autocomplete="tel">
+  <span class="phone-prefix">+998</span><input id="phoneInput" name="phone" value="${h(phoneRaw)}" required inputmode="numeric" maxlength="11" placeholder="90 123 45 67" autocomplete="tel-national">
   </div>
   <button class="btn-continue" type="submit">Davom etish <span>&rarr;</span></button>
   </form>
@@ -4708,9 +4722,10 @@ const server = http.createServer(async (req, res) => {
   var el = document.getElementById('phoneInput');
   if (!el || el.dataset.bound) return;
   el.dataset.bound = '1';
-  el.addEventListener('input', function () {
+  function formatPhone() {
   var d = el.value.replace(/\\D/g, '');
   if (d.indexOf('998') === 0) d = d.slice(3);
+  else if (d.length === 10 && d.indexOf('8') === 0) d = d.slice(1);
   d = d.slice(0, 9);
   var out = '';
   if (d.length) out += d.slice(0, 2);
@@ -4718,7 +4733,9 @@ const server = http.createServer(async (req, res) => {
   if (d.length > 5) out += ' ' + d.slice(5, 7);
   if (d.length > 7) out += ' ' + d.slice(7, 9);
   el.value = out;
-  });
+  }
+  el.addEventListener('input', formatPhone);
+  formatPhone();
   })();
   </script>`;
   } else if (step === 2) {
@@ -4805,6 +4822,9 @@ const server = http.createServer(async (req, res) => {
 
   const phone = normalizePhone(fields.phone);
   const password = String(fields.password || "");
+  if (!validPhone(phone)) {
+    return redirect(res, `/login?pw=1&err=phone&phone=${encodeURIComponent(formatLocalPhone(fields.phone))}${next ? `&next=${encodeURIComponent(next)}` : ""}`);
+  }
   const row = db.prepare("SELECT * FROM users WHERE phone = ?").get(phone);
 
   if (!row || !verifyPassword(password, row.pass)) {
