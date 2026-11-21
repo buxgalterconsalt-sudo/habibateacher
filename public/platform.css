@@ -6040,6 +6040,7 @@ body.is-dashboard .dl-pager .dl-page.active { border-color: #7943e3; background:
 /* Keep the landing photos in separate rows on narrow screens. */
 img, video, iframe { max-width: 100%; }
 .duel-invite-telegram { margin-top: 6px; }
+.duel-create button:disabled { cursor: not-allowed; opacity: .6; filter: saturate(.45); }
 .duel-bot-note { max-width: 56ch; padding: 9px 12px; border: 1px solid var(--line); border-radius: 10px; background: rgba(124,58,237,.07); }
 .duel-accept-hero { max-width: 720px; margin-inline: auto; }
 .duel-accept-hero form { margin-top: 14px; }

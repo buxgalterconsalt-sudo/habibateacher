@@ -3602,10 +3602,10 @@ function duelDashboardPage(user, error = "") {
   <div class="duel-actions">
   <div class="card duel-create">
   <h2>Yangi duel</h2>
-  <p class="muted small">${Math.min(10, poolCount)} ta aralash savol. Duel yaratilgach Telegram'da raqibni tanlaysiz.</p>
+  <p class="muted small">${poolCount ? `${Math.min(10, poolCount)} ta aralash savol. Duel yaratilgach Telegram'da raqibni tanlaysiz.` : "Duel yaratish uchun bazada test savollari bo'lishi kerak. Admin panelida test savollarini qo'shing."}</p>
   <form method="post" action="/duel/create" class="form">
   <div class="field"><div class="duel-pool">Savollar bazasi: <b>${poolCount}</b> ta · duelda <b>${Math.min(10, poolCount)}</b> ta</div></div>
-  <button class="btn btn-primary" type="submit" ${poolCount ? "": "disabled"}>Duel yaratish va Telegramga o'tish &#9876;</button>
+  <button class="btn btn-primary" type="submit" ${poolCount ? "": "disabled title=\"Duel uchun avval test savollari qo'shilishi kerak\""}>${poolCount ? "Duel yaratish va Telegramga o'tish &#9876;" : "Test savollari kiritilmagan"}</button>
   </form>
   ${!botReady ? `<p class="muted small duel-bot-note">Botdan yuborish uchun Railway'da <code>TELEGRAM_BOT_TOKEN</code> va <code>TELEGRAM_BOT_USERNAME</code> sozlanishi kerak. Hozircha Telegram ulashish oynasi ochiladi.</p>` : ""}
   </div>
@@ -4796,7 +4796,7 @@ const server = http.createServer(async (req, res) => {
   ${nextHidden}
   <div class="phone-wrap">
   <span class="phone-ico"><svg viewBox="0 0 24 24"><path d="M6.5 3h3l1.5 4-2 1.5a12 12 0 0 0 6.5 6.5L17 13l4 1.5v3A2.5 2.5 0 0 1 18.5 20 15.5 15.5 0 0 1 4 5.5 2.5 2.5 0 0 1 6.5 3Z"/></svg></span>
-  <span class="phone-prefix">+998</span><input id="phoneInput" name="phone" value="${h(phoneRaw)}" required inputmode="numeric" maxlength="11" placeholder="90 123 45 67" autocomplete="tel-national">
+  <span class="phone-prefix">+998</span><input id="phoneInput" name="phone" value="${h(phoneRaw)}" required inputmode="numeric" maxlength="12" placeholder="90 123 45 67" autocomplete="tel-national">
   </div>
   <div class="field"><label>Parol</label><input name="password" type="password" required autocomplete="current-password"></div>
   <button class="btn-continue" type="submit">Kirish <span>&rarr;</span></button>
@@ -4806,7 +4806,7 @@ const server = http.createServer(async (req, res) => {
   ${nextHidden}
   <div class="phone-wrap">
   <span class="phone-ico"><svg viewBox="0 0 24 24"><path d="M6.5 3h3l1.5 4-2 1.5a12 12 0 0 0 6.5 6.5L17 13l4 1.5v3A2.5 2.5 0 0 1 18.5 20 15.5 15.5 0 0 1 4 5.5 2.5 2.5 0 0 1 6.5 3Z"/></svg></span>
-  <span class="phone-prefix">+998</span><input id="phoneInput" name="phone" value="${h(phoneRaw)}" required inputmode="numeric" maxlength="11" placeholder="90 123 45 67" autocomplete="tel-national">
+  <span class="phone-prefix">+998</span><input id="phoneInput" name="phone" value="${h(phoneRaw)}" required inputmode="numeric" maxlength="12" placeholder="90 123 45 67" autocomplete="tel-national">
   </div>
   <button class="btn-continue" type="submit">Davom etish <span>&rarr;</span></button>
   </form>
