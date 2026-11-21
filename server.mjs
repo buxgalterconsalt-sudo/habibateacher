@@ -972,9 +972,12 @@ function navFor(user, admin, publicPage = false) {
   <a href="/leaderboard">Reyting</a>`;
 
   if (user) {
-  return `<nav class="nav">${links}
-  <span class="who">${h(user.name)}</span>
+  return `<nav class="nav nav-student">
   <a href="/dashboard">Kabinet</a>
+  <a href="/courses">Kurslar</a>
+  <a href="/leaderboard">Reyting</a>
+  <a class="btn btn-sm student-plan" href="/plans">Tariflar</a>
+  <span class="who">${h(user.name)}</span>
   <form method="post" action="/logout"><button class="link" type="submit">Chiqish</button></form>
   </nav>`;
   }
@@ -987,6 +990,8 @@ function navFor(user, admin, publicPage = false) {
 function layout(opts) {
   const { title, body, admin = false } = opts;
   const user = opts.user || null;
+  const isStudentPage = Boolean(user) && !admin;
+  const isDashboard = body.includes('class="dash-hero"');
   const publicPage = Object.prototype.hasOwnProperty.call(opts, "user");
   const seo = opts.seo || {};
   const description = seo.description || "Habiba teacher — O'zbekistondagi ingliz tili o'qituvchilari uchun attestatsiya testlari, TKT tayyorgarligi, metodika va onlayn kurslar.";
@@ -1016,10 +1021,10 @@ ${canonical === "https://habibateacher.uz/" ? '<meta property="og:image" content
 ${seoTags}
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%2312b5a6'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='18' font-weight='bold' text-anchor='middle' fill='%2303211d'%3EH%3C/text%3E%3C/svg%3E">
 <script async src="https://telegram.org/js/telegram-web-app.js"></script>
-<script>try{if(localStorage.getItem('ht_theme')!=='dark')document.documentElement.dataset.theme='light';}catch(e){document.documentElement.dataset.theme='light';}</script>
-<link rel="stylesheet" href="/assets/platform.css?v=20261121a">
+<script>try{document.documentElement.dataset.theme=localStorage.getItem('ht_theme')||'${isStudentPage ? "dark" : "light"}';}catch(e){document.documentElement.dataset.theme='${isStudentPage ? "dark" : "light"}';}</script>
+<link rel="stylesheet" href="/assets/platform.css?v=20261121b">
 </head>
-<body>
+<body${isStudentPage ? ` class="student-page${isDashboard ? " is-dashboard" : ""}"` : ""}>
 <header class="topbar">
   <div class="wrap bar">
   <a class="brand" href="${admin ? "/admin": user ? "/courses": "/"}">
@@ -3146,6 +3151,7 @@ function dashboardPage(user) {
           <span class="muted">${TYPE_LABEL[next.type] || next.type} | ${
         next.type === "test" ? `${Number(next.duration_min) || 30} daqiqa` : "dars"
       } | ${completed}/${total} tugatilgan</span>
+        <span class="dash-hero-progress"><i><b style="width:${pct}%"></b></i><small>${pct}% kurs bajarildi</small></span>
         </span>
         <span class="dash-hero-go">&rarr;</span>
       </a>`
@@ -3174,55 +3180,56 @@ function dashboardPage(user) {
     })
     .join("");
 
-  const weeklyRows = weekly.length
+  const weeklyPodium = weekly
+    .slice(0, 3)
+    .map(
+      (w, i) => `<div class="dash-podium-item place-${i + 1}">
+        <span class="dash-podium-medal">${i + 1}</span>
+        <span class="dash-podium-avatar">${h(w.name.slice(0, 1).toUpperCase())}</span>
+        <b>${h(w.name)}</b>
+        <small>${w.c} dars</small>
+      </div>`
+    )
+    .join("");
+  const weeklyRows = weekly.length > 3
     ? weekly
+        .slice(3)
         .map(
           (w, i) => `<div class="dash-rank-row">
-            <span class="dash-rank-num">${i + 1}</span>
+            <span class="dash-rank-num">${i + 4}</span>
             <b>${h(w.name)}</b>
             <span class="muted">${w.c} dars</span>
           </div>`
         )
         .join("")
-    : `<p class="muted small">Bu hafta hali hech kim dars tugatmadi. Birinchi bo'ling!</p>`;
+    : "";
 
   return `<section class="dash-hero">
-    <div class="wrap">
-      <span class="eyebrow">Xush kelibsiz</span>
-      <h1>Salom, ${h(user.name.split(" ")[0])}!</h1>
-      <p class="lead">O'rganishni davom eting va maqsadingizga erishing!</p>
-      <div class="dash-quote">${h(quote)}</div>
+    <div class="wrap dash-welcome-wrap">
+      <div class="dash-welcome-row">
+        <div>
+          <span class="eyebrow">Xush kelibsiz</span>
+          <h1>Salom, ${h(user.name.split(" ")[0])}! <span aria-hidden="true">&#128075;</span></h1>
+          <p class="lead">O'rganishni davom eting va maqsadingizga erishing!</p>
+        </div>
+        <div class="dash-streak"><span aria-hidden="true">&#9889;</span><div><b>${todayDone} dars</b><small>bugun bajarildi</small></div></div>
+      </div>
+      <div class="dash-quote"><span class="dash-quote-symbol" aria-hidden="true">&#10077;</span><div><small>Bugungi hikmat</small><span>${h(quote)}</span></div><span class="dash-quote-mark" aria-hidden="true">H</span></div>
     </div>
   </section>
   <section class="section tight">
     <div class="wrap">
-      <div class="dash-top">
-        <div class="dash-stat"><b>${todayDone}</b><span>Bugun tugatilgan</span></div>
-        <div class="dash-stat"><b>${completed}/${total}</b><span>Darslar</span></div>
-        <div class="dash-stat"><b>${pct}%</b><span>Kurs jarayoni</span></div>
-        <div class="dash-stat"><b>${rank}</b><span>Reytingdagi o'rningiz</span></div>
-        <div class="dash-stat"><b>${achievements}/4</b><span>Yutuqlar</span></div>
-      </div>
-
       ${nextCard}
-
+      <div class="dash-top">
+        <div class="dash-stat dash-stat-progress"><div><span>Kurs jarayoni</span><b>${completed}<small> / ${total} dars</small></b></div><div class="dash-progress-track"><i style="width:${pct}%"></i></div><small>${pct}% bajarildi</small></div>
+        <div class="dash-stat"><span>Reytingdagi o'rningiz</span><b>#${rank}</b><small>o'quvchilar orasida</small></div>
+        <div class="dash-stat"><span>Yutuqlar</span><b>${achievements}<small> / 4</small></b><small>nishon ochildi</small></div>
+      </div>
       <div class="dash-cols">
         <div class="card dash-rank">
-          <div class="card-head"><h2>Haftalik reyting</h2><span class="badge">7 kun</span></div>
-          ${weeklyRows}
-        </div>
-        <div class="card dash-ach">
-          <div class="card-head"><h2>Yutuqlar</h2></div>
-          <div class="dash-badges">
-            <span class="dash-badge${completed >= 1 ? " on" : ""}">1 dars</span>
-            <span class="dash-badge${completed >= 5 ? " on" : ""}">5 dars</span>
-            <span class="dash-badge${completed >= 10 ? " on" : ""}">10 dars</span>
-            <span class="dash-badge${completed >= 25 ? " on" : ""}">25 dars</span>
-          </div>
-          <div class="dash-ring" style="--p:${pct}">
-            <span>${pct}%</span>
-          </div>
-          <p class="muted small center">Kurs jarayoni</p>
+          <div class="card-head"><div><h2>Guruh reytingi</h2><p class="muted small">Faol o'quvchilarning natijalari</p></div><a class="badge" href="/leaderboard">Haftalik &rarr;</a></div>
+          ${weekly.length ? `<div class="dash-podium">${weeklyPodium}</div>${weeklyRows}` : `<p class="muted small">Bu hafta hali hech kim dars tugatmadi. Birinchi bo'ling!</p>`}
+          <div class="dash-leader-note"><span aria-hidden="true">&#10024;</span> Har kuni ozgina o'sish ham katta natijaga olib keladi.</div>
         </div>
       </div>
 
@@ -3548,10 +3555,10 @@ function testDocument({ title, body }) {  return `<!DOCTYPE html>
 <title>${h(title)}   ${h(config.siteName)}</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%231e40af'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='18' font-weight='bold' text-anchor='middle' fill='white'%3EH%3C/text%3E%3C/svg%3E">
 <script async src="https://telegram.org/js/telegram-web-app.js"></script>
-<script>try{if(localStorage.getItem('ht_theme')!=='dark')document.documentElement.dataset.theme='light';}catch(e){document.documentElement.dataset.theme='light';}</script>
-<link rel="stylesheet" href="/assets/platform.css?v=20261121a">
+<script>try{document.documentElement.dataset.theme=localStorage.getItem('ht_theme')||'dark';}catch(e){document.documentElement.dataset.theme='dark';}</script>
+<link rel="stylesheet" href="/assets/platform.css?v=20261121b">
 </head>
-<body class="test-body">
+<body class="test-body student-page">
 ${body}
 </body>
 </html>`;
