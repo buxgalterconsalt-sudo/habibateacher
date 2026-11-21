@@ -6496,6 +6496,7 @@ const server = http.createServer(async (req, res) => {
   const savedWatchPercent = savedWatchDuration > 0
     ? Math.min(100, Math.round((savedWatchSeconds / savedWatchDuration) * 100))
     : 0;
+  const stepOnePercent = lesson.type === "video" ? (completed ? 100 : savedWatchPercent) : 0;
   const stepOneNote = lesson.type === "video"
     ? `${completed ? 100 : savedWatchPercent}% ko'rildi`
     : completed ? "Tugatildi" : "Tugatilmagan";
@@ -6611,7 +6612,7 @@ const server = http.createServer(async (req, res) => {
           <div class="lesson-progress"><span style="width:${progressPercent}%"></span></div>
           <div class="lesson-step ${completed ? "done" : ""}">
             <span class="ls-ico">${completed ? "&#10003;" : "1"}</span>
-            <span class="ls-copy"><b>${stepOneTitle}</b><small id="lessonWatchPercent">${stepOneNote}</small></span>
+          <span class="ls-copy" ${lesson.type === "video" ? 'style="flex:1"' : ""}><b>${stepOneTitle}</b><small id="lessonWatchPercent">${stepOneNote}</small>${lesson.type === "video" ? `<i class="video-watch-meter"><b id="lessonWatchBar" style="width:${stepOnePercent}%"></b></i>` : ""}</span>
           </div>
           ${
             hasTestStep
@@ -6649,9 +6650,10 @@ const server = http.createServer(async (req, res) => {
         var player = null, playerState = -1;
         var btn = document.getElementById('completeLesson');
         var note = document.getElementById('lessonWatchPercent');
+        var watchBar = document.getElementById('lessonWatchBar');
         var viewerCount = document.getElementById('lessonViewerCount');
         var lessonId = ${lesson.id};
-        var sent = false, maxWatched = ${savedWatchSeconds}, duration = ${savedWatchDuration}, lastSync = 0;
+        var sent = false, videoEnded = ${completed ? "true" : "false"}, correctingSeek = false, maxWatched = ${savedWatchSeconds}, duration = ${savedWatchDuration}, lastSync = 0;
         var alreadyCompleted = ${completed ? "true" : "false"};
         var viewerKey = '';
         try {
@@ -6675,8 +6677,10 @@ const server = http.createServer(async (req, res) => {
           function paint() {
           var p = alreadyCompleted ? 100 : percent();
           if (note) note.textContent = p + "% ko'rildi";
+          if (watchBar) watchBar.style.width = p + "%";
           if (btn) {
-            if (p >= 99) { btn.disabled = false; btn.textContent = 'Darsni tugatdim'; }
+            btn.disabled = !videoEnded;
+            btn.textContent = videoEnded ? 'Darsni tugatdim' : 'Video tugagach faollashadi';
           }
         }
         function sync(force) {
@@ -6693,6 +6697,7 @@ const server = http.createServer(async (req, res) => {
         }
         function finish() {
           if (sent) return;
+          if (!videoEnded) return;
           sent = true;
           if (duration > 0) {
             maxWatched = duration;
@@ -6724,16 +6729,18 @@ const server = http.createServer(async (req, res) => {
             paint();
           });
           v.addEventListener('timeupdate', function () {
-            if (!alreadyCompleted && duration > 0 && v.currentTime > maxWatched + 1.5) { v.currentTime = maxWatched; return; }
             if (v.currentTime > maxWatched) maxWatched = v.currentTime;
             paint();
             sync(false);
-            if (duration > 0 && maxWatched / duration >= 0.99) finish();
           });
           v.addEventListener('seeking', function () {
-            if (v.currentTime > maxWatched + 1) v.currentTime = maxWatched;
+            if (alreadyCompleted || correctingSeek || v.currentTime <= maxWatched + 0.6) return;
+            correctingSeek = true;
+            v.pause();
+            v.currentTime = maxWatched;
           });
-          v.addEventListener('ended', finish);
+          v.addEventListener('seeked', function () { correctingSeek = false; });
+          v.addEventListener('ended', function () { videoEnded = true; maxWatched = duration || v.currentTime; paint(); finish(); });
           v.addEventListener('contextmenu', function (e) { e.preventDefault(); });
           v.setAttribute('controlsList', 'nodownload');
           var speed = document.getElementById('videoSpeed');
@@ -6750,20 +6757,29 @@ const server = http.createServer(async (req, res) => {
                 }
                 paint();
               },
-              onStateChange: function (event) { playerState = event.data; }
+              onStateChange: function (event) {
+                playerState = event.data;
+                if (event.data === 0) { videoEnded = true; maxWatched = duration || maxWatched; paint(); finish(); }
+              }
             }});
             var speed = document.getElementById('videoSpeed');
             if (speed) speed.addEventListener('change', function () { if (player && player.setPlaybackRate) player.setPlaybackRate(Number(speed.value) || 1); });
           };
           var api = document.createElement('script'); api.src = 'https://www.youtube.com/iframe_api'; document.head.appendChild(api);
           setInterval(function () {
-            if (!player || playerState !== 1) return;
+            if (!player) return;
             duration = Number(player.getDuration()) || duration;
             var current = Number(player.getCurrentTime()) || 0;
-            if (!alreadyCompleted && current > maxWatched + 1.5) { player.seekTo(maxWatched, true); return; }
+            if (!alreadyCompleted && !correctingSeek && current > maxWatched + 0.6) {
+              correctingSeek = true;
+              player.pauseVideo();
+              player.seekTo(maxWatched, true);
+              setTimeout(function () { correctingSeek = false; }, 500);
+              return;
+            }
+            if (playerState !== 1) return;
             maxWatched = Math.max(maxWatched, current); paint(); sync(false);
-            if (duration > 0 && maxWatched / duration >= 0.99) finish();
-          }, 1000);
+          }, 150);
         }
         if (btn) { btn.disabled = true; btn.textContent = 'Video tugagach faollashadi'; btn.addEventListener('click', finish); }
       })();
