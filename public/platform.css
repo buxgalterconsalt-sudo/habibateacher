@@ -6146,6 +6146,43 @@ img, video, iframe { max-width: 100%; }
 .lesson-inline-test.is-unlocked { border-color: color-mix(in srgb, var(--primary) 55%, var(--line)); }
 @media (max-width: 900px) { .video-reading-layout { grid-template-columns: minmax(0,1fr); } .video-reading-layout .lesson-video-card { position: relative; top: auto; } .video-reading-layout .lesson-transcript { max-height: 46vh; } }
 
+/* Lesson page: player and steps share the first desktop row; steps follow the player on phones. */
+.lesson-grid.video-lesson-layout { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(250px, .85fr); grid-template-areas: "player side" "materials materials"; gap: 16px; }
+.video-lesson-layout .lesson-main, .video-lesson-layout .video-reading-layout { display: contents; }
+.video-lesson-layout .lesson-video-card { grid-area: player; position: relative; top: auto; align-self: start; }
+.video-lesson-layout .lesson-side { grid-area: side; min-width: 0; }
+.video-lesson-layout .lesson-materials-card { grid-area: materials; min-width: 0; }
+.lesson-viewer-count { display: inline-flex; align-items: center; gap: 6px; color: #83e7c7; font-size: .78rem; font-weight: 700; white-space: nowrap; }
+.lesson-viewer-count i { width: 7px; height: 7px; border-radius: 50%; background: #12c995; box-shadow: 0 0 10px rgba(18, 201, 149, .65); }
+.lesson-reader { overflow: hidden; margin: 0 0 14px; border: 1px solid var(--line); border-radius: 12px; background: #f5f0e6; color: #172a3d; }
+.lesson-reader-head { display: flex; align-items: center; gap: 9px; padding: 11px 14px; border-bottom: 1px solid #ddd5c7; background: #111827; color: #f7f4ed; }
+.lesson-reader-head .lm-ico { display: grid; place-items: center; width: 22px; height: 22px; color: #c4b5fd; }
+.lesson-reader-head .lm-ico svg { width: 18px; height: 18px; }
+.lesson-reader-head h3 { margin: 0; font-size: .92rem; }
+.lesson-reader-body { max-height: 680px; overflow: auto; overscroll-behavior: contain; padding: clamp(16px, 3vw, 28px); color: #172a3d; background-color: #f5f0e6; background-image: linear-gradient(rgba(36, 55, 74, .055) 1px, transparent 1px), linear-gradient(90deg, rgba(36, 55, 74, .055) 1px, transparent 1px); background-size: 24px 24px; }
+.lesson-reader-body .prose { color: #26384a; }
+.lesson-reader-body .prose h1, .lesson-reader-body .prose h2, .lesson-reader-body .prose h3 { color: #172a3d; }
+.lesson-reader-body .prose > :first-child { margin-top: 0; }
+.lesson-reader-body .prose > :last-child { margin-bottom: 0; }
+.lesson-reader-body .prose h2, .lesson-reader-body .prose h3, .lesson-reader-body .prose h4 { margin: 1.5em 0 .55em; line-height: 1.3; }
+.lesson-reader-body .prose p, .lesson-reader-body .prose li, .lesson-reader-body .prose blockquote { line-height: 1.7; }
+.lesson-reader-body .prose ul, .lesson-reader-body .prose ol { padding-left: 1.5em; }
+.lesson-reader-body .prose blockquote { margin: 1em 0; padding: 10px 14px; border-left: 3px solid #24a8ea; border-radius: 0 8px 8px 0; background: #e2f4fb; }
+.lesson-reader-body .prose hr { border: 0; border-top: 1px solid #d7cfbf; margin: 1.4em 0; }
+.lesson-reader-body .prose code { padding: .12em .35em; border-radius: 4px; background: #e2edf3; color: #246080; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: .92em; }
+.lesson-reader-body .prose pre { overflow-x: auto; margin: 1em 0; padding: 15px 17px; border-radius: 9px; background: #172c42; color: #edf4fa; line-height: 1.55; }
+.lesson-reader-body .prose pre code { padding: 0; background: transparent; color: inherit; font-size: .9em; }
+.lesson-table-wrap { max-width: 100%; overflow-x: auto; margin: 1em 0; }
+.lesson-reader-body .prose table { width: 100%; border-collapse: collapse; font-size: .92em; }
+.lesson-reader-body .prose th, .lesson-reader-body .prose td { padding: 9px 11px; border: 1px solid #d7cfbf; text-align: left; vertical-align: top; }
+.lesson-reader-body .prose th { background: #eee7d9; }
+.lesson-reader-body .pdf-frame { min-height: min(78vh, 900px); border: 0; }
+@media (max-width: 900px) {
+  .lesson-grid.video-lesson-layout { grid-template-columns: minmax(0, 1fr); grid-template-areas: "player" "side" "materials"; gap: 12px; }
+  .video-lesson-layout .lesson-video-card { margin-bottom: 0; }
+  .lesson-reader-body { max-height: 65vh; }
+}
+
 
 /* Compact controls for video files and tests in lesson rows. */
 .lesson-file-actions { display: grid; justify-items: start; gap: 6px; min-width: 132px; max-width: 190px; margin-top: 8px; }

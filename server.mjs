@@ -475,6 +475,14 @@ db.exec(`CREATE TABLE IF NOT EXISTS video_watch (
   PRIMARY KEY (user_id, lesson_id)
 )`);
 
+db.exec(`CREATE TABLE IF NOT EXISTS lesson_viewers (
+  lesson_id INTEGER NOT NULL,
+  viewer_key TEXT NOT NULL,
+  last_seen INTEGER NOT NULL,
+  PRIMARY KEY (lesson_id, viewer_key)
+);
+CREATE INDEX IF NOT EXISTS idx_lesson_viewers_seen ON lesson_viewers(lesson_id, last_seen);`);
+
 db.exec(`CREATE TABLE IF NOT EXISTS payment_requests (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id INTEGER NOT NULL,
@@ -722,6 +730,87 @@ const h = (v) =>
 
 const nl2br = (s) => h(s).replace(/\r?\n/g, "<br>");
 
+function renderLessonMarkdown(value) {
+  const source = String(value == null ? "" : value).replace(/\r\n?/g, "\n");
+  const inline = (line) => h(line)
+    .replace(/`([^`]+)`/g, "<code>$1</code>")
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    .replace(/__(.+?)__/g, "<strong>$1</strong>")
+    .replace(/\*(?!\*)(.+?)\*(?!\*)/g, "<em>$1</em>")
+    .replace(/(^|[^_])_([^_]+)_($|[^_])/g, "$1<em>$2</em>$3");
+  const cells = (line) => line.trim().replace(/^\|/, "").replace(/\|$/, "").split("|").map((cell) => cell.trim());
+  const isTableRule = (line) => /^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?\s*$/.test(line);
+  const lines = source.split("\n");
+  const blocks = [];
+  let paragraph = [];
+  let listType = "";
+  let listItems = [];
+  let quote = [];
+  let code = [];
+  let inCode = false;
+  const flushParagraph = () => {
+    if (paragraph.length) blocks.push(`<p>${paragraph.map(inline).join("<br>")}</p>`);
+    paragraph = [];
+  };
+  const flushList = () => {
+    if (!listItems.length) return;
+    blocks.push(`<${listType}>${listItems.map((item) => `<li>${inline(item)}</li>`).join("")}</${listType}>`);
+    listItems = [];
+    listType = "";
+  };
+  const flushQuote = () => {
+    if (quote.length) blocks.push(`<blockquote>${quote.map(inline).join("<br>")}</blockquote>`);
+    quote = [];
+  };
+  for (let i = 0; i < lines.length; i += 1) {
+    const line = lines[i];
+    if (/^\s*```/.test(line) || /^\s*~~~/.test(line)) {
+      flushParagraph(); flushList(); flushQuote();
+      if (inCode) {
+        blocks.push(`<pre><code>${h(code.join("\n"))}</code></pre>`);
+        code = [];
+        inCode = false;
+      } else inCode = true;
+      continue;
+    }
+    if (inCode) { code.push(line); continue; }
+    if (!line.trim()) { flushParagraph(); flushList(); flushQuote(); continue; }
+    if (i + 1 < lines.length && line.includes("|") && isTableRule(lines[i + 1])) {
+      flushParagraph(); flushList(); flushQuote();
+      const headers = cells(line);
+      i += 2;
+      const rows = [];
+      while (i < lines.length && lines[i].includes("|") && lines[i].trim()) { rows.push(cells(lines[i])); i += 1; }
+      i -= 1;
+      blocks.push(`<div class="lesson-table-wrap"><table><thead><tr>${headers.map((c) => `<th>${inline(c)}</th>`).join("")}</tr></thead><tbody>${rows.map((row) => `<tr>${headers.map((_, n) => `<td>${inline(row[n] || "")}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`);
+      continue;
+    }
+    const heading = line.match(/^\s*(#{1,6})\s+(.+?)\s*#*\s*$/);
+    if (heading) {
+      flushParagraph(); flushList(); flushQuote();
+      const level = Math.min(heading[1].length, 4) + 1;
+      blocks.push(`<h${level}>${inline(heading[2])}</h${level}>`);
+      continue;
+    }
+    if (/^\s*(---+|\*\*\*+|___+)\s*$/.test(line)) { flushParagraph(); flushList(); flushQuote(); blocks.push("<hr>"); continue; }
+    const item = line.match(/^\s*(?:[-+*]|\d+[.)])\s+(.+)$/);
+    if (item) {
+      flushParagraph(); flushQuote();
+      const nextType = /^\s*\d/.test(line) ? "ol" : "ul";
+      if (listType && listType !== nextType) flushList();
+      listType = nextType;
+      listItems.push(item[1]);
+      continue;
+    }
+    const quoted = line.match(/^\s*>\s?(.*)$/);
+    if (quoted) { flushParagraph(); flushList(); quote.push(quoted[1]); continue; }
+    flushList(); flushQuote(); paragraph.push(line);
+  }
+  if (inCode) blocks.push(`<pre><code>${h(code.join("\n"))}</code></pre>`);
+  flushParagraph(); flushList(); flushQuote();
+  return blocks.join("\n");
+}
+
 function safeNext(value) {
   const next = String(value || "");
   return next.startsWith("/") && !next.startsWith("//") && !next.startsWith("/\\") ? next: "";
@@ -892,6 +981,15 @@ function normalizePhone(value) {
   else if (digits.length === 10 && digits.startsWith("8")) digits = digits.slice(1);
   if (digits.length !== 9) return digits;
   return "998" + digits;
+}
+
+// Eski yozuvlarda +998, bo'shliq yoki ajratgichlar saqlangan bo'lsa ham,
+// ayni raqam bilan akkaunt topilsin. Yangi akkauntlar esa doim kanonik raqamda saqlanadi.
+function findUserByPhone(phone, columns = "*") {
+  const canonical = normalizePhone(phone);
+  const exact = db.prepare(`SELECT ${columns} FROM users WHERE phone = ?`).get(canonical);
+  if (exact) return exact;
+  return db.prepare(`SELECT ${columns} FROM users`).all().find((row) => normalizePhone(row.phone) === canonical) || null;
 }
 
 function formatLocalPhone(value) {
@@ -1144,7 +1242,7 @@ ${seoTags}
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%2312b5a6'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='18' font-weight='bold' text-anchor='middle' fill='%2303211d'%3EH%3C/text%3E%3C/svg%3E">
 <script async src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>try{document.documentElement.dataset.theme=localStorage.getItem('ht_theme')||'dark';}catch(e){document.documentElement.dataset.theme='dark';}</script>
-<link rel="stylesheet" href="/assets/platform.css?v=20261121f">
+<link rel="stylesheet" href="/assets/platform.css?v=20261121h">
 </head>
 <body${isStudentPage ? ` class="student-page${isDashboard ? " is-dashboard" : ""}"` : ""}>
 <header class="topbar">
@@ -2025,7 +2123,7 @@ async function handleTelegramLoginLink(chatId, token, from) {
     });
     return;
   }
-  const userRow = db.prepare("SELECT id, name FROM users WHERE phone = ?").get(link.phone);
+  const userRow = findUserByPhone(link.phone, "id, name");
   if (!userRow) {
     await telegramApi("sendMessage", {
       chat_id: chatId,
@@ -3916,7 +4014,7 @@ function testDocument({ title, body }) {  return `<!DOCTYPE html>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%231e40af'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='18' font-weight='bold' text-anchor='middle' fill='white'%3EH%3C/text%3E%3C/svg%3E">
 <script async src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>try{document.documentElement.dataset.theme=localStorage.getItem('ht_theme')||'dark';}catch(e){document.documentElement.dataset.theme='dark';}</script>
-<link rel="stylesheet" href="/assets/platform.css?v=20261121f">
+<link rel="stylesheet" href="/assets/platform.css?v=20261121h">
 </head>
 <body class="test-body student-page">
 ${body}
@@ -4814,7 +4912,7 @@ const server = http.createServer(async (req, res) => {
   error = "Bu Telegram ID allaqachon ro'yxatdan o'tgan. Bir ID   bitta akkaunt.";
   else if (telegramUsername && db.prepare("SELECT 1 FROM users WHERE telegram_username = ? COLLATE NOCASE").get(telegramUsername))
   error = "Bu Telegram username allaqachon ro'yxatdan o'tgan.";
-  else if (db.prepare("SELECT 1 FROM users WHERE phone = ?").get(phone))
+  else if (findUserByPhone(phone, "id"))
   error = "Bu telefon raqam allaqachon ro'yxatdan o'tgan.";
 
   if (error) {
@@ -4893,7 +4991,7 @@ const server = http.createServer(async (req, res) => {
   if (p === "/login/reset/start" && method === "POST") {
   const phone = normalizePhone(fields.phone);
   if (!validPhoneInput(fields.phone) || !validPhone(phone)) return redirect(res, "/login/reset?err=phone");
-  const row = db.prepare("SELECT id, phone, telegram_id, telegram_username, is_blocked FROM users WHERE phone = ?").get(phone);
+  const row = findUserByPhone(phone, "id, phone, telegram_id, telegram_username, is_blocked");
   if (!row) return redirect(res, "/login/reset?err=notfound");
   if (Number(row.is_blocked)) return redirect(res, "/login/reset?err=blocked");
   const chatId = resolveTelegramChatId(row);
@@ -4916,7 +5014,7 @@ const server = http.createServer(async (req, res) => {
   const code = String(fields.code || "").replace(/\D/g, "");
   const back = `/login/reset?step=verify&phone=${encodeURIComponent(formatLocalPhone(phone))}`;
   if (!validPhone(phone)) return redirect(res, "/login/reset?err=phone");
-  const userRow = db.prepare("SELECT id, telegram_id, telegram_username, is_blocked FROM users WHERE phone = ?").get(phone);
+  const userRow = findUserByPhone(phone, "id, telegram_id, telegram_username, is_blocked");
   const codeRow = db.prepare("SELECT * FROM login_codes WHERE phone = ?").get(phone);
   if (!codeRow || codeRow.expires_at < Date.now()) {
     if (codeRow) db.prepare("DELETE FROM login_codes WHERE phone = ?").run(phone);
@@ -4948,11 +5046,21 @@ const server = http.createServer(async (req, res) => {
   if (!validPhoneInput(fields.phone) || !validPhone(phone)) {
     return redirect(res, `/login?err=phone&phone=${encodeURIComponent(formatLocalPhone(fields.phone))}${startNextJoin}`);
   }
-  const userRow = db.prepare("SELECT id, telegram_id, telegram_username, is_blocked FROM users WHERE phone = ?").get(phone);
+  const userRow = findUserByPhone(phone, "id, telegram_id, telegram_username, is_blocked");
   if (!userRow) {
   return redirect(res, `/login?err=notfound&phone=${encodeURIComponent(phone)}${startNextJoin}`);
   }
   if (Number(userRow.is_blocked)) return redirect(res, `/login?err=blocked&phone=${encodeURIComponent(phone)}${startNextJoin}`);
+  const deviceToken = parseCookies(req).ht_device;
+  if (deviceToken) {
+    const trustedDevice = db.prepare("SELECT user_id, created_at FROM device_sessions WHERE token = ?").get(deviceToken);
+    const authenticatedAt = trustedDevice ? Date.parse(trustedDevice.created_at) : NaN;
+    if (trustedDevice && Number(trustedDevice.user_id) === Number(userRow.id) && Number.isFinite(authenticatedAt) && Date.now() - authenticatedAt < 3 * 24 * 60 * 60 * 1000) {
+      db.prepare("UPDATE device_sessions SET last_seen = ? WHERE token = ?").run(nowISO(), deviceToken);
+      createUserSession(res, userRow.id, req);
+      return redirect(res, startNext || "/dashboard");
+    }
+  }
   const loginChatId = resolveTelegramChatId(userRow);
   if (!loginChatId) {
   const linkToken = randomBytes(24).toString("hex");
@@ -5000,7 +5108,7 @@ const server = http.createServer(async (req, res) => {
   return redirect(res, `${back}&err=wrong`);
   }
   db.prepare("DELETE FROM login_codes WHERE phone = ?").run(phone);
-  const userRow = db.prepare("SELECT id, is_blocked FROM users WHERE phone = ?").get(phone);
+  const userRow = findUserByPhone(phone, "id, is_blocked");
   if (!userRow) return redirect(res, "/login?err=notfound");
   if (Number(userRow.is_blocked)) return redirect(res, "/login?err=blocked");
   clearFailures(clientIp(req));
@@ -5027,9 +5135,9 @@ const server = http.createServer(async (req, res) => {
     const deviceToken = parseCookies(req).ht_device;
     if (deviceToken) {
       const deviceUser = db
-      .prepare("SELECT u.id, u.is_blocked, d.last_seen FROM device_sessions d JOIN users u ON u.id = d.user_id WHERE d.token = ?")
+      .prepare("SELECT u.id, u.is_blocked, d.created_at FROM device_sessions d JOIN users u ON u.id = d.user_id WHERE d.token = ?")
         .get(deviceToken);
-      if (deviceUser && !Number(deviceUser.is_blocked) && Date.now() - Date.parse(deviceUser.last_seen) < 3 * 24 * 60 * 60 * 1000) {
+      if (deviceUser && !Number(deviceUser.is_blocked) && Date.now() - Date.parse(deviceUser.created_at) < 3 * 24 * 60 * 60 * 1000) {
         db.prepare("UPDATE device_sessions SET last_seen = ? WHERE token = ?").run(nowISO(), deviceToken);
         createUserSession(res, deviceUser.id, req);
         return redirect(res, pageNext || "/dashboard");
@@ -5217,7 +5325,7 @@ const server = http.createServer(async (req, res) => {
   if (!validPhoneInput(fields.phone) || !validPhone(phone)) {
     return redirect(res, `/login?pw=1&err=phone&phone=${encodeURIComponent(formatLocalPhone(fields.phone))}${next ? `&next=${encodeURIComponent(next)}` : ""}`);
   }
-  const row = db.prepare("SELECT * FROM users WHERE phone = ?").get(phone);
+  const row = findUserByPhone(phone);
 
   if (row && Number(row.is_blocked)) return redirect(res, `/login?err=blocked&phone=${encodeURIComponent(formatLocalPhone(fields.phone))}${next ? `&next=${encodeURIComponent(next)}` : ""}`);
   if (!row || !verifyPassword(password, row.pass)) {
@@ -6153,6 +6261,28 @@ const server = http.createServer(async (req, res) => {
   }
 
   /* ------------------------------------------------------------- lesson */
+  const viewersMatch = p.match(/^\/lesson\/(\d+)\/viewers$/);
+  if (viewersMatch && method === "POST") {
+  if (!user) {
+  res.writeHead(401, { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" });
+  res.end(JSON.stringify({ ok: false }));
+  return;
+  }
+  const viewerLesson = db.prepare("SELECT id, type, price FROM lessons WHERE id = ?").get(Number(viewersMatch[1]));
+  const viewerKey = String(req.headers["x-viewer-key"] || "");
+  if (!viewerLesson || viewerLesson.type !== "video" || !/^[a-f0-9-]{32,64}$/i.test(viewerKey) || (Number(viewerLesson.price) > 0 && !testOwned(user.id, viewerLesson.id))) {
+  res.writeHead(404, { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" });
+  res.end(JSON.stringify({ ok: false }));
+  return;
+  }
+  const now = Date.now();
+  db.prepare("INSERT INTO lesson_viewers (lesson_id, viewer_key, last_seen) VALUES (?, ?, ?) ON CONFLICT(lesson_id, viewer_key) DO UPDATE SET last_seen = excluded.last_seen").run(viewerLesson.id, viewerKey, now);
+  const count = db.prepare("SELECT COUNT(*) AS n FROM lesson_viewers WHERE lesson_id = ? AND last_seen >= ?").get(viewerLesson.id, now - 45_000).n;
+  res.writeHead(200, { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" });
+  res.end(JSON.stringify({ ok: true, count }));
+  return;
+  }
+
   const watchMatch = p.match(/^\/lesson\/(\d+)\/watch$/);
   if (watchMatch && method === "POST") {
   if (!user) {
@@ -6301,7 +6431,7 @@ const server = http.createServer(async (req, res) => {
   let contentHtml = "";
   let videoFile = false;
   if (lesson.type === "text") {
-    contentHtml = `<div class="prose">${nl2br(lesson.content || "")}</div>`;
+    contentHtml = `<div class="prose">${renderLessonMarkdown(lesson.content || "")}</div>`;
   } else if (lesson.type === "pdf") {
     contentHtml = `
       <div class="pdf-actions">
@@ -6388,7 +6518,7 @@ const server = http.createServer(async (req, res) => {
     lesson.type === "video"
       ? `<div class="lvc-head">
           <span class="lvc-title"><span class="lvc-ico"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="m16 10 5-3v10l-5-3z"/></svg></span> Video dars</span>
-          <span class="lvc-meta">${views ? `${views} marta ko'rilgan` : ""}</span>
+          <span class="lvc-meta"><span id="lessonViewerCount" class="lesson-viewer-count"><i></i> 1 ta talaba ko'rmoqda</span></span>
         </div>`
       : "";
 
@@ -6436,6 +6566,9 @@ const server = http.createServer(async (req, res) => {
         )
         .join("")}</div>`
     : `<div class="card empty lesson-empty-materials"><span class="empty-ico">&#128196;</span><p class="muted">Materiallar hali qo'shilmagan</p></div>`;
+  const readerContent = lesson.type === "video"
+    ? String(lesson.content || "").trim() ? `<div class="prose">${renderLessonMarkdown(lesson.content)}</div>` : `<p class="muted">Bu dars uchun matnli qo'llanma qo'shilmagan.</p>`
+    : lesson.type === "text" || lesson.type === "pdf" ? contentHtml : "";
 
   const body = `
     <a class="back" href="/course/${course.id}">&larr; ${h(course.title)}</a>
@@ -6452,12 +6585,12 @@ const server = http.createServer(async (req, res) => {
       <h1>${h(lesson.title)}</h1>
     </div>
     ${resultHtml}
-    <div class="lesson-grid">
+    <div class="lesson-grid${lesson.type === "video" ? " video-lesson-layout" : ""}">
       <div class="lesson-main">
         <div class="video-reading-layout">
         <div class="lesson-video-card">
           ${videoHead}
-          ${contentHtml}
+          ${lesson.type === "video" || lesson.type === "test" ? contentHtml : ""}
           ${lesson.type === "video" ? `<label class="video-speed-control" for="videoSpeed">Video tezligi <select id="videoSpeed"><option value="0.75">0.75×</option><option value="1" selected>1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2">2×</option></select></label>` : ""}
           ${
             lesson.type === "video"
@@ -6465,11 +6598,11 @@ const server = http.createServer(async (req, res) => {
               : ""
           }
         </div>
-        ${lesson.type === "video" && String(lesson.content || "").trim() ? `<section class="lesson-transcript"><h2>Video dars matni</h2><div class="prose">${nl2br(lesson.content)}</div></section>` : ""}
         </div>
         <div class="card lesson-materials-card">
           <div class="card-head"><h2>Dars materiallari</h2></div>
-          ${materialsHtml}
+          ${readerContent ? `<section class="lesson-reader"><div class="lesson-reader-head"><span class="lm-ico">${icon("book")}</span><h3>Darslik</h3></div><div class="lesson-reader-body">${readerContent}</div></section>` : ""}
+          ${materials.length ? materialsHtml : readerContent ? "" : materialsHtml}
         </div>
       </div>
       <aside class="lesson-side">
@@ -6516,9 +6649,28 @@ const server = http.createServer(async (req, res) => {
         var player = null, playerState = -1;
         var btn = document.getElementById('completeLesson');
         var note = document.getElementById('lessonWatchPercent');
+        var viewerCount = document.getElementById('lessonViewerCount');
         var lessonId = ${lesson.id};
         var sent = false, maxWatched = ${savedWatchSeconds}, duration = ${savedWatchDuration}, lastSync = 0;
         var alreadyCompleted = ${completed ? "true" : "false"};
+        var viewerKey = '';
+        try {
+          viewerKey = localStorage.getItem('ht_viewer_key') || '';
+          if (!/^[a-f0-9-]{32,64}$/i.test(viewerKey)) {
+            viewerKey = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : (Date.now().toString(16) + '-' + Math.random().toString(16).slice(2) + '-' + Math.random().toString(16).slice(2));
+            localStorage.setItem('ht_viewer_key', viewerKey);
+          }
+        } catch (e) { viewerKey = Date.now().toString(16) + '-' + Math.random().toString(16).slice(2) + '-' + Math.random().toString(16).slice(2); }
+        function updateViewerCount() {
+          if (!viewerCount || document.visibilityState === 'hidden') return;
+          fetch('/lesson/' + lessonId + '/viewers', { method: 'POST', headers: { 'X-Viewer-Key': viewerKey, Accept: 'application/json' } })
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (d) { if (d && d.ok) viewerCount.innerHTML = '<i></i> ' + d.count + ' ta talaba ko\'rmoqda'; })
+            .catch(function () {});
+        }
+        updateViewerCount();
+        setInterval(updateViewerCount, 15000);
+        document.addEventListener('visibilitychange', updateViewerCount);
         function percent() { return duration > 0 ? Math.min(100, Math.round((maxWatched / duration) * 100)) : 0; }
           function paint() {
           var p = alreadyCompleted ? 100 : percent();
