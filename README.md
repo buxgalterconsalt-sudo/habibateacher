@@ -8,17 +8,34 @@ Tashqi npm paketlar kerak emas — faqat Node.js 22.5+ (bu kompyuterda 24 o'rnat
 
 ---
 
-## 1. Ishga tushirish
+## 1. Lokal ko'rib chiqish
 
-- `start-platform.bat` faylini ikki marta bosing, **yoki**
-- konsolda:
+Loyiha papkasida PowerShell yoki terminal ochib serverni ishga tushiring:
 
 ```cmd
-cd "C:\Users\i7TechStore\Documents\Проект по умолчанию\platform"
+cd "C:\Users\i7TechStore\Desktop\Habiba Teacher\railway-upload"
 node server.mjs
 ```
 
-So'ng brauzerda oching: **http://localhost:8788**
+Brauzerda **http://localhost:8788** ni oching. Server ishlashi uchun terminal oynasi ochiq tursin; to'xtatish uchun `Ctrl+C` bosing.
+
+`8788` band bo'lsa, PowerShell'da boshqa port bering:
+
+```powershell
+$env:PORT = "8789"
+node server.mjs
+```
+
+Keyin **http://localhost:8789** ni oching. Admin sahifasi `/admin`; parol `config.json` yoki Railway `ADMIN_PASSWORD` sozlamasidan olinadi.
+
+### Kod papkalari
+
+- `server.mjs` — server va sahifa yo'naltirishlari;
+- `src/config.mjs` — ilova sozlamalari;
+- `src/i18n.mjs` — UZ/RU/EN tarjimalari;
+- `src/question-import.mjs` — XLSX/DOCX savol importi;
+- `public/platform.css` — sayt uslublari;
+- `public/img/` — sahifadagi rasmlar.
 
 - O'quvchi sahifasi: `http://localhost:8788`
 - Admin: `http://localhost:8788/admin`
@@ -104,7 +121,7 @@ kerak (`notifyOnFinish: false` qilsangiz o'chadi).
 ```json
 {
   "port": 8788,
-  "adminPassword": "Habiba2026",
+  "adminPassword": "BU_YERGA_OZINGIZNING_PAROLINGIZ",
   "siteName": "Habiba teacher",
   "maxUploadMb": 60,
   "telegram": "https://t.me/Qobuljon_91",
