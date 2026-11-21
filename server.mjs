@@ -6325,7 +6325,7 @@ const server = http.createServer(async (req, res) => {
   const previousMax = Number(currentWatch && currentWatch.max_seconds) || 0;
   const acceptedSeconds = lessonAlreadyCompleted
     ? seconds
-    : Math.min(seconds, previousMax + elapsedPlaying * 2.15 + 0.75);
+    : Math.min(seconds, previousMax + elapsedPlaying * 2.05);
   const isPlaying = fields.playing === "1" ? 1 : 0;
   db.prepare(
   `INSERT INTO video_watch (user_id, lesson_id, max_seconds, duration, updated_at)
@@ -6780,7 +6780,7 @@ const server = http.createServer(async (req, res) => {
           v.addEventListener('play', function () { sync(true, true); });
           v.addEventListener('pause', function () { sync(true, false); });
           v.addEventListener('seeking', function () {
-            if (alreadyCompleted || correctingSeek || v.currentTime <= maxWatched + 0.6) return;
+            if (alreadyCompleted || correctingSeek || v.currentTime <= maxWatched + 0.25) return;
             correctingSeek = true;
             v.pause();
             v.currentTime = maxWatched;
@@ -6817,7 +6817,7 @@ const server = http.createServer(async (req, res) => {
             if (!player) return;
             duration = Number(player.getDuration()) || duration;
             var current = Number(player.getCurrentTime()) || 0;
-            if (!alreadyCompleted && !correctingSeek && current > maxWatched + 0.6) {
+            if (!alreadyCompleted && !correctingSeek && current > maxWatched + 0.25) {
               correctingSeek = true;
               player.pauseVideo();
               player.seekTo(maxWatched, true);
