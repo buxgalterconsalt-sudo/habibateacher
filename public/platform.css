@@ -1,18 +1,18 @@
 /* ==========================================================================
-   Habiba teacher — platforma stillari (to'q ko'k + firuza)
+   Habiba teacher — platforma stillari (qoramtir binafsha + ko'k)
    ========================================================================== */
 :root {
-  --bg: #061726;
-  --bg-soft: #082238;
-  --surface: rgba(13, 45, 66, 0.68);
-  --surface-solid: #0c2c42;
-  --surface-2: #0a2438;
-  --line: rgba(148, 205, 220, 0.16);
-  --line-strong: rgba(94, 234, 212, 0.34);
-  --text: #eaf6fa;
-  --muted: #9fbbc7;
-  --primary: #12b5a6;
-  --primary-soft: #5eead4;
+  --bg: #080611;
+  --bg-soft: #110d21;
+  --surface: rgba(19, 14, 37, 0.9);
+  --surface-solid: #110d20;
+  --surface-2: #18132a;
+  --line: rgba(182, 161, 255, 0.14);
+  --line-strong: rgba(128, 85, 255, 0.48);
+  --text: #f5f2ff;
+  --muted: #a7a0bf;
+  --primary: #7c3aed;
+  --primary-soft: #a78bfa;
   --gold: #f3c878;
   --danger: #fb7185;
   --ok: #34d399;
@@ -42,9 +42,9 @@ body {
   color: var(--text);
   background-color: var(--bg);
   background-image:
-    radial-gradient(900px 600px at 8% -10%, rgba(18, 181, 166, 0.2), transparent 62%),
-    radial-gradient(760px 520px at 102% 4%, rgba(56, 189, 248, 0.12), transparent 60%),
-    radial-gradient(820px 600px at 50% 110%, rgba(13, 148, 136, 0.14), transparent 66%);
+    radial-gradient(900px 600px at 8% -10%, rgba(103, 44, 224, 0.2), transparent 62%),
+    radial-gradient(760px 520px at 102% 4%, rgba(10, 148, 210, 0.12), transparent 60%),
+    radial-gradient(820px 600px at 50% 110%, rgba(63, 38, 126, 0.16), transparent 66%);
   background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
 }
@@ -119,7 +119,7 @@ ul {
   position: sticky;
   top: 0;
   z-index: 40;
-  background: rgba(6, 23, 38, 0.86);
+  background: rgba(8, 6, 17, 0.9);
   border-bottom: 1px solid var(--line);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
@@ -6090,3 +6090,31 @@ img, video, iframe { max-width: 100%; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
 }
+
+/* Keep the TKT note clear of the hero photo and its caption. */
+@media (min-width: 681px) {
+  .landing-hero-art { grid-template-columns: minmax(0,1fr); align-content: center; justify-items: stretch; gap: 14px; }
+  .hero-photo-frame { grid-row: 1; justify-self: center; }
+  .hero-float-card, .hero-float-card.one { position: relative; inset: auto; width: min(100%,470px); justify-self: center; padding: 15px 18px; transform: none; }
+}
+
+
+/* Video lesson workspace: keep the player visible while the reading text scrolls independently. */
+.video-reading-layout { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(250px, .85fr); gap: 16px; align-items: start; }
+.video-reading-layout .lesson-video-card { position: sticky; top: 86px; min-width: 0; margin-bottom: 18px; }
+.video-reading-layout .lesson-transcript { max-height: min(72vh, 760px); overflow: auto; overscroll-behavior: contain; margin: 0 0 18px; padding: 18px; border: 1px solid var(--line); border-radius: 18px; background: var(--surface); }
+.lesson-transcript h2 { margin: 0 0 12px; font-size: 1.05rem; }
+.lesson-inline-test { padding: 16px; }
+.lesson-inline-test .card-head { align-items: flex-start; gap: 10px; }
+.lesson-inline-test .question { margin: 12px 0; padding: 12px; }
+.lesson-inline-test.is-locked { opacity: .8; }
+.lesson-inline-test.is-unlocked { border-color: color-mix(in srgb, var(--primary) 55%, var(--line)); }
+@media (max-width: 900px) { .video-reading-layout { grid-template-columns: minmax(0,1fr); } .video-reading-layout .lesson-video-card { position: relative; top: auto; } .video-reading-layout .lesson-transcript { max-height: 46vh; } }
+
+
+/* Compact controls for video files and tests in lesson rows. */
+.lesson-file-actions { display: grid; justify-items: start; gap: 6px; min-width: 132px; max-width: 190px; margin-top: 8px; }
+.lesson-file-picker { cursor: pointer; }
+.lesson-file-input { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; clip-path: inset(50%); }
+.lesson-file-input:focus + button { outline: 2px solid var(--primary); }
+.lesson-file-actions small { max-width: 100%; overflow-wrap: anywhere; }

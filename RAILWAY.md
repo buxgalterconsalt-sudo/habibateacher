@@ -32,7 +32,7 @@ Railway → Service → **Variables** bo'limiga qo'shing:
 | `TELEGRAM_CHAT_ID` | ha | Admin xabarlari uchun chat ID |
 | `TELEGRAM_URL` | yo'q | Telegram havolasi |
 | `CONTACT_PHONE` | yo'q | Aloqa telefon raqami |
-| `MAX_UPLOAD_MB` | yo'q | `100` (video uchun alohida 1 GB) |
+| `MAX_UPLOAD_MB` | yo'q | `100` (video uchun alohida 4 GB) |
 
 `PORT` ni qo'lda yozmang — Railway o'zi beradi, ilova uni avtomatik oladi.
 
@@ -77,14 +77,24 @@ Cloudflare DNS da:
 
 Hozir domen `153.52.255.8` (Railway edge) ga ketayapti va **404** qaytaryapti — bu servis ishlamayotganini bildiradi, DNS xatosi emas. Deploy muvaffaqiyatli bo'lsa, 404 yo'qoladi.
 
-## 6. Bot haqida muhim
+## 6. Admin panelga kirish
+
+Standart admin parol bilan kiring. Parolni almashtirish uchun:
+
+1. Admin panelga kiring.
+2. **«Parolni o'zgartirish»** tugmasini bosing.
+3. Yangi parolni ikki marta kiriting va saqlang.
+
+Yangi parol bazada hash ko‘rinishida saqlanadi va Railway’dagi `ADMIN_PASSWORD` dan ustun turadi. Agar parolni keyin yana almashtirmoqchi bo‘lsangiz, shu sahifadan qiling.
+
+## 7. Bot haqida muhim
 
 Telegram bot tokeni faqat **bitta** joyda ishlashi kerak. Lokal kompyuterda ham, Railway'da ham bir vaqtda ishlasa, Telegram `409 Conflict` beradi.
 
 - Railway'da ishlatmoqchi bo'lsangiz, lokal serverni to'xtating yoki lokal `config.json` dan bot tokenini olib tashlang.
 - Yoki Railway'da alohida bot tokeni ishlating.
 
-## 7. Eski bazani ko'chirish (ixtiyoriy)
+## 8. Eski bazani ko'chirish (ixtiyoriy)
 
 Mavjud `platform.db` va `storage/` fayllarini Railway volume ichiga ko'chirish kerak:
 

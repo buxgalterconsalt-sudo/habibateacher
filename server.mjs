@@ -17,6 +17,19 @@ import { loadAppConfig } from "./src/config.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const { config, port: PORT, dataDir: DATA_DIR, storageDir: STORAGE_DIR, publicDir: PUBLIC_DIR, maxUpload: MAX_UPLOAD } = loadAppConfig(__dirname);
+const MAX_VIDEO_UPLOAD = 4 * 1024 * 1024 * 1024;
+const VIDEO_UPLOAD_CHUNK = 2 * 1024 * 1024;
+const MAX_MULTIPART_BODY = Math.max(256 * 1024 * 1024, MAX_UPLOAD + 1024 * 1024);
+const videoUploadSessions = new Map();
+const videoUploadCleanup = setInterval(() => {
+  const cutoff = Date.now() - 6 * 60 * 60 * 1000;
+  for (const [token, session] of videoUploadSessions) {
+    if (session.createdAt >= cutoff) continue;
+    videoUploadSessions.delete(token);
+    fs.promises.unlink(session.path).catch(() => {});
+  }
+}, 60 * 60 * 1000);
+videoUploadCleanup.unref();
 
 const DEFAULT_ADMIN_PASSWORD_HASH = "7e3379d301a940c026d357d73fea6007:9c89ab7ba9f0dc3ecf9292610192eb2041c4b68bca73e90ae2548da7bef7a7f4619a004438960e6a7c174c32a99ecac93a37cd9b2a0898d28065809898553fb8";
 
@@ -143,6 +156,9 @@ function contractText() {
 const db = new DatabaseSync(path.join(DATA_DIR, "platform.db"));
 db.exec(`
   PRAGMA journal_mode = WAL;
+  PRAGMA synchronous = NORMAL;
+  PRAGMA busy_timeout = 5000;
+  PRAGMA cache_size = -64000;
   PRAGMA foreign_keys = ON;
 
   CREATE TABLE IF NOT EXISTS users (
@@ -364,6 +380,10 @@ db.exec(`CREATE TABLE IF NOT EXISTS login_links (
   expires_at INTEGER NOT NULL,
   used INTEGER NOT NULL DEFAULT 0
 )`);
+const loginLinkCols = db.prepare("PRAGMA table_info(login_links)").all();
+if (!loginLinkCols.some((c) => c.name === "send_error")) {
+  db.exec("ALTER TABLE login_links ADD COLUMN send_error TEXT NOT NULL DEFAULT ''");
+}
 
 /* Eski bitta-kunlik turnir jadvalini guruhli jadvalga o'tkazish */
 const tournamentCols = db.prepare("PRAGMA table_info(tournaments)").all();
@@ -469,6 +489,10 @@ CREATE TABLE IF NOT EXISTS plan_subscriptions (
   status TEXT NOT NULL DEFAULT 'active'
 );
 CREATE INDEX IF NOT EXISTS idx_plan_subscriptions_user ON plan_subscriptions(user_id, status, expires_at);
+CREATE INDEX IF NOT EXISTS idx_sessions_user_expiry ON sessions(user_id, expires_at);
+CREATE INDEX IF NOT EXISTS idx_lessons_course_position ON lessons(course_id, position, id);
+CREATE INDEX IF NOT EXISTS idx_questions_lesson ON questions(lesson_id, id);
+CREATE INDEX IF NOT EXISTS idx_materials_lesson ON materials(lesson_id, id);
 CREATE TABLE IF NOT EXISTS test_attempts (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id INTEGER NOT NULL,
@@ -479,6 +503,7 @@ CREATE TABLE IF NOT EXISTS test_attempts (
   created_at TEXT NOT NULL,
   completed_at TEXT NOT NULL DEFAULT ''
 );
+CREATE INDEX IF NOT EXISTS idx_test_attempts_user_lesson ON test_attempts(user_id, lesson_id, id);
 `);
 
 // Eski bazalarga ustun qo'shish
@@ -1103,13 +1128,13 @@ ${canonical === "https://habibateacher.uz/" ? '<meta property="og:image" content
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#f7f7f7">
+<meta name="theme-color" content="#080611">
 <title>${h(title)}   ${h(config.siteName)}</title>
 ${seoTags}
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%2312b5a6'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='18' font-weight='bold' text-anchor='middle' fill='%2303211d'%3EH%3C/text%3E%3C/svg%3E">
 <script async src="https://telegram.org/js/telegram-web-app.js"></script>
-<script>try{document.documentElement.dataset.theme=localStorage.getItem('ht_theme')||'${isStudentPage ? "dark" : "light"}';}catch(e){document.documentElement.dataset.theme='${isStudentPage ? "dark" : "light"}';}</script>
-<link rel="stylesheet" href="/assets/platform.css?v=20261121c">
+<script>try{document.documentElement.dataset.theme=localStorage.getItem('ht_theme')||'dark';}catch(e){document.documentElement.dataset.theme='dark';}</script>
+<link rel="stylesheet" href="/assets/platform.css?v=20261121e">
 </head>
 <body${isStudentPage ? ` class="student-page${isDashboard ? " is-dashboard" : ""}"` : ""}>
 <header class="topbar">
@@ -1435,7 +1460,7 @@ async function readForm(req) {
 
   if (ct.includes("multipart/form-data")) {
   const declared = Number(req.headers["content-length"] || 0);
-  if (declared && declared > MAX_UPLOAD) throw new Error("too_large");
+  if (declared && declared > MAX_MULTIPART_BODY) throw new Error("too_large");
 
   const request = new Request("http://localhost/upload", {
   method: "POST",
@@ -1699,8 +1724,11 @@ function startTunnelWatchdog() {
 }
 
 async function telegramApi(method, payload) {
-  const token = config.telegramBotToken || "";
-  if (!token) return null;
+  const token = config.telegramBotToken || process.env.TELEGRAM_BOT_TOKEN || "";
+  if (!token) {
+  console.error(`[telegram] ${method} failed: TELEGRAM_BOT_TOKEN is not configured`);
+  return { ok: false, description: "Bot token is not configured" };
+  }
   try {
   const res = await fetch(`https://api.telegram.org/bot${token}/${method}`, {
   method: "POST",
@@ -1708,11 +1736,25 @@ async function telegramApi(method, payload) {
   body: JSON.stringify(payload || {}),
   signal: AbortSignal.timeout(35000)
   });
-  return await res.json().catch(() => null);
+  const data = await res.json().catch(() => null);
+  if (!res.ok || !data || !data.ok) {
+  console.error(`[telegram] ${method} failed (${data && data.error_code || res.status}): ${String(data && data.description || "Invalid Telegram API response").slice(0, 240)}`);
+  }
+  return data;
   } catch (e) {
   console.error("[bot]", e.message);
   return null;
   }
+}
+
+async function sendLoginCode(chatId, code) {
+  const response = await telegramApi("sendMessage", {
+    chat_id: chatId,
+    text: `<b>Kirish kodi</b>\n\n<code>${code}</code>\n\nKod 5 daqiqa amal qiladi. Nusxalash uchun kodni bosing.`,
+    parse_mode: "HTML",
+    reply_markup: { inline_keyboard: [[{ text: "Nusxalash", copy_text: { text: code } }]] }
+  });
+  return Boolean(response && response.ok);
 }
 
 function telegramDuelKeyboard(path, label = "Duelni ochish") {
@@ -1971,32 +2013,45 @@ async function handleTelegramLoginLink(chatId, token, from) {
     });
     return;
   }
-  db.prepare("UPDATE login_links SET chat_id = ?, used = 1 WHERE token = ?").run(String(chatId), token);
-  db.prepare("UPDATE users SET telegram_id = ? WHERE id = ?").run(String(chatId), userRow.id);
   const username = String(from?.username || "").trim().toLowerCase();
+  const code = String(randomInt(100000, 1000000));
+  if (!(await sendLoginCode(chatId, code))) {
+    db.prepare("UPDATE login_links SET send_error = 'telegram_send_failed' WHERE token = ?").run(token);
+    return;
+  }
+  db.prepare("UPDATE login_links SET chat_id = ?, used = 1, send_error = '' WHERE token = ?").run(String(chatId), token);
+  db.prepare("UPDATE users SET telegram_id = ? WHERE id = ?").run(String(chatId), userRow.id);
   if (username) {
     db.prepare(
       "INSERT INTO telegram_users (username, chat_id, updated_at) VALUES (?, ?, ?) ON CONFLICT(username) DO UPDATE SET chat_id = excluded.chat_id, updated_at = excluded.updated_at"
     ).run(username, String(chatId), nowISO());
   }
-  const code = String(randomInt(100000, 1000000));
   db.prepare(
     `INSERT INTO login_codes (phone, code_hash, expires_at, attempts, created_at)
      VALUES (?, ?, ?, 0, ?)
      ON CONFLICT(phone) DO UPDATE SET code_hash = excluded.code_hash, expires_at = excluded.expires_at, attempts = 0, created_at = excluded.created_at`
   ).run(link.phone, loginCodeHash(link.phone, code), Date.now() + 5 * 60 * 1000, nowISO());
-  await telegramApi("sendMessage", {
-    chat_id: chatId,
-    text: `<b>Kirish kodi</b>\n\n<code>${code}</code>\n\nKod 5 daqiqa amal qiladi. Saytga qaytib, kodni kiriting.`,
-    parse_mode: "HTML",
-    reply_markup: { inline_keyboard: [[{ text: "Nusxalash", copy_text: { text: code } }]] }
-  });
 }
 
 function startPlatformBot() {
-  if (!config.telegramBotToken) return;
+  const token = config.telegramBotToken || process.env.TELEGRAM_BOT_TOKEN || "";
+  if (!token) {
+  console.error("[bot] not started: TELEGRAM_BOT_TOKEN is not configured");
+  return;
+  }
   let offset = Number(metaGet("bot_offset", "0")) || 0;
   const loop = async () => {
+  const identity = await telegramApi("getMe", {});
+  if (!identity || !identity.ok) {
+  console.error("[bot] stopped: Telegram rejected the bot token; check TELEGRAM_BOT_TOKEN in the service variables");
+  return;
+  }
+  const webhook = await telegramApi("getWebhookInfo", {});
+  if (webhook && webhook.ok && webhook.result && webhook.result.url) {
+  console.error("[bot] stopped: a Telegram webhook is active; disable it before this app can poll updates");
+  return;
+  }
+  console.log(`[bot] @${identity.result.username} connected`);
   while (true) {
   try {
   const params = new URLSearchParams({
@@ -2005,7 +2060,7 @@ function startPlatformBot() {
     allowed_updates: JSON.stringify(["message", "inline_query"])
   });
   const res = await fetch(
-  `https://api.telegram.org/bot${config.telegramBotToken}/getUpdates?${params}`,
+  `https://api.telegram.org/bot${token}/getUpdates?${params}`,
   { signal: AbortSignal.timeout(35000) }
   );
   const data = await res.json().catch(() => null);
@@ -2015,6 +2070,8 @@ function startPlatformBot() {
   metaSet("bot_offset", offset);
   await handleBotUpdate(update);
   }
+  } else {
+  console.error(`[bot] getUpdates failed (${data && data.error_code || res.status}): ${String(data && data.description || "Invalid Telegram API response").slice(0, 240)}`);
   }
   } catch (e) {
   console.error("[bot]", e.message);
@@ -2023,7 +2080,6 @@ function startPlatformBot() {
   }
   };
   loop();
-  console.log("[bot] @HabibateacherBot ishga tushdi");
 }
 
 function testResultStats(lessonId) {
@@ -3764,12 +3820,12 @@ function testDocument({ title, body }) {  return `<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#f4f7fb">
+<meta name="theme-color" content="#080611">
 <title>${h(title)}   ${h(config.siteName)}</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%231e40af'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='18' font-weight='bold' text-anchor='middle' fill='white'%3EH%3C/text%3E%3C/svg%3E">
 <script async src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>try{document.documentElement.dataset.theme=localStorage.getItem('ht_theme')||'dark';}catch(e){document.documentElement.dataset.theme='dark';}</script>
-<link rel="stylesheet" href="/assets/platform.css?v=20261121c">
+<link rel="stylesheet" href="/assets/platform.css?v=20261121e">
 </head>
 <body class="test-body student-page">
 ${body}
@@ -4408,15 +4464,18 @@ const server = http.createServer(async (req, res) => {
   }
 
   let form = { fields: {}, files: {} };
+  const isVideoChunkRequest = /^\/admin\/video-upload\/[a-f0-9]{40}$/.test(p);
   if (method === "POST") {
   if (!sameOrigin(req)) {
   send(res, 403, layout({ title: "Taqiqlangan", body: `<div class="card">So'rov rad etildi.</div>`, user, admin }));
   return;
   }
   try {
-  form = await readForm(req);
+  if (!isVideoChunkRequest) form = await readForm(req);
   } catch (e) {
-  const msg = e.message === "too_large" ? "Fayl hajmi juda katta.": "Formani o'qishda xatolik.";
+  const msg = e.message === "too_large"
+    ? `Forma hajmi ${Math.round(MAX_MULTIPART_BODY / 1024 / 1024)} MB limitdan oshdi. Video faylini bo'laklab yuborish uchun video yuklash maydonidan foydalaning.`
+    : "Formani o'qishda xatolik.";
   send(res, 413, layout({ title: "Xatolik", body: alertBox(msg), user, admin }));
   return;
   }
@@ -4424,6 +4483,50 @@ const server = http.createServer(async (req, res) => {
 
   const fields = form.fields;
   const files = form.files;
+
+  if (p === "/admin/video-upload/start" && method === "POST") {
+    if (!admin) return json(res, 401, { error: "Admin tizimiga kiring." });
+    const fileName = path.basename(String(fields.name || "video.mp4")).slice(0, 180);
+    const fileSize = Number(fields.size);
+    const ext = path.extname(fileName).toLowerCase();
+    if (!Number.isSafeInteger(fileSize) || fileSize < 1 || fileSize > MAX_VIDEO_UPLOAD) {
+      return json(res, 413, { error: "Video hajmi 4 GB dan oshmasin." });
+    }
+    if (![".mp4", ".webm", ".mov", ".m4v", ".mkv"].includes(ext)) {
+      return json(res, 415, { error: "MP4, WebM, MOV, M4V yoki MKV video tanlang." });
+    }
+    const token = randomBytes(20).toString("hex");
+    const tempPath = path.join(STORAGE_DIR, `.upload-${token}`);
+    await fs.promises.writeFile(tempPath, "");
+    videoUploadSessions.set(token, { path: tempPath, name: fileName, size: fileSize, offset: 0, createdAt: Date.now() });
+    return json(res, 200, { token, chunkSize: VIDEO_UPLOAD_CHUNK });
+  }
+
+  const videoUploadMatch = p.match(/^\/admin\/video-upload\/([a-f0-9]{40})$/);
+  if (videoUploadMatch && method === "POST") {
+    if (!admin) return json(res, 401, { error: "Admin tizimiga kiring." });
+    const token = videoUploadMatch[1];
+    const session = videoUploadSessions.get(token);
+    if (!session || Date.now() - session.createdAt > 6 * 60 * 60 * 1000) {
+      if (session) { videoUploadSessions.delete(token); fs.promises.unlink(session.path).catch(() => {}); }
+      return json(res, 404, { error: "Video yuklash sessiyasi tugagan. Qayta boshlang." });
+    }
+    const offset = Number(url.searchParams.get("offset"));
+    if (!Number.isSafeInteger(offset) || offset !== session.offset || session.busy) return json(res, 409, { error: "Video bo'lagi tartibi noto'g'ri." });
+    session.busy = true;
+    try {
+      const chunk = await readRaw(req, VIDEO_UPLOAD_CHUNK);
+      if (!chunk.length || session.offset + chunk.length > session.size) return json(res, 400, { error: "Video bo'lagi hajmi mos kelmadi." });
+      await fs.promises.appendFile(session.path, chunk);
+      session.offset += chunk.length;
+    } catch (error) {
+      if (error.message === "too_large") return json(res, 413, { error: "Yuborilgan bo'lak juda katta." });
+      return json(res, 500, { error: "Video bo'lagini saqlab bo'lmadi." });
+    } finally {
+      session.busy = false;
+    }
+    return json(res, 200, { offset: session.offset, complete: session.offset === session.size });
+  }
 
   /* --------------------------------------------------------------- home */
   if (p === "/" && method === "GET") {
@@ -4470,8 +4573,7 @@ const server = http.createServer(async (req, res) => {
   <img src="/img/habiba-stage.jpg" alt="Habiba teacher ingliz tili o'qituvchilari bilan mashg'ulotda">
   <div class="hero-photo-caption"><small>HABIBA TEACHER</small><b>Ustozlar uchun amaliy tayyorlov</b></div>
   </div>
-  <div class="hero-float-card one"><span class="hero-float-mark">TKT</span><span><strong>3 ta modul</strong><small>Tartibli tayyorgarlik</small></span></div>
-  <div class="hero-float-card two"><img src="/img/teachers-group.jpg" alt=""><span><strong>Birga o'rganamiz</strong><small>Har qadamda qo'llab-quvvatlash</small></span></div>
+  <div class="hero-float-card one"><span class="hero-float-mark">TKT</span><span><strong>TKT: 3 ta modul</strong><small>Har bir modul bo'yicha alohida tayyorgarlik</small></span></div>
   </div>
   </div>
   </section>
@@ -4479,19 +4581,16 @@ const server = http.createServer(async (req, res) => {
   <section class="section tight">
   <div class="wrap">
   <div class="section-head center">
-  <span class="eyebrow">Yo'nalishni tanlang</span>
   <h2>Yo'nalishni tanlang</h2>
   <p class="muted">Attestatsiya yoki TKT   o'zingizga kerakli yo'nalishdan boshlang.</p>
   </div>
   <div class="grid two directions">
   <a class="direction-card" href="/attestation">
-  <span class="badge">Attestatsiya</span>
   <h3>Attestatsiya</h3>
   <p class="muted">Ingliz tili fani o'qituvchilari uchun testlar, metodika va demo dars.</p>
   <span class="card-link">Ochish   </span>
   </a>
   <a class="direction-card" href="/tkt">
-  <span class="badge">TKT</span>
   <h3>TKT</h3>
   <p class="muted">Teaching Knowledge Test formatidagi metodika va sinf boshqaruvi testlari.</p>
   <span class="card-link">Ochish   </span>
@@ -4682,17 +4781,13 @@ const server = http.createServer(async (req, res) => {
   return redirect(res, `/login?step=3&phone=${encodeURIComponent(phone)}${startNextJoin}&err=blocked`);
   }
   const code = String(randomInt(100000, 1000000));
+  const sent = await sendLoginCode(loginChatId, code);
+  if (!sent) return redirect(res, `/login?err=sendcode&phone=${encodeURIComponent(formatLocalPhone(phone))}${startNextJoin}`);
   db.prepare(
   `INSERT INTO login_codes (phone, code_hash, expires_at, attempts, created_at)
   VALUES (?, ?, ?, 0, ?)
   ON CONFLICT(phone) DO UPDATE SET code_hash = excluded.code_hash, expires_at = excluded.expires_at, attempts = 0, created_at = excluded.created_at`
   ).run(phone, loginCodeHash(phone, code), Date.now() + 5 * 60 * 1000, nowISO());
-  await telegramApi("sendMessage", {
-  chat_id: loginChatId,
-  text: `<b>Kirish kodi</b>\n\n<code>${code}</code>\n\nKod 5 daqiqa amal qiladi. Nusxalash uchun kodni bosing.`,
-  parse_mode: "HTML",
-  reply_markup: { inline_keyboard: [[{ text: "Nusxalash", copy_text: { text: code } }]] }
-  });
   return redirect(res, `/login?step=2&phone=${encodeURIComponent(phone)}${startNextJoin}`);
   }
 
@@ -4727,13 +4822,13 @@ const server = http.createServer(async (req, res) => {
 
   if (p === "/login/link-status" && method === "GET") {
   const token = String(url.searchParams.get("token") || "");
-  const row = db.prepare("SELECT chat_id, expires_at FROM login_links WHERE token = ?").get(token);
+  const row = db.prepare("SELECT chat_id, expires_at, send_error FROM login_links WHERE token = ?").get(token);
   const linked = Boolean(row && row.chat_id && Number(row.expires_at) > Date.now());
   res.writeHead(200, {
     "Content-Type": "application/json; charset=utf-8",
     "Cache-Control": "no-store"
   });
-  res.end(JSON.stringify({ linked }));
+  res.end(JSON.stringify({ linked, error: Boolean(row && row.send_error) }));
   return;
   }
 
@@ -4760,9 +4855,10 @@ const server = http.createServer(async (req, res) => {
   const step = Math.min(3, Math.max(1, Number(url.searchParams.get("step")) || 1));
   const phoneRaw = formatLocalPhone(url.searchParams.get("phone") || "");
   const err = String(url.searchParams.get("err") || "");
-  const pwMode = false;
+  const pwMode = url.searchParams.get("pw") === "1";
   const nextQs = pageNext ? `?next=${encodeURIComponent(pageNext)}` : "";
   const nextJoin = pageNext ? `&next=${encodeURIComponent(pageNext)}` : "";
+  const passwordAction = `/login?pw=1${nextJoin}`;
   const nextHidden = pageNext ? `<input type="hidden" name="next" value="${h(pageNext)}">` : "";
   const steps = `
   <div class="login-steps">
@@ -4790,9 +4886,10 @@ const server = http.createServer(async (req, res) => {
   ${err === "blocked" ? alertBox("Akkauntga kirish vaqtincha cheklangan. Administrator bilan bog'laning.", "error") : ""}
   ${err === "notelegram" ? alertBox("Bu akkauntga Telegram bog'lanmagan. Parol bilan kiring.", "error") : ""}
   ${err === "startbot" ? alertBox("Avval Telegram botga /start yozing. Shundan keyin kirish kodi shu botga keladi.", "error") : ""}
+  ${err === "sendcode" ? alertBox("Telegram bot kirish kodini yubora olmadi. Telegram akkauntingizda botni ochib /start bosing yoki parol bilan kiring.", "error") : ""}
   ${err === "startbot" ? `<div class="actions" style="margin-bottom:16px"><a class="btn btn-primary" href="${botLink()}" target="_blank" rel="noopener">Botni ochish</a></div>` : ""}
   ${pwMode ? `
-  <form method="post" action="/login" class="login-form">
+  <form method="post" action="${h(passwordAction)}" class="login-form">
   ${nextHidden}
   <div class="phone-wrap">
   <span class="phone-ico"><svg viewBox="0 0 24 24"><path d="M6.5 3h3l1.5 4-2 1.5a12 12 0 0 0 6.5 6.5L17 13l4 1.5v3A2.5 2.5 0 0 1 18.5 20 15.5 15.5 0 0 1 4 5.5 2.5 2.5 0 0 1 6.5 3Z"/></svg></span>
@@ -4811,7 +4908,7 @@ const server = http.createServer(async (req, res) => {
   <button class="btn-continue" type="submit">Davom etish <span>&rarr;</span></button>
   </form>
   `}
-  ${(err === "notelegram" || err === "startbot") && !pwMode ? `<p class="alt"><a href="/login?pw=1${nextJoin}">Parol bilan kirish</a></p>` : ""}
+  ${(err === "notelegram" || err === "startbot" || err === "sendcode") && !pwMode ? `<p class="alt"><a href="/login?pw=1&phone=${encodeURIComponent(phoneRaw)}${nextJoin}">Parol bilan kirish</a></p>` : ""}
   <script>
   (function () {
   var el = document.getElementById('phoneInput');
@@ -4847,10 +4944,16 @@ const server = http.createServer(async (req, res) => {
   (function () {
   var token = ${JSON.stringify(linkToken)};
   var next = ${JSON.stringify(nextStep)};
+  var failed = ${JSON.stringify(`/login?err=sendcode&phone=${encodeURIComponent(phoneRaw)}${nextJoin}`)};
   var timer = setInterval(function () {
   fetch('/login/link-status?token=' + encodeURIComponent(token))
   .then(function (r) { return r.json(); })
   .then(function (d) {
+  if (d && d.error) {
+  clearInterval(timer);
+  location.href = failed;
+  return;
+  }
   if (d && d.linked) {
   clearInterval(timer);
   location.href = next;
@@ -4908,8 +5011,10 @@ const server = http.createServer(async (req, res) => {
 
   const next = safeNext(fields.next || url.searchParams.get("next"));
 
-  // Platform logins must always begin with Telegram OTP, including legacy password forms.
-  return redirect(res, `/login?phone=${encodeURIComponent(formatLocalPhone(fields.phone))}${next ? `&next=${encodeURIComponent(next)}` : ""}`);
+  // Telegram OTP is the default; password sign-in remains available as a recovery path.
+  if (url.searchParams.get("pw") !== "1") {
+    return redirect(res, `/login?phone=${encodeURIComponent(formatLocalPhone(fields.phone))}${next ? `&next=${encodeURIComponent(next)}` : ""}`);
+  }
 
   const ip = clientIp(req);
   const lock = lockedFor(ip);
@@ -4932,7 +5037,7 @@ const server = http.createServer(async (req, res) => {
   "Kirish",
   "Telefon va parolingizni kiriting.",
   `${alertBox("Telefon yoki parol noto'g'ri.")}
-  <form method="post" action="/login" class="form">
+  <form method="post" action="/login?pw=1${next ? `&next=${encodeURIComponent(next)}` : ""}" class="form">
   ${next ? `<input type="hidden" name="next" value="${h(next)}">`: ""}
   <input type="hidden" name="tg_init_data" value="">
   <div class="field"><label>Telefon</label><input name="phone" data-phone value="${h(fields.phone || "")}" required></div>
@@ -6097,6 +6202,19 @@ const server = http.createServer(async (req, res) => {
       : `<span class="dash-next-locked"><span class="lock-ico">&#128274;</span> ${nextStepNote}</span>`
     : `<a class="dash-next-link" href="/course/${course.id}">Kursga qaytish &rarr;</a>`;
 
+  const relatedTestQuestions = relatedTest
+    ? db.prepare("SELECT * FROM questions WHERE lesson_id = ? ORDER BY id").all(relatedTest.id)
+    : [];
+  const relatedTestPanel = relatedTest
+    ? `<section class="card lesson-inline-test ${completed ? "is-unlocked" : "is-locked"}" id="lessonInlineTest">
+        <div class="card-head"><h2>${h(relatedTest.title || "Dars testi")}</h2><span class="muted small">${testDone ? `Natija: ${testProgress.score}%` : completed ? `${relatedTestQuestions.length} ta savol` : "Video tugagach ochiladi"}</span></div>
+        ${!completed ? `<p class="muted small">Dars bosqichlari tugagach, shu yerning o'zida test ishlaysiz.</p>` : testDone ? `<p class="muted">Test muvaffaqiyatli topshirildi.</p>` : relatedTestQuestions.length ? `<form method="post" action="/lesson/${relatedTest.id}/submit" class="test-form">
+          ${relatedTestQuestions.map((q, i) => `<fieldset class="question"><legend>${i + 1}. ${h(q.text)}</legend>${[1,2,3,4].map((n) => `<label class="opt"><input type="radio" name="q${q.id}" value="${n}" required> <span>${h(q["o" + n])}</span></label>`).join("")}</fieldset>`).join("")}
+          <button class="btn btn-primary" type="submit">Testni yakunlash</button>
+        </form>` : `<p class="muted">Test savollari hali qo'shilmagan.</p><a class="btn btn-sm" href="/test/${relatedTest.id}">Testni ochish</a>`}
+      </section>`
+    : lesson.type === "video" ? `<section class="card lesson-inline-test"><div class="card-head"><h2>Dars testi</h2></div><p class="muted small">Bu dars uchun test hali qo'shilmagan.</p></section>` : "";
+
   const materialsHtml = materials.length
     ? `<div class="lesson-materials">${materials
         .map(
@@ -6119,7 +6237,7 @@ const server = http.createServer(async (req, res) => {
         <span class="badge">${lessonNo}-dars</span>
         ${
           lesson.type === "video"
-            ? `<span class="badge ghost">${Number(lesson.duration_min) || 0} daqiqa</span>`
+            ? `<span class="badge ghost">${TYPE_LABEL[lesson.type] || lesson.type}</span>`
             : `<span class="badge ghost">${TYPE_LABEL[lesson.type] || lesson.type}</span>`
         }
         ${completed ? `<span class="badge done">Tugatildi</span>` : ""}
@@ -6129,16 +6247,18 @@ const server = http.createServer(async (req, res) => {
     ${resultHtml}
     <div class="lesson-grid">
       <div class="lesson-main">
+        <div class="video-reading-layout">
         <div class="lesson-video-card">
           ${videoHead}
           ${contentHtml}
           ${lesson.type === "video" ? `<label class="video-speed-control" for="videoSpeed">Video tezligi <select id="videoSpeed"><option value="0.75">0.75×</option><option value="1" selected>1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2">2×</option></select></label>` : ""}
-          ${lesson.type === "video" && String(lesson.content || "").trim() ? `<details class="lesson-transcript"><summary>Video dars matni</summary><div class="prose">${nl2br(lesson.content)}</div></details>` : ""}
           ${
             lesson.type === "video"
               ? `<details class="video-help"><summary>Video ochilmayaptimi?</summary><p class="muted small">Internet aloqasini tekshiring yoki sahifani yangilang. Muammo davom etsa, Telegram guruhida yozing.</p></details>`
               : ""
           }
+        </div>
+        ${lesson.type === "video" && String(lesson.content || "").trim() ? `<section class="lesson-transcript"><h2>Video dars matni</h2><div class="prose">${nl2br(lesson.content)}</div></section>` : ""}
         </div>
         <div class="card lesson-materials-card">
           <div class="card-head"><h2>Dars materiallari</h2></div>
@@ -6172,6 +6292,7 @@ const server = http.createServer(async (req, res) => {
           ${completeBlock}
           ${nextBlock}
         </div>
+        ${relatedTestPanel}
         <a class="card discuss-card" href="${h(config.telegram || "#")}" target="_blank" rel="noopener">
           <span class="dc-ico"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9 9 0 0 1-3.9-.9L3 20l1-4.1A8.4 8.4 0 0 1 12 3a8.4 8.4 0 0 1 9 8.5Z"/></svg></span>
           <span class="dc-copy"><b>Muhokama guruhi</b><small>Savollaringizga Telegram guruhda javob oling</small></span>
@@ -6188,7 +6309,6 @@ const server = http.createServer(async (req, res) => {
         var player = null, playerState = -1;
         var btn = document.getElementById('completeLesson');
         var note = document.querySelector('.lesson-step.done small');
-        var next = ${JSON.stringify(nextHref)};
         var lessonId = ${lesson.id};
         var sent = false, maxWatched = 0, duration = 0, lastSync = 0;
         var alreadyCompleted = ${completed ? "true" : "false"};
@@ -6675,9 +6795,24 @@ const server = http.createServer(async (req, res) => {
       db.prepare("DELETE FROM device_sessions WHERE user_id = ?").run(studentId);
     }
   } else if (action === "grant") {
-    const plan = getPlans().find((item) => item.id === "quarter") || getPlans()[0];
-    if (plan) db.prepare("INSERT INTO plan_subscriptions (user_id, plan_id, starts_at, expires_at, status) VALUES (?, ?, ?, ?, 'active')")
-      .run(studentId, plan.id, nowISO(), new Date(Date.now() + plan.days * 86400000).toISOString());
+    const fullAccess = fields.duration === "full";
+    const startsAt = nowISO();
+    const months = Math.max(1, Math.min(120, Math.round(Number(fields.months) || 1)));
+    const expiryDate = String(fields.expiry_date || "").trim();
+    const dateExpiry = fields.duration === "date" && /^\d{4}-\d{2}-\d{2}$/.test(expiryDate)
+      ? Date.parse(`${expiryDate}T23:59:59.999+05:00`)
+      : NaN;
+    if (fields.duration === "date" && !Number.isFinite(dateExpiry)) return redirect(res, "/admin/students");
+    db.prepare("UPDATE plan_subscriptions SET status = 'revoked' WHERE user_id = ? AND status = 'active'").run(studentId);
+    const expiresAt = fullAccess
+      ? "9999-12-31T23:59:59.999Z"
+      : fields.duration === "date"
+        ? new Date(dateExpiry).toISOString()
+        : new Date(Date.now() + months * 30 * 86400000).toISOString();
+    if (!Number.isFinite(dateExpiry) || dateExpiry > Date.now()) {
+      db.prepare("INSERT INTO plan_subscriptions (user_id, plan_id, starts_at, expires_at, status) VALUES (?, ?, ?, ?, 'active')")
+        .run(studentId, fullAccess ? "admin_full" : fields.duration === "date" ? "admin_date" : `admin_${months}m`, startsAt, expiresAt);
+    }
   } else {
     db.prepare("UPDATE plan_subscriptions SET status = 'revoked' WHERE user_id = ? AND status = 'active'").run(studentId);
   }
@@ -6702,10 +6837,11 @@ const server = http.createServer(async (req, res) => {
   <td>${h(s.phone)}</td>
   <td>${s.telegram_username ? "@" + h(s.telegram_username) : s.telegram_id ? h(s.telegram_id) : " "}</td>
   <td>${s.done}</td>
-  <td>${s.plan_expires ? `Faol: ${h(String(s.plan_expires).slice(0, 10))}` : "Ruxsat yo'q"}</td>
+  <td>${s.plan_expires ? String(s.plan_expires).startsWith("9999-") ? "To'liq ruxsat" : `Faol: ${h(String(s.plan_expires).slice(0, 10))}` : "Ruxsat yo'q"}</td>
   <td>${Number(s.is_blocked) ? `<span class="badge danger">Cheklangan</span>` : `<span class="badge done">Faol</span>`}</td>
   <td><form method="post" action="/admin/student/${s.id}/${Number(s.is_blocked) ? "unblock" : "block"}" class="inline"><button class="btn btn-sm ${Number(s.is_blocked) ? "btn-primary" : "btn-danger"}">${Number(s.is_blocked) ? "Ruxsat berish" : "Cheklash"}</button></form>
-  <form method="post" action="/admin/student/${s.id}/${s.plan_expires ? "revoke" : "grant"}" class="inline"><button class="btn btn-sm">${s.plan_expires ? "Tarifni yopish" : "3 oy tarif ochish"}</button></form></td>
+  <form method="post" action="/admin/student/${s.id}/grant" class="inline"><label class="small">Muddat <select name="months" style="min-width:100px">${Array.from({length:120},(_,i)=>`<option value="${i+1}"${i===2?" selected":""}>${i+1} oy</option>`).join("")}</select></label><button class="btn btn-sm" name="duration" value="set">Ruxsat berish</button><label class="small">Tugash sanasi <input type="date" name="expiry_date" value="${s.plan_expires && !String(s.plan_expires).startsWith("9999-") ? h(String(s.plan_expires).slice(0, 10)) : ""}"></label><button class="btn btn-sm" name="duration" value="date">Sanani belgilash</button><button class="btn btn-sm" name="duration" value="full">To'liq ochish</button></form>
+  ${s.plan_expires ? `<form method="post" action="/admin/student/${s.id}/revoke" class="inline"><button class="btn btn-sm btn-danger">Tarifni yopish</button></form>` : ""}</td>
   <td>${h(String(s.created_at).slice(0, 10))}</td>
   </tr>`
   )
@@ -6834,9 +6970,12 @@ const server = http.createServer(async (req, res) => {
   )}</small>${Number(l.price) > 0 ? `<br><small class="muted">${formatSum(l.price)} so'm. PRO</small>`: ""}
   <details class="q-edit">
   <summary>Tahrirlash</summary>
-  <form method="post" action="/admin/lesson/${l.id}/update" class="form">
+  <form method="post" action="/admin/lesson/${l.id}/update" class="form" enctype="multipart/form-data" id="lesson-edit-${l.id}" data-video-upload data-video-upload-key="${l.id}">
   <div class="field"><label>Nomi</label><input name="title" value="${h(l.title)}" required></div>
-  ${l.type === "video" ? `<div class="field"><label>Video matni / transkript</label><textarea name="content" rows="5">${h(l.content || "")}</textarea></div>` : ""}
+  ${l.type === "video" ? `<div class="field"><label>Video havolasi</label><input name="video_url" value="${h(l.video_url || "")}" placeholder="https://youtu.be/... yoki https://.../video.mp4"><small class="muted">Yangi video fayl yuklansa, havola o‘rniga fayl ishlatiladi.</small></div>
+  <input type="hidden" name="video_upload_id" id="video-upload-token-${l.id}" data-video-upload-id form="lesson-edit-${l.id}"><small class="muted">Hozirgi video: ${h(l.file_name || l.video_url || "mavjud emas")}. Yangi fayl tanlasangiz, joriy video almashtiriladi.</small>
+  <div class="field"><label><input type="checkbox" name="remove_video" value="1"> Videoni olib tashlash</label><small class="muted">Yangi fayl yoki havola kiritilsa, olib tashlash belgisi e’tiborga olinmaydi.</small></div>
+  <div class="field"><label>Video matni / transkript</label><textarea name="content" rows="5">${h(l.content || "")}</textarea></div>` : ""}
   ${
   l.type === "test"
   ? `<div class="grid two">
@@ -6859,8 +6998,8 @@ const server = http.createServer(async (req, res) => {
   </form>
   </details>
   </td>
-  <td>${typeBadge(l.type)}</td>
-  <td>${l.type === "test" ? l.qcount: " "}</td>
+  <td>${typeBadge(l.type)}${l.type === "video" ? `<div class="lesson-file-actions"><label class="btn btn-sm lesson-file-picker" for="lesson-video-file-${l.id}">Video yuklash</label><input type="file" class="lesson-file-input" id="lesson-video-file-${l.id}" data-video-file data-video-upload-key="${l.id}" form="lesson-edit-${l.id}" accept="video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov,.m4v,.mkv"><button class="btn btn-sm" type="button" data-clear-video-for="${l.id}" hidden>Tanlovni olib tashlash</button><small class="muted" id="video-upload-status-${l.id}" data-video-status>${h(l.file_name || l.video_url || "Video tanlanmagan")}</small></div>` : ""}</td>
+  <td>${l.type === "test" ? l.qcount : l.type === "video" ? lessons[i + 1]?.type === "test" ? `<a class="btn btn-sm" href="/admin/lesson/${lessons[i + 1].id}/questions">Test savollarini tahrirlash (${lessons[i + 1].qcount})</a>` : `<form method="post" action="/admin/lesson/${l.id}/add-test" class="inline"><button class="btn btn-sm btn-primary">Shu darsga test qo'shish</button></form>` : " "}</td>
   <td class="ta-right">
   ${l.type === "test" ? `<a class="btn btn-sm" href="/admin/lesson/${l.id}/questions">Savollar</a>`: ""}
   ${l.type === "test" ? `<a class="btn btn-sm" href="/admin/lesson/${l.id}/materials">Materiallar</a>`: ""}
@@ -6919,7 +7058,7 @@ const server = http.createServer(async (req, res) => {
 
   <div class="card" id="new-lesson">
   <h2>Yangi dars</h2>
-  <form method="post" action="/admin/lesson" enctype="multipart/form-data" class="form">
+  <form method="post" action="/admin/lesson" enctype="multipart/form-data" class="form" data-video-upload data-video-upload-key="new">
   <input type="hidden" name="course_id" value="${course.id}">
   <div class="field"><label>Dars nomi</label><input name="title" required placeholder="Masalan: Modul 1   Metodika"></div>
   <div class="field">
@@ -6946,9 +7085,11 @@ const server = http.createServer(async (req, res) => {
   </div>
   <div class="field" data-for="video"><label>Video dars matni / transkripti</label><textarea name="transcript" rows="6" placeholder="Videoda tushuntirilgan mavzu matni shu yerda ko'rinadi."></textarea></div>
   <div class="field" data-for="video">
-  <label>Yoki video fayl yuklang (maks. 1 GB)</label>
-  <input type="file" name="video" accept="video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov,.m4v,.mkv">
-  <small class="muted">MP4 tavsiya etiladi. Videoni faqat admin yuklay oladi.</small>
+  <label>Yoki video fayl tanlang (maks. 4 GB)</label>
+  <input type="file" id="lessonVideoFile" accept="video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov,.m4v,.mkv">
+  <input type="hidden" name="video_upload_id" id="videoUploadId">
+  <button class="btn btn-sm" type="button" id="clearVideoSelection" hidden>Tanlangan videoni olib tashlash</button>
+  <small class="muted" id="videoUploadStatus">MP4 tavsiya etiladi. Video avtomatik qismlarga yuboriladi, 4 GB gacha.</small>
   </div>
   <div class="field" data-for="test">
   <label>Test davomiyligi (daqiqa)</label>
@@ -6981,6 +7122,61 @@ const server = http.createServer(async (req, res) => {
   }
   type.addEventListener('change', sync);
   sync();
+  document.querySelectorAll('form[data-video-upload]').forEach(function (lessonForm) {
+    var uploadKey = lessonForm.getAttribute('data-video-upload-key') || 'new';
+    var videoInput = lessonForm.querySelector('[data-video-file]') || document.getElementById(uploadKey === 'new' ? 'lessonVideoFile' : 'lesson-video-file-' + uploadKey);
+    var uploadId = lessonForm.querySelector('[data-video-upload-id]') || document.getElementById(uploadKey === 'new' ? 'videoUploadId' : 'video-upload-token-' + uploadKey);
+    var uploadStatus = lessonForm.querySelector('[data-video-status]') || document.getElementById(uploadKey === 'new' ? 'videoUploadStatus' : 'video-upload-status-' + uploadKey);
+    var clearVideo = document.querySelector('[data-clear-video-for="' + uploadKey + '"]');
+    if (!videoInput || !uploadId) return;
+    var uploading = false;
+    function syncClearVideo() { if (clearVideo) clearVideo.hidden = !((videoInput.files && videoInput.files.length) || uploadId.value); }
+    if (clearVideo) clearVideo.addEventListener('click', function () {
+      if (uploading) return;
+      videoInput.value = ''; videoInput.disabled = false; uploadId.value = '';
+      if (uploadStatus) uploadStatus.textContent = uploadKey === 'new' ? 'Video tanlanmagan. MP4 tavsiya etiladi.' : 'Video tanlanmagan.';
+      syncClearVideo();
+    });
+    videoInput.addEventListener('change', function () {
+      syncClearVideo();
+      if (uploadStatus && videoInput.files && videoInput.files[0]) uploadStatus.textContent = 'Tanlandi: ' + videoInput.files[0].name + ' (' + Math.ceil(videoInput.files[0].size / 1048576) + ' MB)';
+    });
+    lessonForm.addEventListener('submit', async function (event) {
+      var file = videoInput.files && videoInput.files[0];
+      if ((uploadKey === 'new' && type.value !== 'video') || !file || uploadId.value || uploading) { if (uploading) event.preventDefault(); return; }
+      event.preventDefault();
+      if (file.size > ${MAX_VIDEO_UPLOAD}) { alert('Video hajmi 4 GB dan oshmasin.'); return; }
+      uploading = true;
+      var submit = lessonForm.querySelector('button[type="submit"]');
+      if (submit) submit.disabled = true;
+      if (uploadStatus) uploadStatus.textContent = 'Video yuklanmoqda: 0%';
+      try {
+        var initResponse = await fetch('/admin/video-upload/start', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ name: file.name, size: String(file.size) }).toString() });
+        var initData = await initResponse.json();
+        if (!initResponse.ok) throw new Error(initData.error || 'Video yuklashni boshlash amalga oshmadi.');
+        var offset = 0;
+        while (offset < file.size) {
+          var part = file.slice(offset, Math.min(offset + initData.chunkSize, file.size));
+          var partResponse = await fetch('/admin/video-upload/' + initData.token + '?offset=' + offset, { method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: part });
+          var partData = await partResponse.json();
+          if (!partResponse.ok) throw new Error(partData.error || 'Video bo‘lagini serverga yuborib bo‘lmadi (HTTP ' + partResponse.status + ').');
+          offset = partData.offset;
+          if (uploadStatus) uploadStatus.textContent = 'Video yuklanmoqda: ' + Math.floor(offset / file.size * 100) + '%';
+        }
+        uploadId.value = initData.token;
+        videoInput.disabled = true;
+        uploading = false;
+        if (uploadStatus) uploadStatus.textContent = 'Video yuklandi. Dars saqlanmoqda...';
+        lessonForm.submit();
+      } catch (error) {
+        uploading = false;
+        if (submit) submit.disabled = false;
+        if (uploadStatus) uploadStatus.textContent = 'Yuklash tugamadi. Tanlangan faylni “Tanlovni olib tashlash” tugmasi bilan tozalab, yana urinib ko‘ring.';
+        syncClearVideo();
+        alert(error && error.message ? error.message : 'Video yuklanmadi.');
+      }
+    });
+  });
   })();
   </script>
   </div>`;
@@ -7034,14 +7230,32 @@ const server = http.createServer(async (req, res) => {
 
   if (type === "video") {
   const videoFile = files.video;
-  if (videoFile && videoFile.size) {
+  const uploadToken = String(fields.video_upload_id || "");
+  if (uploadToken) {
+  const upload = videoUploadSessions.get(uploadToken);
+  if (!upload || upload.offset !== upload.size) {
+  redirect(res, `/admin/course/${courseId}?err=video_upload`);
+  return;
+  }
+  const ext = path.extname(upload.name).toLowerCase();
+  if (![".mp4", ".webm", ".mov", ".m4v", ".mkv"].includes(ext)) {
+  redirect(res, `/admin/course/${courseId}?err=notvideo`);
+  return;
+  }
+  fileId = `${randomBytes(12).toString("hex")}${ext}`;
+  fs.renameSync(upload.path, path.join(STORAGE_DIR, fileId));
+  fileName = upload.name;
+  fileSize = upload.size;
+  videoUrl = "";
+  videoUploadSessions.delete(uploadToken);
+  } else if (videoFile && videoFile.size) {
   const ext = (path.extname(videoFile.name || "") || ".mp4").toLowerCase();
   const allowed = [".mp4", ".webm", ".mov", ".m4v", ".mkv"];
   if (!allowed.includes(ext) || !/^video\//i.test(String(videoFile.type || ""))) {
   redirect(res, `/admin/course/${courseId}?err=notvideo`);
   return;
   }
-  if (videoFile.size > 1024 * 1024 * 1024) {
+  if (videoFile.size > MAX_VIDEO_UPLOAD) {
   redirect(res, `/admin/course/${courseId}?err=big`);
   return;
   }
@@ -7098,6 +7312,30 @@ const server = http.createServer(async (req, res) => {
   return;
   }
 
+  const addVideoTestMatch = p.match(/^\/admin\/lesson\/(\d+)\/add-test$/);
+  if (addVideoTestMatch && method === "POST") {
+    if (!admin) return redirect(res, "/admin/login");
+    const video = db.prepare("SELECT * FROM lessons WHERE id = ? AND type = 'video'").get(Number(addVideoTestMatch[1]));
+    if (!video) return redirect(res, "/admin");
+    const immediateNext = db.prepare("SELECT id, type FROM lessons WHERE course_id = ? AND (position > ? OR (position = ? AND id > ?)) ORDER BY position, id LIMIT 1")
+      .get(video.course_id, video.position, video.position, video.id);
+    if (immediateNext?.type === "test") return redirect(res, "/admin/lesson/" + immediateNext.id + "/questions");
+    db.exec("BEGIN IMMEDIATE");
+    let testId;
+    try {
+      db.prepare("UPDATE lessons SET position = position + 1 WHERE course_id = ? AND position > ?").run(video.course_id, video.position);
+      const title = (video.title + " - Test").slice(0, 200);
+      const info = db.prepare("INSERT INTO lessons (course_id, title, type, content, video_url, duration_min, position, price, is_pro, max_score, question_count, created_at) VALUES (?, ?, 'test', '', '', 20, ?, 0, 0, 100, 20, ?)")
+        .run(video.course_id, title, video.position + 1, nowISO());
+      testId = Number(info.lastInsertRowid);
+      db.exec("COMMIT");
+    } catch (error) {
+      db.exec("ROLLBACK");
+      throw error;
+    }
+    return redirect(res, "/admin/lesson/" + testId + "/questions");
+  }
+
   const adminLessonMatch = p.match(/^\/admin\/lesson\/(\d+)(\/questions|\/sections|\/rename|\/update|\/delete|\/access|\/materials|\/about)?$/);
   if (adminLessonMatch) {
   if (!admin) return redirect(res, "/admin/login");
@@ -7108,7 +7346,34 @@ const server = http.createServer(async (req, res) => {
   const title = String(fields.title || "").trim();
   if (title) db.prepare("UPDATE lessons SET title = ? WHERE id = ?").run(title, lesson.id);
   if (adminLessonMatch[2] === "/update" && lesson.type === "video") {
-    db.prepare("UPDATE lessons SET content = ? WHERE id = ?").run(String(fields.content || "").trim(), lesson.id);
+    let nextFileId = lesson.file_id || "";
+    let nextFileName = lesson.file_name || "";
+    let nextFileSize = Number(lesson.file_size) || 0;
+    let nextVideoUrl = lesson.video_url || "";
+    const uploadToken = String(fields.video_upload_id || "");
+    const upload = uploadToken ? videoUploadSessions.get(uploadToken) : null;
+    if (uploadToken && (!upload || upload.offset !== upload.size)) return redirect(res, `/admin/course/${lesson.course_id}?err=video_upload`);
+    if (upload) {
+      const ext = path.extname(upload.name).toLowerCase();
+      if (![".mp4", ".webm", ".mov", ".m4v", ".mkv"].includes(ext)) return redirect(res, `/admin/course/${lesson.course_id}?err=notvideo`);
+      nextFileId = `${randomBytes(12).toString("hex")}${ext}`;
+      fs.renameSync(upload.path, path.join(STORAGE_DIR, nextFileId));
+      nextFileName = upload.name;
+      nextFileSize = upload.size;
+      nextVideoUrl = "";
+      videoUploadSessions.delete(uploadToken);
+    } else if (String(fields.video_url || "").trim()) {
+      nextVideoUrl = String(fields.video_url).trim();
+      if (!/^https?:\/\//i.test(nextVideoUrl)) return redirect(res, `/admin/course/${lesson.course_id}?err=badurl`);
+      nextFileId = ""; nextFileName = ""; nextFileSize = 0;
+    } else if (String(fields.remove_video || "") === "1") {
+      nextVideoUrl = ""; nextFileId = ""; nextFileName = ""; nextFileSize = 0;
+    }
+    db.prepare("UPDATE lessons SET content = ?, video_url = ?, file_id = ?, file_name = ?, file_size = ? WHERE id = ?")
+      .run(String(fields.content || "").trim(), nextVideoUrl, nextFileId, nextFileName, nextFileSize, lesson.id);
+    if (lesson.file_id && lesson.file_id !== nextFileId) {
+      try { fs.unlinkSync(path.join(STORAGE_DIR, lesson.file_id)); } catch (e) {}
+    }
   }
   if (adminLessonMatch[2] === "/update" && lesson.type === "test") {
   const duration = Math.min(180, Math.max(1, Number(fields.duration_min) || lesson.duration_min || 30));
@@ -7148,7 +7413,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (adminLessonMatch[2] === "/about" && method === "POST") {
-  const about = String(fields.about || "").trim().slice(0, 5000);
+  const about = String(fields.about || "").trim();
   db.prepare("UPDATE lessons SET about = ? WHERE id = ?").run(about, lesson.id);
   redirect(res, `/admin/lesson/${lesson.id}/materials?saved=1`);
   return;
@@ -7554,7 +7819,7 @@ Matn: passage matni (ixtiyoriy)</p>
   const o3 = String(fields.o3 || "").trim();
   const o4 = String(fields.o4 || "").trim();
   const correct = Math.min(4, Math.max(1, Number(fields.correct) || 1));
-  const passage = String(fields.passage || "").trim().slice(0, 20000);
+  const passage = String(fields.passage || "").trim();
 
   if (text && o1 && o2 && o3 && o4) {
   db.prepare(
@@ -7576,7 +7841,7 @@ Matn: passage matni (ixtiyoriy)</p>
   const o3 = String(fields.o3 || "").trim();
   const o4 = String(fields.o4 || "").trim();
   const correct = Math.min(4, Math.max(1, Number(fields.correct) || 1));
-  const passage = String(fields.passage || "").trim().slice(0, 20000);
+  const passage = String(fields.passage || "").trim();
   if (text && o1 && o2 && o3 && o4) {
   db.prepare(
   "UPDATE questions SET text = ?, o1 = ?, o2 = ?, o3 = ?, o4 = ?, correct = ?, passage = ? WHERE id = ?"
@@ -7595,7 +7860,7 @@ Matn: passage matni (ixtiyoriy)</p>
   const title = String(fields.title || "").trim() || "Bo'lim";
   const fromNo = Math.max(1, Number(fields.from_no) || 1);
   const toNo = Math.max(0, Number(fields.to_no) || 0);
-  const passage = String(fields.passage || "").trim().slice(0, 20000);
+  const passage = String(fields.passage || "").trim();
   const position =
   db.prepare("SELECT COALESCE(MAX(position), 0) + 1 AS n FROM test_sections WHERE lesson_id = ?").get(lessonId)
 .n || 1;
@@ -7617,7 +7882,7 @@ Matn: passage matni (ixtiyoriy)</p>
   const title = String(fields.title || "").trim() || "Bo'lim";
   const fromNo = Math.max(1, Number(fields.from_no) || 1);
   const toNo = Math.max(0, Number(fields.to_no) || 0);
-  const passage = String(fields.passage || "").trim().slice(0, 20000);
+  const passage = String(fields.passage || "").trim();
   db.prepare("UPDATE test_sections SET title = ?, from_no = ?, to_no = ?, passage = ? WHERE id = ?").run(
   title,
   fromNo,
@@ -7710,6 +7975,8 @@ function notFound(res, user, admin) {
   );
 }
 
+server.headersTimeout = 65_000;
+server.requestTimeout = 15 * 60 * 1000;
 server.listen(PORT, () => {
   console.log(`Platforma ishga tushdi: http://localhost:${PORT}`);
   console.log(`Admin: http://localhost:${PORT}/admin  (parol: config.json ichida)`);
