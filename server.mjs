@@ -6726,7 +6726,7 @@ const server = http.createServer(async (req, res) => {
         if (v) {
           v.addEventListener('loadedmetadata', function () {
             duration = Number(v.duration) || 0;
-            if (duration > 0 && (maxWatched > 0 || alreadyCompleted)) {
+            if (duration > 0) {
               maxWatched = alreadyCompleted ? duration : Math.min(maxWatched, duration);
               v.currentTime = maxWatched;
             }
@@ -6755,7 +6755,7 @@ const server = http.createServer(async (req, res) => {
             player = new YT.Player('lessonYoutube', { videoId: ytNode.getAttribute('data-video-id'), playerVars: { controls: 1, disablekb: 1, playsinline: 1, rel: 0 }, events: {
               onReady: function (event) {
                 duration = Number(event.target.getDuration()) || 0;
-                if (duration > 0 && (maxWatched > 0 || alreadyCompleted)) {
+                if (duration > 0) {
                   maxWatched = alreadyCompleted ? duration : Math.min(maxWatched, duration);
                   event.target.seekTo(maxWatched, true);
                 }
