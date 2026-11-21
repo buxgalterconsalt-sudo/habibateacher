@@ -6671,7 +6671,7 @@ const server = http.createServer(async (req, res) => {
           if (!viewerCount || document.visibilityState === 'hidden') return;
           fetch('/lesson/' + lessonId + '/viewers', { method: 'POST', headers: { 'X-Viewer-Key': viewerKey, Accept: 'application/json' } })
             .then(function (r) { return r.ok ? r.json() : null; })
-            .then(function (d) { if (d && d.ok) viewerCount.innerHTML = '<i></i> ' + d.count + ' ta talaba ko\'rmoqda'; })
+            .then(function (d) { if (d && d.ok) viewerCount.innerHTML = '<i></i> ' + d.count + ' ta talaba ko\\'rmoqda'; })
             .catch(function () {});
         }
         updateViewerCount();
