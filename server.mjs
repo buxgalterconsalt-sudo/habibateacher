@@ -3350,6 +3350,10 @@ function dashboardPage(user) {
        ORDER BY c.id, l.position, l.id`
     )
     .all();
+  const learningLessons = lessons.filter((lesson) => lesson.type !== "test");
+  const attestationTests = lessons.filter((lesson) => lesson.type === "test" && lesson.course_category === "attestation");
+  const tktTests = lessons.filter((lesson) => lesson.type === "test" && lesson.course_category === "tkt");
+  const otherTests = lessons.filter((lesson) => lesson.type === "test" && !["attestation", "tkt"].includes(lesson.course_category));
   const doneRows = db.prepare("SELECT p.lesson_id FROM progress p JOIN lessons l ON l.id = p.lesson_id WHERE p.user_id = ? AND (l.type <> 'test' OR p.score >= 80)").all(user.id);
   const done = new Set(doneRows.map((r) => r.lesson_id));
   const total = lessons.length;
@@ -3423,27 +3427,29 @@ function dashboardPage(user) {
       </a>`
     : `<div class="dash-hero-card done"><span class="dash-hero-ico">âœ“</span><span class="dash-hero-copy"><b>Barcha darslar tugatilgan!</b><span class="muted">Tabriklaymiz, siz barcha materiallarni o'zlashtirdingiz.</span></span></div>`;
 
-  const lessonCards = lessons
-    .map((l, i) => {
-      const isDone = done.has(l.id);
-      const href = l.type === "test" ? `/test/${l.id}` : `/lesson/${l.id}`;
-      const totalNotice = l.type === "test" ? "Test" : `${Number(l.duration_min) || 0} daq`;
-      return `<a class="dl-card${isDone ? " done" : ""}" href="${href}" data-title="${h(
-        (l.title + " " + l.course_title).toLowerCase()
-      )}">
-        <span class="dl-top">
-          <span class="dl-ico">${isDone ? "&#10003;" : i + 1}</span>
-          <span class="dl-status${isDone ? " done" : ""}">${isDone ? "Tugatildi" : l.type === "test" ? "Test" : "Ochish"}</span>
-        </span>
-        <span class="dl-module">${h(l.course_title)}</span>
-        <b class="dl-title">${h(l.title)}</b>
-        <span class="dl-sub">${h(l.course_title)}</span>
-        <span class="dl-foot">
-          <span class="dl-time">${totalNotice}</span>
-          <span class="dl-arrow">&rarr;</span>
-        </span>
-      </a>`;
-    })
+  const dashboardGroups = [
+    { title: "Darslar", lessons: learningLessons },
+    { title: "Attestatsiya testlari", lessons: attestationTests },
+    { title: "TKT testlari", lessons: tktTests },
+    { title: "Boshqa testlar", lessons: otherTests },
+  ].filter((group) => group.lessons.length);
+  const lessonCards = dashboardGroups
+    .map((group) => `<section class="dl-group">
+      <div class="dl-group-head"><h3>${h(group.title)}</h3><span>${group.lessons.length} ta</span></div>
+      <div class="dl-grid">${group.lessons.map((l, i) => {
+        const isDone = done.has(l.id);
+        const href = l.type === "test" ? `/test/${l.id}` : `/lesson/${l.id}`;
+        const totalNotice = l.type === "test" ? "Test" : `${Number(l.duration_min) || 0} daq`;
+        return `<a class="dl-card${isDone ? " done" : ""}" href="${href}" data-title="${h(
+          (l.title + " " + l.course_title).toLowerCase()
+        )}">
+          <span class="dl-top"><span class="dl-ico">${isDone ? "&#10003;" : i + 1}</span><span class="dl-status${isDone ? " done" : ""}">${isDone ? "Tugatildi" : l.type === "test" ? "Test" : "Ochish"}</span></span>
+          <span class="dl-module">${h(l.course_title)}</span><b class="dl-title">${h(l.title)}</b>
+          <span class="dl-sub">${h(l.course_title)}</span>
+          <span class="dl-foot"><span class="dl-time">${totalNotice}</span><span class="dl-arrow">&rarr;</span></span>
+        </a>`;
+      }).join("")}</div>
+    </section>`)
     .join("");
 
   const weeklyPodium = weekly
@@ -3508,7 +3514,7 @@ function dashboardPage(user) {
             <button type="button" class="dl-view" data-view="list" aria-label="Ro'yxat ko'rinishi">&#9776;</button>
           </div>
         </div>
-        <div class="dl-grid" id="dlGrid">${lessonCards || `<p class="muted">Hozircha darslar yo'q.</p>`}</div>
+        <div class="dl-groups" id="dlGrid">${lessonCards || `<p class="muted">Hozircha darslar yo'q.</p>`}</div>
         <div class="dl-pager" id="dlPager"></div>
       </div>
       <script>
@@ -3517,7 +3523,7 @@ function dashboardPage(user) {
         var pager = document.getElementById('dlPager');
         var search = document.getElementById('dlSearch');
         if (!grid || !pager) return;
-        var cards = Array.prototype.slice.call(grid.children);
+        var cards = Array.prototype.slice.call(grid.querySelectorAll('.dl-card'));
         var per = 6;
         var page = 1;
         function filtered() {
@@ -3532,6 +3538,9 @@ function dashboardPage(user) {
           if (page > pages) page = pages;
           cards.forEach(function (c) { c.hidden = true; });
           list.slice((page - 1) * per, page * per).forEach(function (c) { c.hidden = false; });
+          Array.prototype.forEach.call(grid.querySelectorAll('.dl-group'), function (group) {
+            group.hidden = !group.querySelector('.dl-card:not([hidden])');
+          });
           pager.innerHTML = '';
           function add(label, target, disabled, active) {
             var b = document.createElement('button');
@@ -3559,7 +3568,9 @@ function dashboardPage(user) {
               x.classList.remove('active');
             });
             b.classList.add('active');
-            grid.classList.toggle('list', b.getAttribute('data-view') === 'list');
+            Array.prototype.forEach.call(grid.querySelectorAll('.dl-grid'), function (cardsGrid) {
+              cardsGrid.classList.toggle('list', b.getAttribute('data-view') === 'list');
+            });
           });
         });
         render();
@@ -6161,7 +6172,17 @@ const server = http.createServer(async (req, res) => {
 
   const stepOneTitle =
     lesson.type === "video" ? "Videoni ko'ring" : lesson.type === "pdf" ? "PDF bilan tanishing" : "Darsni o'qing";
-  const stepOneNote = completed ? "Tugatildi" : lesson.type === "video" ? "0% ko'rildi" : "Tugatilmagan";
+  const savedWatch = lesson.type === "video"
+    ? db.prepare("SELECT max_seconds, duration FROM video_watch WHERE user_id = ? AND lesson_id = ?").get(user.id, lesson.id)
+    : null;
+  const savedWatchDuration = Number(savedWatch && savedWatch.duration) || 0;
+  const savedWatchSeconds = Number(savedWatch && savedWatch.max_seconds) || 0;
+  const savedWatchPercent = savedWatchDuration > 0
+    ? Math.min(100, Math.round((savedWatchSeconds / savedWatchDuration) * 100))
+    : 0;
+  const stepOneNote = lesson.type === "video"
+    ? `${completed ? 100 : savedWatchPercent}% ko'rildi`
+    : completed ? "Tugatildi" : "Tugatilmagan";
   const progressPercent = Math.round((stepsDone / stepsTotal) * 100);
   const canNext = completed && (!hasTestStep || testDone);
   const testStepClass = !completed ? "locked" : testDone ? "done" : "active";
@@ -6271,7 +6292,7 @@ const server = http.createServer(async (req, res) => {
           <div class="lesson-progress"><span style="width:${progressPercent}%"></span></div>
           <div class="lesson-step ${completed ? "done" : ""}">
             <span class="ls-ico">${completed ? "&#10003;" : "1"}</span>
-            <span class="ls-copy"><b>${stepOneTitle}</b><small>${stepOneNote}</small></span>
+            <span class="ls-copy"><b>${stepOneTitle}</b><small id="lessonWatchPercent">${stepOneNote}</small></span>
           </div>
           ${
             hasTestStep
@@ -6308,13 +6329,13 @@ const server = http.createServer(async (req, res) => {
         var ytNode = document.getElementById('lessonYoutube');
         var player = null, playerState = -1;
         var btn = document.getElementById('completeLesson');
-        var note = document.querySelector('.lesson-step.done small');
+        var note = document.getElementById('lessonWatchPercent');
         var lessonId = ${lesson.id};
-        var sent = false, maxWatched = 0, duration = 0, lastSync = 0;
+        var sent = false, maxWatched = ${savedWatchSeconds}, duration = ${savedWatchDuration}, lastSync = 0;
         var alreadyCompleted = ${completed ? "true" : "false"};
         function percent() { return duration > 0 ? Math.min(100, Math.round((maxWatched / duration) * 100)) : 0; }
-        function paint() {
-          var p = percent();
+          function paint() {
+          var p = alreadyCompleted ? 100 : percent();
           if (note) note.textContent = p + "% ko'rildi";
           if (btn) {
             if (p >= 99) { btn.disabled = false; btn.textContent = 'Darsni tugatdim'; }

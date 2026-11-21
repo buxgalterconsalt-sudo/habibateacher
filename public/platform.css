@@ -5432,6 +5432,13 @@ html[data-theme="light"] .pal {
   margin-top: 14px;
 }
 
+.dl-groups { display: grid; gap: 22px; margin-top: 16px; }
+.dl-group-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 9px; }
+.dl-group-head h3 { margin: 0; font-size: 1rem; }
+.dl-group-head > span { padding: 4px 9px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); font-size: .7rem; }
+.dl-group .dl-grid { margin-top: 0; }
+.dl-group[hidden] { display: none; }
+
 .dl-grid.list {
   grid-template-columns: minmax(0, 1fr);
 }
@@ -6027,7 +6034,7 @@ body.is-dashboard .dl-pager .dl-page.active { border-color: #7943e3; background:
   body.is-dashboard .dash-all .card-head { align-items: flex-start; flex-direction: column; }
   body.is-dashboard .dl-tools { width: 100%; }
   body.is-dashboard .dl-search { flex: 1; width: 0; }
-  body.is-dashboard .dl-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  body.is-dashboard .dl-grid { grid-template-columns: minmax(0,1fr); }
 }
 
 @media (max-width: 380px) {
