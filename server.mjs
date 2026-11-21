@@ -367,6 +367,10 @@ if (!userCols3.some((c) => c.name === "last_nudge_at")) {
 if (!userCols3.some((c) => c.name === "is_blocked")) {
   db.exec("ALTER TABLE users ADD COLUMN is_blocked INTEGER NOT NULL DEFAULT 0");
 }
+const loginSecurityCols = db.prepare("PRAGMA table_info(users)").all();
+if (!loginSecurityCols.some((c) => c.name === "password_failures")) {
+  db.exec("ALTER TABLE users ADD COLUMN password_failures INTEGER NOT NULL DEFAULT 0");
+}
 db.exec(`CREATE TABLE IF NOT EXISTS telegram_users (
   username TEXT PRIMARY KEY,
   chat_id TEXT NOT NULL,
@@ -1085,8 +1089,12 @@ function navFor(user, admin, publicPage = false) {
 
   if (user) {
   return `<nav class="nav nav-student">
-  <a href="/dashboard">Kabinet</a>
+  <a href="/">Bosh sahifa</a>
+  <a href="/attestation">Attestatsiya</a>
+  <a href="/tkt">TKT</a>
+  <a href="/duel">Duel</a>
   <a href="/courses">Kurslar</a>
+  <a href="/dashboard">Kabinet</a>
   <a href="/leaderboard">Reyting</a>
   <a class="btn btn-sm student-plan" href="/plans">Tariflar</a>
   <span class="who">${h(user.name)}</span>
@@ -1755,6 +1763,16 @@ async function sendLoginCode(chatId, code) {
     text: `<b>Kirish kodi</b>\n\n<code>${code}</code>\n\nKod 5 daqiqa amal qiladi. Nusxalash uchun kodni bosing.`,
     parse_mode: "HTML",
     reply_markup: { inline_keyboard: [[{ text: "Nusxalash", copy_text: { text: code } }]] }
+  });
+  return Boolean(response && response.ok);
+}
+
+async function sendResetPassword(chatId, password) {
+  const response = await telegramApi("sendMessage", {
+    chat_id: chatId,
+    text: `<b>Yangi parolingiz</b>\n\n<code>${password}</code>\n\nPlatformaga kirishda ushbu 4 raqamli paroldan foydalaning.`,
+    parse_mode: "HTML",
+    reply_markup: { inline_keyboard: [[{ text: "Nusxalash", copy_text: { text: password } }]] }
   });
   return Boolean(response && response.ok);
 }
@@ -4759,7 +4777,7 @@ const server = http.createServer(async (req, res) => {
   <div class="field"><label>Ismingiz</label><input name="name" required maxlength="60" placeholder="Habiba"></div>
   <div class="field"><label>Telegram username yoki ID</label><input name="telegram_id" required placeholder="@username yoki 1097025987"><small class="muted">Username (@qobuljon) yoki raqamli ID. Kod bot orqali kelishi uchun avval botga <b>/start</b> yozing.</small></div>
   <div class="field"><label>Telefon</label><input name="phone" data-phone required inputmode="tel" placeholder="+998 93 568 00 91"></div>
-  <div class="field"><label>Parol</label><input name="password" type="password" required minlength="6" placeholder="Kamida 6 belgi"></div>
+  <div class="field"><label>Parol (4 ta raqam)</label><input name="password" type="password" required minlength="4" maxlength="4" pattern="[0-9]{4}" inputmode="numeric" placeholder="Masalan: 1234"></div>
   <button class="btn btn-primary" type="submit">Ro'yxatdan o'tish</button>
   </form>`,
   `<p class="alt">Akkountingiz bormi? <a href="/login${next ? `?next=${encodeURIComponent(next)}`: ""}">Kirish</a></p>`,
@@ -4789,7 +4807,7 @@ const server = http.createServer(async (req, res) => {
   let error = "";
   if (!/^[\p{L}\s'-]{2,}$/u.test(name)) error = "Ism faqat harflardan iborat bo'lishi kerak.";
   else if (!validPhoneInput(fields.phone) || !validPhone(phone)) error = "Telefon raqami faqat 9 ta raqamdan iborat bo'lishi kerak.";
-  else if (password.length < 6) error = "Parol kamida 6 belgidan iborat bo'lishi kerak.";
+  else if (!/^\d{4}$/.test(password)) error = "Parol aynan 4 ta raqamdan iborat bo'lishi kerak.";
   else if (!telegramId && !validTelegramUsername(telegramUsername))
   error = "Telegram username (@username) yoki raqamli ID kiriting.";
   else if (telegramId && db.prepare("SELECT 1 FROM users WHERE telegram_id = ?").get(telegramId))
@@ -4810,7 +4828,7 @@ const server = http.createServer(async (req, res) => {
   <div class="field"><label>Ismingiz</label><input name="name" value="${h(name)}" required></div>
   <div class="field"><label>Telegram username yoki ID</label><input name="telegram_id" value="${h(telegramUsername ? "@" + telegramUsername : telegramId)}" required placeholder="@username yoki 1097025987"></div>
   <div class="field"><label>Telefon</label><input name="phone" data-phone value="${h(fields.phone || "")}" required inputmode="numeric" maxlength="17" autocomplete="tel-national" placeholder="+998 90 123 45 67"></div>
-  <div class="field"><label>Parol</label><input name="password" type="password" required minlength="6" maxlength="128" placeholder="Kamida 6 belgi" autocomplete="new-password"></div>
+  <div class="field"><label>Parol (4 ta raqam)</label><input name="password" type="password" required minlength="4" maxlength="4" pattern="[0-9]{4}" inputmode="numeric" placeholder="Masalan: 1234" autocomplete="new-password"></div>
   <button class="btn btn-primary" type="submit">Ro'yxatdan o'tish</button>
   </form>`,
   `<p class="alt">Akkountingiz bormi? <a href="/login${next ? `?next=${encodeURIComponent(next)}`: ""}">Kirish</a></p>`,
@@ -4834,6 +4852,92 @@ const server = http.createServer(async (req, res) => {
   ).catch(() => {});
   redirect(res, next || "/dashboard");
   return;
+  }
+
+  /* ---------------------------------------------------------- password reset */
+  if (p === "/login/reset" && method === "GET") {
+  const step = url.searchParams.get("step") === "verify" ? "verify" : "phone";
+  const phoneRaw = formatLocalPhone(url.searchParams.get("phone") || "");
+  const err = String(url.searchParams.get("err") || "");
+  const alerts = {
+    phone: "Telefon raqamini to'g'ri kiriting.",
+    notfound: "Bu telefon raqam bilan akkaunt topilmadi.",
+    telegram: "Avval ulangan Telegram botga /start yuboring, keyin parolni tiklashni qayta boshlang.",
+    sendcode: "Telegram tasdiqlash kodini yubora olmadi. Botni ochib /start bosing va qayta urinib ko'ring.",
+    wrong: "Tasdiqlash kodi noto'g'ri. Qayta kiriting.",
+    expired: "Kod muddati tugadi. Yangi kod so'rang.",
+    blocked: "Urinishlar ko'p bo'ldi. Yangi kod so'rang.",
+    sent: "Yangi parol Telegram botga yuborildi. Botdagi xabarlarni tekshiring."
+  };
+  const body = `<section class="login-modern"><div class="login-card">
+    <h1 class="login-title">Parolni tiklash</h1>
+    <p class="login-sub">Telefoningizga ulangan Telegram bot orqali parolni tiklang.</p>
+    ${alerts[err] ? alertBox(alerts[err], err === "sent" ? "success" : "error") : ""}
+    ${err === "telegram" || err === "sendcode" ? `<p class="center-actions"><a class="btn btn-ghost" href="${h(botLink())}" target="_blank" rel="noopener">Telegram botni ochish</a></p>` : ""}
+    ${step === "verify" ? `<form method="post" action="/login/reset/verify" class="login-form">
+      <input type="hidden" name="phone" value="${h(phoneRaw)}">
+      <p class="login-sub"><b>${h(phoneRaw)}</b> raqamiga ulangan botga 6 xonali kod yuborildi.</p>
+      <div class="field"><label>Tasdiqlash kodi</label><input name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" placeholder="123456" required></div>
+      <button class="btn-continue" type="submit">Yangi parolni olish</button>
+    </form><form method="post" action="/login/reset/start" class="login-resend"><input type="hidden" name="phone" value="${h(phoneRaw)}"><button class="link" type="submit">Kodni qayta yuborish</button></form>`
+    : `<form method="post" action="/login/reset/start" class="login-form">
+      <div class="field"><label>Telefon</label><input name="phone" data-phone value="${h(phoneRaw)}" inputmode="tel" maxlength="17" autocomplete="tel-national" placeholder="+998 90 123 45 67" required></div>
+      <button class="btn-continue" type="submit">Telegramga kod yuborish</button>
+    </form>`}
+    <p class="alt"><a href="/login?pw=1${phoneRaw ? `&phone=${encodeURIComponent(phoneRaw)}` : ""}">Kirishga qaytish</a></p>
+  </div></section>`;
+  send(res, 200, layout({ title: "Parolni tiklash", body }));
+  return;
+  }
+
+  if (p === "/login/reset/start" && method === "POST") {
+  const phone = normalizePhone(fields.phone);
+  if (!validPhoneInput(fields.phone) || !validPhone(phone)) return redirect(res, "/login/reset?err=phone");
+  const row = db.prepare("SELECT id, phone, telegram_id, telegram_username, is_blocked FROM users WHERE phone = ?").get(phone);
+  if (!row) return redirect(res, "/login/reset?err=notfound");
+  if (Number(row.is_blocked)) return redirect(res, "/login/reset?err=blocked");
+  const chatId = resolveTelegramChatId(row);
+  if (!chatId) return redirect(res, "/login/reset?err=telegram");
+  const currentCode = db.prepare("SELECT created_at FROM login_codes WHERE phone = ?").get(phone);
+  if (currentCode && Date.now() - Date.parse(currentCode.created_at) < 30000) {
+    return redirect(res, `/login/reset?step=verify&phone=${encodeURIComponent(formatLocalPhone(phone))}`);
+  }
+  const code = String(randomInt(100000, 1000000));
+  if (!(await sendLoginCode(chatId, code))) return redirect(res, "/login/reset?err=sendcode");
+  db.prepare(`INSERT INTO login_codes (phone, code_hash, expires_at, attempts, created_at)
+    VALUES (?, ?, ?, 0, ?)
+    ON CONFLICT(phone) DO UPDATE SET code_hash = excluded.code_hash, expires_at = excluded.expires_at, attempts = 0, created_at = excluded.created_at`
+  ).run(phone, loginCodeHash(phone, code), Date.now() + 5 * 60 * 1000, nowISO());
+  return redirect(res, `/login/reset?step=verify&phone=${encodeURIComponent(formatLocalPhone(phone))}`);
+  }
+
+  if (p === "/login/reset/verify" && method === "POST") {
+  const phone = normalizePhone(fields.phone);
+  const code = String(fields.code || "").replace(/\D/g, "");
+  const back = `/login/reset?step=verify&phone=${encodeURIComponent(formatLocalPhone(phone))}`;
+  if (!validPhone(phone)) return redirect(res, "/login/reset?err=phone");
+  const userRow = db.prepare("SELECT id, telegram_id, telegram_username, is_blocked FROM users WHERE phone = ?").get(phone);
+  const codeRow = db.prepare("SELECT * FROM login_codes WHERE phone = ?").get(phone);
+  if (!codeRow || codeRow.expires_at < Date.now()) {
+    if (codeRow) db.prepare("DELETE FROM login_codes WHERE phone = ?").run(phone);
+    return redirect(res, `${back}&err=expired`);
+  }
+  if (codeRow.attempts >= 5) {
+    db.prepare("DELETE FROM login_codes WHERE phone = ?").run(phone);
+    return redirect(res, `${back}&err=blocked`);
+  }
+  if (!userRow || Number(userRow.is_blocked)) return redirect(res, "/login/reset?err=notfound");
+  if (!/^\d{6}$/.test(code) || loginCodeHash(phone, code) !== codeRow.code_hash) {
+    db.prepare("UPDATE login_codes SET attempts = attempts + 1 WHERE phone = ?").run(phone);
+    return redirect(res, `${back}&err=wrong`);
+  }
+  const chatId = resolveTelegramChatId(userRow);
+  if (!chatId) return redirect(res, "/login/reset?err=telegram");
+  const newPassword = String(randomInt(1000, 10000));
+  if (!(await sendResetPassword(chatId, newPassword))) return redirect(res, `${back}&err=sendcode`);
+  db.prepare("UPDATE users SET pass = ?, password_failures = 0 WHERE id = ?").run(hashPassword(newPassword), userRow.id);
+  db.prepare("DELETE FROM login_codes WHERE phone = ?").run(phone);
+  return redirect(res, "/login/reset?err=sent");
   }
 
   /* -------------------------------------------------------------- login */
@@ -4980,7 +5084,7 @@ const server = http.createServer(async (req, res) => {
   <span class="phone-ico"><svg viewBox="0 0 24 24"><path d="M6.5 3h3l1.5 4-2 1.5a12 12 0 0 0 6.5 6.5L17 13l4 1.5v3A2.5 2.5 0 0 1 18.5 20 15.5 15.5 0 0 1 4 5.5 2.5 2.5 0 0 1 6.5 3Z"/></svg></span>
   <span class="phone-prefix">+998</span><input id="phoneInput" name="phone" value="${h(phoneRaw)}" required inputmode="numeric" maxlength="12" placeholder="90 123 45 67" autocomplete="tel-national">
   </div>
-  <div class="field"><label>Parol</label><input name="password" type="password" required autocomplete="current-password"></div>
+  <div class="field"><label>Parol (4 ta raqam)</label><input name="password" type="password" required minlength="4" maxlength="4" pattern="[0-9]{4}" inputmode="numeric" autocomplete="current-password"></div>
   <button class="btn-continue" type="submit">Kirish <span>&rarr;</span></button>
   </form>
   ` : `
@@ -5117,16 +5221,19 @@ const server = http.createServer(async (req, res) => {
 
   if (row && Number(row.is_blocked)) return redirect(res, `/login?err=blocked&phone=${encodeURIComponent(formatLocalPhone(fields.phone))}${next ? `&next=${encodeURIComponent(next)}` : ""}`);
   if (!row || !verifyPassword(password, row.pass)) {
+  const failures = row ? Number(row.password_failures || 0) + 1 : 0;
+  if (row) db.prepare("UPDATE users SET password_failures = ? WHERE id = ?").run(failures, row.id);
   noteFailure(ip);
   const body = authCard(
   "Kirish",
   "Telefon va parolingizni kiriting.",
   `${alertBox("Telefon yoki parol noto'g'ri.")}
+  ${failures >= 5 ? `<p class="alt"><a href="/login/reset?phone=${encodeURIComponent(formatLocalPhone(phone))}">Parolni unutdingizmi? Parolni tiklash</a></p>` : ""}
   <form method="post" action="/login?pw=1${next ? `&next=${encodeURIComponent(next)}` : ""}" class="form">
   ${next ? `<input type="hidden" name="next" value="${h(next)}">`: ""}
   <input type="hidden" name="tg_init_data" value="">
   <div class="field"><label>Telefon</label><input name="phone" data-phone value="${h(fields.phone || "")}" required></div>
-  <div class="field"><label>Parol</label><input name="password" type="password" required></div>
+  <div class="field"><label>Parol (4 ta raqam)</label><input name="password" type="password" required minlength="4" maxlength="4" pattern="[0-9]{4}" inputmode="numeric"></div>
   <button class="btn btn-primary" type="submit">Kirish</button>
   </form>`,
   `<p class="alt">Akkountingiz yo'qmi? <a href="/register${next ? `?next=${encodeURIComponent(next)}`: ""}">Ro'yxatdan o'tish</a></p>`,
@@ -5136,6 +5243,7 @@ const server = http.createServer(async (req, res) => {
   return;
   }
 
+  db.prepare("UPDATE users SET password_failures = 0 WHERE id = ?").run(row.id);
   const tgUser = telegramUserFromInitData(fields.tg_init_data);
   if (tgUser && tgUser.id) {
   const telegramId = String(tgUser.id);
@@ -5271,7 +5379,11 @@ const server = http.createServer(async (req, res) => {
     true
   );
   const target = config.telegram || "";
-  const body = `<div class="card"><h1>So'rovingiz adminga yuborildi</h1><p>To'lovni amalga oshirgach, adminning Telegram lichkasiga <b>to'lov cheki skrinshoti</b>, <b>tranzaksiya ID/raqami</b>, telefon raqamingiz va tanlangan tarifni yuboring.</p><p class="muted small">Karta PIN-kodi, SMS tasdiqlash kodi va CVV raqamini hech kimga yubormang.</p>${target ? `<a class="btn btn-primary" href="${h(target)}" target="_blank" rel="noopener">Chekni adminga Telegramda yuborish</a>` : ""}<p class="muted small">So'rov raqami: #${requestId}. Admin to'lovni tekshirib, tarifni ochadi.</p></div>`;
+  const cardNumber = String(metaGet("payment_card_number", "") || "");
+  const cardHolder = String(metaGet("payment_card_holder", "") || "");
+  const cardDisplay = cardNumber.replace(/\D/g, "").replace(/(.{4})/g, "$1 ").trim();
+  const cardBlock = cardNumber && cardHolder ? `<div class="card" style="margin:18px 0"><h2>To'lov uchun karta</h2><p><b>Karta raqami:</b> <code id="payCardNumber">${h(cardDisplay)}</code> <button class="btn btn-ghost btn-sm" type="button" data-copy="${h(cardNumber)}">Nusxalash</button></p><p><b>Karta egasi:</b> <span id="payCardHolder">${h(cardHolder)}</span> <button class="btn btn-ghost btn-sm" type="button" data-copy="${h(cardHolder)}">Nusxalash</button></p><small class="muted">To'lovdan so'ng chek skrinshotini adminga yuboring.</small></div>` : `<div class="card" style="margin:18px 0"><p>To'lov kartasi hozircha sozlanmagan. Admin bilan bog'laning.</p></div>`;
+  const body = `<div class="card"><h1>So'rovingiz adminga yuborildi</h1><p>${h(plan.title)} uchun <b>${formatSum(plan.price)} so'm</b> to'lov qiling.</p>${cardBlock}<p class="muted small">Karta PIN-kodi, SMS tasdiqlash kodi va CVV raqamini hech kimga yubormang.</p>${target ? `<a class="btn btn-primary" href="${h(target)}" target="_blank" rel="noopener">Chekni adminga Telegramda yuborish</a>` : ""}<p class="muted small">So'rov raqami: #${requestId}. Admin to'lovni tekshirib, tarifni ochadi.</p></div><script>document.querySelectorAll('[data-copy]').forEach(function(b){b.addEventListener('click',async function(){var value=b.getAttribute('data-copy');try{await navigator.clipboard.writeText(value)}catch(e){var t=document.createElement('textarea');t.value=value;document.body.appendChild(t);t.select();document.execCommand('copy');t.remove()}var old=b.textContent;b.textContent='Nusxalandi';setTimeout(function(){b.textContent=old},1500)})})</script>`;
   send(res, 200, layout({ title: "To'lov so'rovi", body, user, admin }));
   return;
   }
@@ -6755,16 +6867,22 @@ const server = http.createServer(async (req, res) => {
   if (!admin) return redirect(res, "/admin/login");
   const plans = getPlans();
   const body = `<a class="back" href="/admin">Admin panel</a><div class="page-head"><div><h1>Tarif narxlari</h1><p class="muted">Narxlar Tariflar sahifasida darhol yangilanadi.</p></div><a class="btn btn-ghost" href="/admin/payments">To'lov so'rovlari</a></div>
-  ${url.searchParams.get("saved") === "1" ? alertBox("Tarif narxlari saqlandi.", "success") : ""}
-  <div class="card"><form method="post" action="/admin/plans" class="form">${plans.map((plan) => `<div class="field"><label>${h(plan.title)} tarifi (so'm)</label><input type="number" name="${h(plan.id)}" min="0" step="1000" value="${plan.price}" required></div>`).join("")}<button class="btn btn-primary" type="submit">Narxlarni saqlash</button></form></div>`;
+  ${url.searchParams.get("saved") === "1" ? alertBox("Tarif va karta ma'lumotlari saqlandi.", "success") : ""}
+  ${url.searchParams.get("err") === "card" ? alertBox("Karta raqami 16 ta raqam bo'lsin; karta egasining ismini tekshiring.", "error") : ""}
+  <div class="card"><form method="post" action="/admin/plans" class="form">${plans.map((plan) => `<div class="field"><label>${h(plan.title)} tarifi (so'm)</label><input type="number" name="${h(plan.id)}" min="0" step="1000" value="${plan.price}" required></div>`).join("")}<hr><h2>To'lov kartasi</h2><p class="muted">Karta raqamini bo'sh qoldirsangiz karta ma'lumotlari o'chiriladi.</p><div class="field"><label>Karta raqami</label><input name="card_number" inputmode="numeric" autocomplete="off" maxlength="23" value="${h(metaGet("payment_card_number", ""))}" placeholder="8600 0000 0000 0000"></div><div class="field"><label>Karta egasi</label><input name="card_holder" maxlength="80" value="${h(metaGet("payment_card_holder", ""))}" placeholder="ISM FAMILIYA"></div><button class="btn btn-primary" type="submit">Tarif va karta ma'lumotlarini saqlash</button></form></div>`;
   send(res, 200, layout({ title: "Tarif narxlari", body, admin }));
   return;
   }
 
   if (p === "/admin/plans" && method === "POST") {
   if (!admin) return redirect(res, "/admin/login");
+  const cardNumber = String(fields.card_number || "").replace(/\D/g, "");
+  const cardHolder = String(fields.card_holder || "").trim().replace(/\s+/g, " ");
+  if ((cardNumber && cardNumber.length !== 16) || (cardNumber && !/^[\p{L}\s'-]{2,80}$/u.test(cardHolder))) return redirect(res, "/admin/plans?err=card");
   const prices = getPlans().map((plan) => ({ id: plan.id, price: Math.min(100000000, Math.max(0, Math.round(Number(fields[plan.id]) || 0))) }));
   metaSet("plans_json", JSON.stringify(prices));
+  metaSet("payment_card_number", cardNumber);
+  metaSet("payment_card_holder", cardNumber ? cardHolder : "");
   return redirect(res, "/admin/plans?saved=1");
   }
 
