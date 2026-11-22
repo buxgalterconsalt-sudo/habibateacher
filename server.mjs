@@ -810,6 +810,13 @@ function seedPreparedTests() {
     const sourceNumber = Number(set.number);
     const number = set.category === "mock" ? sourceNumber + 10 : sourceNumber;
     if (!Number.isInteger(number) || number < 2 || number > 20 || !Array.isArray(set.questions) || set.questions.length !== 50) continue;
+    const fallbackPassage = String(set.questions.find((question) => String(question.passage || "").trim())?.passage || "").trim();
+    const questions = set.questions.map((question, index) => {
+      const prepared = replacementsByTest.get(`${number}:${index + 1}`) || question;
+      return index < 15 && !String(prepared.passage || "").trim() && fallbackPassage
+        ? { ...prepared, passage: fallbackPassage }
+        : prepared;
+    });
     sources[0].push({
       category: "attestation",
       number,
@@ -817,7 +824,7 @@ function seedPreparedTests() {
       lesson: `Attestatsiya 2026 · Sinov ${number}`,
       position: number,
       layout: "attestation-50-sections",
-      questions: set.questions.map((question, index) => replacementsByTest.get(`${number}:${index + 1}`) || question)
+      questions
     });
   }
   const readingSections = [
@@ -865,6 +872,15 @@ function seedPreparedTests() {
         });
       }
       if (currentCount >= set.questions.length) {
+        if (set.category === "attestation" && set.layout === "attestation-50-sections" &&
+            metaGet("attestation_first15_passages_2026_11", "") !== "1") {
+          const existingRows = db.prepare("SELECT id, passage FROM questions WHERE lesson_id = ? ORDER BY id").all(lesson.id);
+          const updatePassage = db.prepare("UPDATE questions SET passage = ? WHERE id = ?");
+          for (let index = 0; index < Math.min(15, set.questions.length, existingRows.length); index += 1) {
+            const passage = String(set.questions[index].passage || "");
+            if (passage && existingRows[index].passage !== passage) updatePassage.run(passage, existingRows[index].id);
+          }
+        }
         if (set.category === "attestation" && set.layout === "attestation-50-sections" &&
             metaGet("attestation_unique_questions_2026_11", "") !== "1") {
           const existingRows = db.prepare("SELECT id FROM questions WHERE lesson_id = ? ORDER BY id").all(lesson.id);
@@ -922,6 +938,16 @@ function seedPreparedTests() {
       return lesson && Number(db.prepare("SELECT COUNT(*) AS n FROM questions WHERE lesson_id = ?").get(lesson.id)?.n || 0) >= 50;
     });
     if (migrated.length === expected.size) metaSet("attestation_unique_questions_2026_11", "1");
+  }
+  if (metaGet("attestation_first15_passages_2026_11", "") !== "1") {
+    const expected = new Set(sources[0].filter((set) => Number(set.number) >= 2 && Number(set.number) <= 20).map((set) => Number(set.number)));
+    const migrated = [...expected].filter((number) => {
+      const lesson = db.prepare("SELECT id FROM lessons WHERE title = ? ORDER BY id LIMIT 1").get(`Attestatsiya 2026 · Sinov ${number}`);
+      if (!lesson) return false;
+      const rows = db.prepare("SELECT passage FROM questions WHERE lesson_id = ? ORDER BY id LIMIT 15").all(lesson.id);
+      return rows.length === 15 && rows.every((row) => String(row.passage || "").trim());
+    });
+    if (migrated.length === expected.size) metaSet("attestation_first15_passages_2026_11", "1");
   }
   const expectedReadingSets = sources[0].filter((set) => set.category === "attestation" &&
     set.questions.length === 50 && ((Number(set.number) >= 1 && Number(set.number) <= 10) || set.layout === "attestation-50-sections")).length;
