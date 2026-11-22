@@ -1,0 +1,24 @@
+[
+  {
+    "testNumber": 4,
+    "questionPosition": 1,
+    "q": "According to English Collocations in Use Advanced, which item is a strong collocation whose words are very closely associated?",
+    "a": "a modern car",
+    "b": "buy a ticket",
+    "c": "mitigating circumstances",
+    "d": "make a decision",
+    "answer": "C",
+    "passage": ""
+  },
+  {
+    "testNumber": 18,
+    "questionPosition": 44,
+    "q": "In the interaction hypothesis of second-language acquisition, what can negotiation of meaning during conversation help a learner do?",
+    "a": "Notice a gap in their language knowledge and modify their output",
+    "b": "Avoid receiving any feedback from a conversational partner",
+    "c": "Replace all explicit grammar instruction with memorization",
+    "d": "Acquire language only through silent reading",
+    "answer": "A",
+    "passage": ""
+  }
+]

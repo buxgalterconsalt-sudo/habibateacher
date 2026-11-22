@@ -772,6 +772,11 @@ for (const [title, description] of [
 
 function seedPreparedTests() {
   const attestationSets = JSON.parse(fs.readFileSync(path.join(__dirname, "seed-data", "attestation-mocks.json"), "utf8"));
+  const attestationReplacements = JSON.parse(fs.readFileSync(path.join(__dirname, "seed-data", "attestation-replacements.json"), "utf8"));
+  const replacementsByTest = new Map(attestationReplacements.map((replacement) => [
+    `${Number(replacement.testNumber)}:${Number(replacement.questionPosition)}`,
+    replacement
+  ]));
   const sources = [
     [],
     JSON.parse(fs.readFileSync(path.join(__dirname, "seed-data", "tkt-modules-1-2.json"), "utf8")),
@@ -812,7 +817,7 @@ function seedPreparedTests() {
       lesson: `Attestatsiya 2026 · Sinov ${number}`,
       position: number,
       layout: "attestation-50-sections",
-      questions: set.questions
+      questions: set.questions.map((question, index) => replacementsByTest.get(`${number}:${index + 1}`) || question)
     });
   }
   const readingSections = [
@@ -860,6 +865,17 @@ function seedPreparedTests() {
         });
       }
       if (currentCount >= set.questions.length) {
+        if (set.category === "attestation" && set.layout === "attestation-50-sections" &&
+            metaGet("attestation_unique_questions_2026_11", "") !== "1") {
+          const existingRows = db.prepare("SELECT id FROM questions WHERE lesson_id = ? ORDER BY id").all(lesson.id);
+          const updateAttestationQuestion = db.prepare("UPDATE questions SET text = ?, o1 = ?, o2 = ?, o3 = ?, o4 = ?, correct = ?, passage = ? WHERE id = ?");
+          for (const replacement of attestationReplacements.filter((item) => Number(item.testNumber) === Number(set.number))) {
+            const row = existingRows[Number(replacement.questionPosition) - 1];
+            if (!row) continue;
+            updateAttestationQuestion.run(replacement.q, replacement.a, replacement.b, replacement.c, replacement.d,
+              "ABCD".indexOf(replacement.answer.toUpperCase()) + 1, replacement.passage || "", row.id);
+          }
+        }
         if (isAttestationFifty && readingMigrationNeeded) {
           replaceReadingSections(lesson.id);
           if (readingMigrationNeeded) migratedReadingSets += 1;
@@ -898,6 +914,14 @@ function seedPreparedTests() {
         throw error;
       }
     }
+  }
+  if (metaGet("attestation_unique_questions_2026_11", "") !== "1") {
+    const expected = new Set(attestationReplacements.map((item) => Number(item.testNumber)));
+    const migrated = [...expected].filter((number) => {
+      const lesson = db.prepare("SELECT id FROM lessons WHERE title = ? ORDER BY id LIMIT 1").get(`Attestatsiya 2026 · Sinov ${number}`);
+      return lesson && Number(db.prepare("SELECT COUNT(*) AS n FROM questions WHERE lesson_id = ?").get(lesson.id)?.n || 0) >= 50;
+    });
+    if (migrated.length === expected.size) metaSet("attestation_unique_questions_2026_11", "1");
   }
   const expectedReadingSets = sources[0].filter((set) => set.category === "attestation" &&
     set.questions.length === 50 && ((Number(set.number) >= 1 && Number(set.number) <= 10) || set.layout === "attestation-50-sections")).length;
@@ -4457,24 +4481,40 @@ function testPage(lesson, questions, testSections = [], attemptId = 0) {
   });
   const hasPassage = passages.some(Boolean);
 
+  const answerSlots = Array.from({ length: total }, (_, index) => index % 4);
+  for (let index = answerSlots.length - 1; index > 0; index -= 1) {
+    const swap = Math.floor(Math.random() * (index + 1));
+    [answerSlots[index], answerSlots[swap]] = [answerSlots[swap], answerSlots[index]];
+  }
   const slides = questions
 .map(
-  (q, i) => `<section class="q-slide${i === 0 ? " is-active": ""}" data-i="${i}">
+  (q, i) => {
+  const correctSlot = answerSlots[i];
+  const distractors = [1, 2, 3, 4].filter((n) => n !== Number(q.correct));
+  for (let index = distractors.length - 1; index > 0; index -= 1) {
+    const swap = Math.floor(Math.random() * (index + 1));
+    [distractors[index], distractors[swap]] = [distractors[swap], distractors[index]];
+  }
+  const optionOrder = [];
+  let distractorIndex = 0;
+  for (let slot = 0; slot < 4; slot += 1) optionOrder.push(slot === correctSlot ? Number(q.correct) : distractors[distractorIndex++]);
+  return `<section class="q-slide${i === 0 ? " is-active": ""}" data-i="${i}">
   <div class="q-passage-data" hidden>${testReadingHtml(passages[i])}</div>
   <div class="q-head">${i + 1}-savol</div>
   <h2 class="q-title">${h(q.text)}</h2>
   <div class="q-options">
-  ${[1, 2, 3, 4]
+  ${optionOrder
 .map(
-  (n) => `<label class="q-opt">
+  (n, slot) => `<label class="q-opt">
   <input type="radio" name="q${q.id}" value="${n}">
-  <span class="q-letter">${"ABCD"[n - 1]}</span>
+  <span class="q-letter">${"ABCD"[slot]}</span>
   <span class="q-text">${i >= 11 && i < 15 ? testReadingHtml(q["o" + n]) : h(q["o" + n])}</span>
   </label>`
   )
 .join("")}
   </div>
-  </section>`
+  </section>`;
+  }
   )
 .join("");
 
