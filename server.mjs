@@ -3837,7 +3837,7 @@ function dashboardPage(user) {
 
   return `<section class="dash-hero">
     <div class="wrap dash-welcome-wrap">
-      <div class="dash-quote"><span class="dash-quote-symbol" aria-hidden="true">&#128172;</span><div><small class="dash-quote-label">Bugungi kun hikmati</small><span>${h(quoteText)}</span>${quoteAttribution ? `<small class="dash-quote-author">— ${h(quoteAttribution)}</small>` : ""}</div></div>
+      <div class="dash-quote"><span class="dash-quote-symbol" aria-hidden="true">&#128172;</span><div><small class="dash-quote-label">Bugungi kun hikmati2</small><span>${h(quoteText)}</span>${quoteAttribution ? `<small class="dash-quote-author">— ${h(quoteAttribution)}</small>` : ""}</div></div>
       <div class="dash-welcome-row">
         <div>
           <span class="eyebrow">Xush kelibsiz</span>
