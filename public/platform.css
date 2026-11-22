@@ -6315,6 +6315,7 @@ html[data-theme="dark"] body:not(.is-dashboard):not(.admin-page) {
 body:not(.is-dashboard):not(.admin-page) .topbar { background: rgba(242,247,250,.9); border-color: var(--line); }
 html[data-theme="dark"] body:not(.is-dashboard):not(.admin-page) .topbar { background: rgba(7,26,43,.92); }
 body:not(.is-dashboard):not(.admin-page) .mark { background: linear-gradient(135deg,#087e8b,#247bb0); color: #fff; }
+body:not(.is-dashboard):not(.admin-page) .btn-orange { background: linear-gradient(120deg,#087e8b,#176da0); color: #fff; }
 body:not(.is-dashboard):not(.admin-page) .btn-primary,
 html[data-theme="light"] body:not(.is-dashboard):not(.admin-page) .btn-primary { background: linear-gradient(120deg,#087e8b,#176da0); border-color: #087e8b; color: #fff; box-shadow: 0 12px 26px -17px rgba(8,126,139,.62); }
 body:not(.is-dashboard):not(.admin-page) .btn-primary:hover { background: linear-gradient(120deg,#066873,#115b86); border-color: #066873; color: #fff; }
@@ -6341,6 +6342,12 @@ body:not(.is-dashboard):not(.admin-page) .about,
 body:not(.is-dashboard):not(.admin-page) .home-features { border-color: var(--line); background: var(--bg-soft); }
 body:not(.is-dashboard):not(.admin-page) .about-art { background: linear-gradient(145deg,#0a304b,#075d6d); color: #effcff; }
 body:not(.is-dashboard):not(.admin-page) .about-art p { color: #b6dbe4; }
+body:not(.is-dashboard):not(.admin-page) .about-art .about-mark { background: #43c5ce; color: #07344c; }
+body:not(.is-dashboard):not(.admin-page) .hero-float-mark { background: color-mix(in srgb,var(--primary) 14%,var(--surface)); color: var(--primary); }
+body:not(.is-dashboard):not(.admin-page) .landing-hero-copy h1 .accent { color: #43c5ce; -webkit-text-fill-color: currentColor; }
+html[lang="uz"] body:not(.is-dashboard):not(.admin-page) .lang-uz,
+html[lang="ru"] body:not(.is-dashboard):not(.admin-page) .lang-ru,
+html[lang="en"] body:not(.is-dashboard):not(.admin-page) .lang-en { background: color-mix(in srgb,var(--primary) 14%,var(--surface)); color: var(--primary); }
 body:not(.is-dashboard):not(.admin-page) .site-footer { border-color: var(--line); background: var(--bg-soft); }
 body:not(.is-dashboard):not(.admin-page) input,
 body:not(.is-dashboard):not(.admin-page) select,
