@@ -1,5 +1,5 @@
-const CACHE_NAME = "habiba-shell-v9";
-const SHELL_ASSETS = ["/assets/platform.css?v=20261122g", "/img/habiba-app-icon.svg", "/img/habiba-app-icon-192.png", "/img/habiba-app-icon-512.png"];
+const CACHE_NAME = "habiba-shell-v10";
+const SHELL_ASSETS = ["/assets/platform.css?v=20261122h", "/img/habiba-app-icon.svg", "/img/habiba-app-icon-192.png", "/img/habiba-app-icon-512.png"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(SHELL_ASSETS)));

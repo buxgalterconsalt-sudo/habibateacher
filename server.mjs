@@ -428,8 +428,10 @@ if (!userCols3.some((c) => c.name === "is_author")) {
   db.exec("ALTER TABLE users ADD COLUMN is_author INTEGER NOT NULL DEFAULT 0");
 }
 db.prepare(`UPDATE users SET is_author = 1
-  WHERE lower(trim(name || ' ' || surname)) LIKE '%habiba%qoraboyeva%'
-     OR lower(trim(name || ' ' || surname)) LIKE '%qoraboyeva%habiba%'`).run();
+  WHERE lower(trim(name || ' ' || surname || ' ' || father_name)) LIKE '%habiba%qoraboyeva%'
+     OR lower(trim(name || ' ' || surname || ' ' || father_name)) LIKE '%qoraboyeva%habiba%'
+     OR lower(trim(name || ' ' || surname || ' ' || father_name)) LIKE '%habiba%mo''minjonovna%'
+     OR lower(trim(name || ' ' || surname || ' ' || father_name)) LIKE '%mo''minjonovna%habiba%'`).run();
 const loginSecurityCols = db.prepare("PRAGMA table_info(users)").all();
 if (!loginSecurityCols.some((c) => c.name === "password_failures")) {
   db.exec("ALTER TABLE users ADD COLUMN password_failures INTEGER NOT NULL DEFAULT 0");
@@ -1007,6 +1009,12 @@ function detectLang(req) {
 }
 
 const TYPE_LABEL = { text: "Matn", pdf: "PDF", video: "Video", test: "Test" };
+
+function adminBulkSaveBar(itemLabel, count) {
+  if (!count) return "";
+  return `<div class="admin-test-savebar"><button class="btn btn-primary" id="saveAllTestEdits" type="button">O'zgarishlarni saqlash</button><span class="muted small" id="testSaveStatus" aria-live="polite"></span></div>
+  <script>(function(){var button=document.getElementById('saveAllTestEdits');if(!button)return;var status=document.getElementById('testSaveStatus');var saveLabel=${JSON.stringify(itemLabel)};button.addEventListener('click',async function(){var forms=Array.from(document.querySelectorAll('form[data-bulk-save]'));if(!forms.length)return;button.disabled=true;button.textContent='Saqlanmoqda...';if(status)status.textContent='';try{for(var form of forms){var values=new URLSearchParams(new FormData(form));var response=await fetch(form.action,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},body:values.toString()});if(!response.ok)throw new Error('save');}button.textContent='Saqlandi';if(status)status.textContent="Barcha "+saveLabel+" o'zgarishlari saqlandi.";setTimeout(function(){location.reload();},500);}catch(e){button.disabled=false;button.textContent='Qayta saqlash';if(status)status.textContent='Saqlashda xatolik yuz berdi. Qayta urinib ko'ring.';}});})();</script>`;
+}
 const CAT_LABEL = { attestation: "Attestatsiya", tkt: "TKT", other: "Boshqa" };
 function categoryLabel(category) {
   if (category === "other") return metaGet("other_category_label", "Boshqa") || "Boshqa";
@@ -1479,7 +1487,7 @@ ${seoTags}
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%2312b5a6'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='18' font-weight='bold' text-anchor='middle' fill='%2303211d'%3EH%3C/text%3E%3C/svg%3E">
 <script async src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>try{document.documentElement.dataset.theme=localStorage.getItem('ht_theme')||'dark';}catch(e){document.documentElement.dataset.theme='dark';}</script>
-<link rel="stylesheet" href="/assets/platform.css?v=20261122g">
+<link rel="stylesheet" href="/assets/platform.css?v=20261122h">
 </head>
 <body${isStudentPage ? ` class="student-page${isDashboard ? " is-dashboard" : ""}"` : ""}>
 <header class="topbar">
@@ -1572,7 +1580,7 @@ ${body}
   </div>
   </div>
   <div class="wrap footer-bottom">
-  ${new Date().getFullYear()} ${h(config.siteName)}. Muallif: Habiba Qoraboyeva. Barcha huquqlar himoyalangan.
+  ${new Date().getFullYear()} ${h(config.siteName)}. Avtor: Habiba Mo'minjonovna. Barcha huquqlar himoyalangan.
   </div>
 </footer>
 ${
@@ -1769,7 +1777,7 @@ c.addEventListener('change', function () { b.disabled = !c.checked; });
 })();
 </script>
 <script>
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=9').then(function (registration) { registration.update().catch(function () {}); }).catch(function () {});
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=10').then(function (registration) { registration.update().catch(function () {}); }).catch(function () {});
 document.querySelectorAll('[data-app-refresh]').forEach(function (button) {
   button.addEventListener('click', async function () {
     if (button.disabled) return;
@@ -3937,7 +3945,7 @@ function dashboardPage(user) {
           ru: { installed: "Приложение уже установлено.", help: "Откройте меню браузера и выберите «Установить приложение» или «Добавить на главный экран»." },
           en: { installed: "The app is already installed.", help: "Open your browser menu and choose Install app or Add to Home screen." }
         };
-        if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=9').catch(function () {});
+        if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=10').catch(function () {});
         window.addEventListener('beforeinstallprompt', function (event) {
           event.preventDefault();
           installPrompt = event;
@@ -4280,11 +4288,12 @@ function testDocument({ title, body }) {  return `<!DOCTYPE html>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%231e40af'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='18' font-weight='bold' text-anchor='middle' fill='white'%3EH%3C/text%3E%3C/svg%3E">
 <script async src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>try{document.documentElement.dataset.theme=localStorage.getItem('ht_theme')||'dark';}catch(e){document.documentElement.dataset.theme='dark';}</script>
-<link rel="stylesheet" href="/assets/platform.css?v=20261122g">
+<link rel="stylesheet" href="/assets/platform.css?v=20261122h">
 </head>
 <body class="test-body student-page">
 ${body}
-<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=9').then(function (registration) { registration.update().catch(function () {}); }).catch(function () {});</script>
+<footer class="test-author-footer">${new Date().getFullYear()} ${h(config.siteName)} · Avtor: Habiba Mo'minjonovna</footer>
+<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=10').then(function (registration) { registration.update().catch(function () {}); }).catch(function () {});</script>
 </body>
 </html>`;
 }
@@ -5257,9 +5266,9 @@ const server = http.createServer(async (req, res) => {
 
   const info = db
 .prepare(
-  "INSERT INTO users (name, surname, father_name, birth_date, phone, pass, telegram_id, telegram_username, created_at, is_author) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CASE WHEN lower(? || ' ' || ?) LIKE '%habiba%qoraboyeva%' OR lower(? || ' ' || ?) LIKE '%qoraboyeva%habiba%' THEN 1 ELSE 0 END)"
+  "INSERT INTO users (name, surname, father_name, birth_date, phone, pass, telegram_id, telegram_username, created_at, is_author) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CASE WHEN lower(? || ' ' || ? || ' ' || ?) LIKE '%habiba%qoraboyeva%' OR lower(? || ' ' || ? || ' ' || ?) LIKE '%qoraboyeva%habiba%' OR lower(? || ' ' || ? || ' ' || ?) LIKE '%habiba%mo''minjonovna%' OR lower(? || ' ' || ? || ' ' || ?) LIKE '%mo''minjonovna%habiba%' THEN 1 ELSE 0 END)"
 )
-.run(fullName, surname, fatherName, birthDate, phone, hashPassword(password), telegramId || null, telegramUsername || null, nowISO(), fullName, surname, fullName, surname);
+.run(fullName, surname, fatherName, birthDate, phone, hashPassword(password), telegramId || null, telegramUsername || null, nowISO(), fullName, surname, fatherName, fullName, surname, fatherName, fullName, surname, fatherName, fullName, surname, fatherName);
   createUserSession(res, Number(info.lastInsertRowid), req);
   createDeviceSession(res, Number(info.lastInsertRowid), req);
   notifyTelegram(
@@ -8546,7 +8555,7 @@ const server = http.createServer(async (req, res) => {
   <div class="muted small">To'g'ri javob: ${q.correct}) ${h(q["o" + q.correct])}</div>
   <details class="q-edit">
   <summary>Tahrirlash</summary>
-  <form method="post" action="/admin/question/${q.id}/update" class="form">
+  <form method="post" action="/admin/question/${q.id}/update" class="form" data-bulk-save>
   <div class="field"><label>Savol matni</label><input name="text" value="${h(q.text)}" required></div>
   <div class="grid two">
   <div class="field"><label>1-variant</label><input name="o1" value="${h(q.o1)}" required></div>
@@ -8586,6 +8595,7 @@ const server = http.createServer(async (req, res) => {
   sectionCount ? ` (${sectionCount})`: ""
   }</a></div>
   </div>
+  ${adminBulkSaveBar("savol", questions.length)}
   ${
   url.searchParams.get("imported")
   ? alertBox(`${url.searchParams.get("imported")} ta savol muvaffaqiyatli qo'shildi.`, "success")
@@ -8667,7 +8677,7 @@ Matn: passage matni (ixtiyoriy)</p>
   ? secs
 .map(
   (s, i) => `<div class="card section-item">
-  <form method="post" action="/admin/section/${s.id}" class="form">
+  <form method="post" action="/admin/section/${s.id}" class="form" data-bulk-save>
   <div class="grid two">
   <div class="field"><label>Bo'lim nomi</label><input name="title" value="${h(s.title)}" required></div>
   <div class="field"><label>Savollar oralig'i</label>
@@ -8698,6 +8708,7 @@ Matn: passage matni (ixtiyoriy)</p>
   const body = `
   <a class="back" href="/admin/lesson/${lesson.id}/questions">  Savollar</a>
   <div class="page-head"><div><h1>${h(lesson.title)}</h1><p class="muted">Bo'limlar va matnlar. ${qcount} savol</p></div></div>
+  ${adminBulkSaveBar("bo'lim", secs.length)}
   <div class="card">
   <b>Qanday ishlaydi?</b>
   <p class="muted small">Har bir bo'lim uchun savollar oralig'ini va matnni belgilang. Shu oraliqdagi savollarda matn chap tomonda, savol o'ng tomonda chiqadi. Matn kiritilmagan bo'limlar oddiy test ko'rinishida bo'ladi. Savolga alohida matn ham qo'shish mumkin   u bo'lim matnidan ustun turadi.</p>
