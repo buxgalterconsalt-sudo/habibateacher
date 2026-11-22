@@ -4872,7 +4872,7 @@ const server = http.createServer(async (req, res) => {
   <div class="wrap landing-hero-grid">
   <div class="landing-hero-copy">
   <span class="eyebrow">Ingliz tili ustozlari uchun platforma</span>
-  <h1>Ingliz tili attestatsiyasiga <span class="accent">ishonch bilan</span> tayyorlaning</h1>
+  <h1>Ingliz tili imtihonlariga <span class="accent">ishonch bilan</span> tayyorlaning</h1>
   <p class="lead">Ingliz tili o'qituvchilari uchun attestatsiya testlari, TKT modullari, metodika va amaliy tayyorlov — barchasi bir platformada.</p>
   <div class="landing-actions">
   <a class="btn btn-primary" href="${user ? "/courses": "/register"}">Tayyorgarlikni boshlash</a>
