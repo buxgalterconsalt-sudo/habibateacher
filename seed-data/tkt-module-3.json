@@ -346,7 +346,7 @@
         "c": "Standardized textbook glossaries that students must transcribe verbatim.",
         "d": "The physical arrangement of classroom furniture to prevent student distraction.",
         "answer": "B",
-        "passage": "Passage 1 (as above)"
+        "passage": "Passage 1: Differentiated instruction in mixed-ability language classrooms is grounded in the recognition that learners vary significantly in readiness, learning preferences, and background knowledge. Rather than enforcing a uniform pedagogical pace, teachers employ tiered tasks, flexible grouping strategies, and varied instructional materials to optimize learning outcomes for all students. Differentiating content, process, or product allows educators to provide appropriate cognitive scaffolding without reducing academic rigor. However, successful differentiation requires continuous formative assessment to monitor individual student growth and dynamically adjust support, ensuring that low-achieving students receive targeted assistance while high-achieving students are provided with enriching cognitive challenges."
       },
       {
         "q": "During a freer oral fluency activity, how should a teacher manage error correction?",
@@ -472,7 +472,7 @@
         "c": "Ignoring all grammatical errors and evaluating only word length.",
         "d": "Assigning a single letter grade without any written notes.",
         "answer": "A",
-        "passage": "Passage 2 (as above)"
+        "passage": "Passage 2: In written language pedagogy, the quality of teacher feedback significantly influences student writing development. Traditional marking practices often rely on \"error hunting\"—crossing out every mechanical slip in red ink—which can demotivate learners and foster writing anxiety. Contemporary research advocates criteria-based formative feedback that balances form and content. Teachers are advised to highlight positive achievements, provide clear margin annotations, and use selective error coding (e.g., indicating error types like 'sp' for spelling or 'gr' for grammar) to prompt student self-correction. Providing clear, actionable steps for revision empowers learners to take ownership of their writing trajectory."
       },
       {
         "q": "When a teacher uses \"Scaffolding\" during a complex writing task, they are providing:",
@@ -499,7 +499,7 @@
         "c": "Students acquire native-like pronunciation too quickly.",
         "d": "It increases Student Talking Time beyond recommended limits.",
         "answer": "A",
-        "passage": "Passage 3 (as above)"
+        "passage": "Passage 3: Balancing fluency and accuracy is a central challenge in communicative language teaching. Fluency tasks aim to develop learners' capacity to communicate meaning smoothly and spontaneously, whereas accuracy tasks focus on structural correctness and precision. When teachers interrupt fluency activities to correct every minor grammatical slip, students often become hesitant and risk-averse. To foster communicative confidence, methodological frameworks recommend maintaining a clear distinction between fluency and accuracy stages. During fluency-focused tasks, teachers monitor unobtrusively, noting recurring linguistic gaps to address during a dedicated post-activity feedback session."
       },
       {
         "q": "According to the TKT framework on lesson planning, a \"Syllabus\" is best defined as:",
@@ -697,7 +697,7 @@
         "c": "Ignore all errors permanently without ever addressing them.",
         "d": "Publicly reprimand students who make errors during group discussions.",
         "answer": "B",
-        "passage": "Passage 3 (as above)"
+        "passage": "Passage 3: Oral error correction requires delicate pedagogical decision-making regarding when, how, and which errors to address. Methodological research distinguishes between immediate explicit correction and implicit scaffolding techniques such as recasts, prompts, and metalinguistic feedback. While direct explicit correction provides immediate models, it can disrupt communication flow and heighten learner anxiety. Indirect prompts—such as clarification requests or metalinguistic cues—encourage learners to notice the gap between their output and target forms, prompting self-correction. Furthermore, effective teachers differentiate their feedback based on task goals: prioritizing immediate accuracy during controlled practice while reserving delayed selective feedback for fluency activities."
       },
       {
         "q": "According to Passage 3, why might immediate explicit correction be problematic during communicative interaction?",
@@ -706,7 +706,7 @@
         "c": "It prevents teachers from recording diagnostic data.",
         "d": "It takes too little time for teachers to execute.",
         "answer": "B",
-        "passage": "Passage 3 (as above)"
+        "passage": "Passage 3: Oral error correction requires delicate pedagogical decision-making regarding when, how, and which errors to address. Methodological research distinguishes between immediate explicit correction and implicit scaffolding techniques such as recasts, prompts, and metalinguistic feedback. While direct explicit correction provides immediate models, it can disrupt communication flow and heighten learner anxiety. Indirect prompts—such as clarification requests or metalinguistic cues—encourage learners to notice the gap between their output and target forms, prompting self-correction. Furthermore, effective teachers differentiate their feedback based on task goals: prioritizing immediate accuracy during controlled practice while reserving delayed selective feedback for fluency activities."
       },
       {
         "q": "When conducting a \"Delayed Error Correction\" session on the board after a speaking activity, how should the teacher present the errors to maintain a safe learning environment?",
@@ -1183,7 +1183,7 @@
         "c": "It eliminates the need for formative assessment rubrics.",
         "d": "It allows the teacher to finish class early.",
         "answer": "B",
-        "passage": "Passage 3 (as above)"
+        "passage": "Passage 3: Error correction techniques vary in their degree of teacher explicit intervention. Direct correction involves providing the correct language form immediately to the learner. While direct correction is efficient during controlled accuracy practice, it offers minimal cognitive engagement. In contrast, metalinguistic feedback provides cues, questions, or metalinguistic terminology—such as asking \"Is that countable or uncountable?\"—which prompts learners to retrieve their own declarative knowledge and self-correct. Research indicates that metalinguistic feedback promotes deeper cognitive processing and reinforces interlanguage restructuring more effectively than passive reception of direct corrections."
       },
       {
         "q": "During a freer oral fluency activity, when is the most appropriate time for the teacher to conduct error correction?",
@@ -1336,7 +1336,7 @@
         "c": "By isolating low-achieving students in separate study halls during English lessons.",
         "d": "By adapting learning tasks for diverse student abilities while preserving physical and emotional safety.",
         "answer": "D",
-        "passage": "Passage 1 (as above)"
+        "passage": "Passage 1: Under Uzbekistan's updated Teacher Professional Standard (Kasb Standarti), secondary educators are evaluated across two overarching domain areas: instructional management and continuous professional development. Instructional management requires teachers to design goal-oriented lesson plans, apply modern digital technologies, and execute fair, transparent assessments. Crucially, Kasb Standarti mandates that assessment serve a formative diagnostic function, providing actionable feedback that guides student improvement rather than merely assigning punitive marks. Furthermore, the standard emphasizes inclusive practice, requiring teachers to adapt learning tasks for diverse student abilities while maintaining a physically and emotionally safe classroom environment."
       },
       {
         "q": "As used in Passage 1, the phrase \"actionable feedback\" refers to:",
@@ -1345,7 +1345,7 @@
         "c": "Public vocal reprimands delivered in front of school inspectors.",
         "d": "Confidential administrative files shared with private tutoring companies.",
         "answer": "A",
-        "passage": "Passage 1 (as above)"
+        "passage": "Passage 1: Under Uzbekistan's updated Teacher Professional Standard (Kasb Standarti), secondary educators are evaluated across two overarching domain areas: instructional management and continuous professional development. Instructional management requires teachers to design goal-oriented lesson plans, apply modern digital technologies, and execute fair, transparent assessments. Crucially, Kasb Standarti mandates that assessment serve a formative diagnostic function, providing actionable feedback that guides student improvement rather than merely assigning punitive marks. Furthermore, the standard emphasizes inclusive practice, requiring teachers to adapt learning tasks for diverse student abilities while maintaining a physically and emotionally safe classroom environment."
       },
       {
         "q": "In inclusive ELT pedagogy, what does Universal Design for Learning (UDL) advocate regarding instructional presentation?",
@@ -1399,7 +1399,7 @@
         "c": "By requiring teachers to lecture exclusively in the native language.",
         "d": "By eliminating foreign language subjects from the school curriculum.",
         "answer": "A",
-        "passage": "Passage 3 (as above)"
+        "passage": "Passage 3: Inclusive education is founded on the principle that every learner, regardless of physical, cognitive, or socioeconomic differences, has an equal right to high-quality instruction within a unified educational environment. In foreign language teaching, inclusion requires moving beyond a \"one-size-fits-all\" curriculum toward differentiated instruction. Differentiated instruction involves modifying content, process, products, or learning environments based on individual readiness, interests, and learning profiles. For instance, rather than assigning an identical written task to all students, a teacher might offer tiered assignments with varied scaffolding levels. Furthermore, inclusive assessment utilizes flexible evaluation formats—such as oral presentations, visual portfolios, or digital projects—ensuring that students can demonstrate their true linguistic competence without being hindered by non-construct barriers."
       },
       {
         "q": "According to Passage 3, what is an example of a tiered assignment in an inclusive classroom?",
@@ -1408,7 +1408,7 @@
         "c": "Forcing all students to memorize 50 irregular verbs in 10 minutes.",
         "d": "Assigning identical workbook pages without teacher feedback.",
         "answer": "A",
-        "passage": "Passage 3 (as above)"
+        "passage": "Passage 3: Inclusive education is founded on the principle that every learner, regardless of physical, cognitive, or socioeconomic differences, has an equal right to high-quality instruction within a unified educational environment. In foreign language teaching, inclusion requires moving beyond a \"one-size-fits-all\" curriculum toward differentiated instruction. Differentiated instruction involves modifying content, process, products, or learning environments based on individual readiness, interests, and learning profiles. For instance, rather than assigning an identical written task to all students, a teacher might offer tiered assignments with varied scaffolding levels. Furthermore, inclusive assessment utilizes flexible evaluation formats—such as oral presentations, visual portfolios, or digital projects—ensuring that students can demonstrate their true linguistic competence without being hindered by non-construct barriers."
       },
       {
         "q": "In inclusive language teaching, what is an effective scaffolding strategy for supporting a dyslexic student during reading activities?",
@@ -1435,7 +1435,7 @@
         "c": "A list of 500 isolated vocabulary headwords.",
         "d": "A physical wooden structure used in building maintenance.",
         "answer": "B",
-        "passage": "Passage 1 (as above)"
+        "passage": "Passage 1: The concept of pedagogical content knowledge (PCK), first articulated by Lee Shulman, bridges the traditional divide between general pedagogical techniques and subject-matter expertise. PCK represents the specialized knowledge that language teachers possess regarding how to transform structural linguistic knowledge (such as syntax, phonology, and pragmatic norms) into pedagogically powerful forms accessible to diverse learners. Rather than treating English grammar as a static body of rules to be transmitted, a teacher with well-developed PCK understands common learner misconceptions, knows which instructional analogies or visual models clarify complex concepts, and selects task stages that scaffold interlanguage development. Consequently, teacher certification frameworks emphasize PCK alongside subject competence to ensure that educators do not merely know English, but know how to facilitate its acquisition."
       },
       {
         "q": "Which of the following is an effective Concept Checking Question (CCQ) for the modal structure \"You shouldn't have bought that expensive coat\"?",

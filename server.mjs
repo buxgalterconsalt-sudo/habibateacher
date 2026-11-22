@@ -765,7 +765,19 @@ function seedPreparedTests() {
         lesson = { id: Number(info.lastInsertRowid), question_count: 0 };
       }
       const currentCount = Number(db.prepare("SELECT COUNT(*) AS n FROM questions WHERE lesson_id = ?").get(lesson.id)?.n || 0);
-      if (currentCount >= set.questions.length) continue;
+      if (currentCount >= set.questions.length) {
+        if (set.category === "tkt") {
+          const existingQuestions = db.prepare("SELECT id, text, passage FROM questions WHERE lesson_id = ? ORDER BY id").all(lesson.id);
+          const updatePassage = db.prepare("UPDATE questions SET passage = ? WHERE id = ?");
+          existingQuestions.forEach((row, index) => {
+            const sourceQuestion = set.questions[index];
+            if (sourceQuestion && row.text === sourceQuestion.q && row.passage !== (sourceQuestion.passage || "")) {
+              updatePassage.run(sourceQuestion.passage || "", row.id);
+            }
+          });
+        }
+        continue;
+      }
       db.exec("BEGIN IMMEDIATE");
       try {
         for (const question of set.questions.slice(currentCount)) {
