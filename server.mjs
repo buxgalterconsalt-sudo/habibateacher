@@ -6794,12 +6794,7 @@ const server = http.createServer(async (req, res) => {
     .all(lesson.course_id);
   const lessonIndex = lessonList.findIndex((l) => l.id === lesson.id);
   const lessonNo = lessonIndex >= 0 ? lessonIndex + 1 : 1;
-  const nextLesson = lessonIndex >= 0 ? lessonList[lessonIndex + 1] || null : null;
-  const nextHref = nextLesson
-    ? nextLesson.type === "test"
-      ? `/test/${nextLesson.id}`
-      : `/lesson/${nextLesson.id}`
-    : `/course/${course.id}`;
+  const immediateNextLesson = lessonIndex >= 0 ? lessonList[lessonIndex + 1] || null : null;
   const relatedTest =
     lesson.type === "video"
       ? db
@@ -6815,6 +6810,18 @@ const server = http.createServer(async (req, res) => {
     ? db.prepare("SELECT score FROM progress WHERE user_id = ? AND lesson_id = ?").get(user.id, relatedTest.id)
     : null;
   const testDone = !!(testProgress && Number(testProgress.score) >= 80);
+  // A video lesson's first following test is its checkpoint. Once passed,
+  // the next-lesson control must advance beyond that test instead of reopening it.
+  const relatedTestIndex = relatedTest ? lessonList.findIndex((item) => item.id === relatedTest.id) : -1;
+  const nextLesson =
+    lesson.type === "video" && testDone && relatedTestIndex >= 0
+      ? lessonList[relatedTestIndex + 1] || null
+      : immediateNextLesson;
+  const nextHref = nextLesson
+    ? nextLesson.type === "test"
+      ? `/test/${nextLesson.id}`
+      : `/lesson/${nextLesson.id}`
+    : `/course/${course.id}`;
   const hasTestStep = !!relatedTest;
   const stepsTotal = hasTestStep ? 3 : 2;
   const stepsDone =
