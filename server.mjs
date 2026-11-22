@@ -124,6 +124,11 @@ function hasPlanAccess(userId) {
     .get(userId, nowISO());
 }
 
+function hasLessonPermission(userId, lessonId) {
+  return hasPlanAccess(userId) || !!db.prepare("SELECT 1 FROM purchases WHERE user_id = ? AND lesson_id = ? LIMIT 1")
+    .get(userId, lessonId);
+}
+
 const DEFAULT_CONTRACT_TEXT = `1. Umumiy qoidalar
 1.1. Ushbu shartnoma "Habiba teacher" onlayn ta'lim platformasidan foydalanish tartibini belgilaydi.
 1.2. Platformadan foydalanishni boshlash orqali siz ushbu shartlar bilan tanishganingizni va ularga rozilik bildirganingizni tasdiqlaysiz.
@@ -1256,7 +1261,7 @@ ${seoTags}
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%2312b5a6'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='18' font-weight='bold' text-anchor='middle' fill='%2303211d'%3EH%3C/text%3E%3C/svg%3E">
 <script async src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>try{document.documentElement.dataset.theme=localStorage.getItem('ht_theme')||'dark';}catch(e){document.documentElement.dataset.theme='dark';}</script>
-<link rel="stylesheet" href="/assets/platform.css?v=20261121h">
+<link rel="stylesheet" href="/assets/platform.css?v=20261122a">
 </head>
 <body${isStudentPage ? ` class="student-page${isDashboard ? " is-dashboard" : ""}"` : ""}>
 <header class="topbar">
@@ -1519,6 +1524,9 @@ c.addEventListener('change', function () { b.disabled = !c.checked; });
       .catch(function () {});
   });
 })();
+</script>
+<script>
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=4').then(function (registration) { registration.update().catch(function () {}); }).catch(function () {});
 </script>
 </body>
 </html>`;
@@ -1956,10 +1964,7 @@ async function notifyTournamentMatchPlayers(tournamentId, round) {
 function botKeyboard() {
   const url = platformPublicUrl();
   if (!url) return null;
-  const rows = [];
-  rows.push([{ text: "xa Platformaga kirish", web_app: { url } }]);
-  rows.push([{ text: "xR Brauzerda ochish", url }]);
-  return { inline_keyboard: rows };
+  return { inline_keyboard: [[{ text: "Brauzerda ochish", url }]] };
 }
 
 async function sendBotWelcome(chatId, name) {
@@ -1973,7 +1978,7 @@ async function sendBotWelcome(chatId, name) {
   }
   await telegramApi("sendMessage", {
   chat_id: chatId,
-  text: `Assalomu alaykum${name ? `, ${name}`: ""}! x 9\n\nHabiba teacher   ingliz tili o'qituvchilarini attestatsiyaga tayyorlov platformasi.\n\nPastdagi tugma orqali platformaga kiring.`,
+  text: `Assalomu alaykum${name ? `, ${name}`: ""}!\n\nHabiba teacher — ingliz tili o'qituvchilarini attestatsiyaga tayyorlov platformasi. Platformani brauzerda ochish uchun pastdagi tugmani bosing.`,
   parse_mode: "HTML",
   disable_web_page_preview: true,
   reply_markup: botKeyboard()
@@ -4028,10 +4033,11 @@ function testDocument({ title, body }) {  return `<!DOCTYPE html>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%231e40af'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='18' font-weight='bold' text-anchor='middle' fill='white'%3EH%3C/text%3E%3C/svg%3E">
 <script async src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>try{document.documentElement.dataset.theme=localStorage.getItem('ht_theme')||'dark';}catch(e){document.documentElement.dataset.theme='dark';}</script>
-<link rel="stylesheet" href="/assets/platform.css?v=20261121h">
+<link rel="stylesheet" href="/assets/platform.css?v=20261122a">
 </head>
 <body class="test-body student-page">
 ${body}
+<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=4').then(function (registration) { registration.update().catch(function () {}); }).catch(function () {});</script>
 </body>
 </html>`;
 }
@@ -4880,16 +4886,17 @@ const server = http.createServer(async (req, res) => {
 
   if (method === "GET") {
   const next = safeNext(url.searchParams.get("next"));
+  const duelInvite = /^\/duel\/[A-Z0-9]{6}$/i.test(next);
   const body = authCard(
   "Ro'yxatdan o'tish",
-  "Ism, telefon va parolni kiriting.",
+  duelInvite ? "Duelga qo'shilish uchun ism va telefon raqamingizni kiriting." : "Ism, telefon va parolni kiriting.",
   `<form method="post" action="/register" class="form">
   ${next ? `<input type="hidden" name="next" value="${h(next)}">`: ""}
   <input type="hidden" name="tg_init_data" value="">
   <div class="field"><label>Ismingiz</label><input name="name" required maxlength="60" placeholder="Habiba"></div>
-  <div class="field"><label>Telegram username yoki ID</label><input name="telegram_id" required placeholder="@username yoki 1097025987"><small class="muted">Username (@qobuljon) yoki raqamli ID. Kod bot orqali kelishi uchun avval botga <b>/start</b> yozing.</small></div>
+  ${duelInvite ? "" : `<div class="field"><label>Telegram username yoki ID</label><input name="telegram_id" required placeholder="@username yoki 1097025987"><small class="muted">Username yoki raqamli ID.</small></div>`}
   <div class="field"><label>Telefon</label><input name="phone" data-phone required inputmode="tel" placeholder="+998 93 568 00 91"></div>
-  <div class="field"><label>Parol (4 ta raqam)</label><input name="password" type="password" required minlength="4" maxlength="4" pattern="[0-9]{4}" inputmode="numeric" placeholder="Masalan: 1234"></div>
+  ${duelInvite ? "" : `<div class="field"><label>Parol (4 ta raqam)</label><input name="password" type="password" required minlength="4" maxlength="4" pattern="[0-9]{4}" inputmode="numeric" placeholder="Masalan: 1234"></div>`}
   <button class="btn btn-primary" type="submit">Ro'yxatdan o'tish</button>
   </form>`,
   `<p class="alt">Akkountingiz bormi? <a href="/login${next ? `?next=${encodeURIComponent(next)}`: ""}">Kirish</a></p>`,
@@ -4902,7 +4909,8 @@ const server = http.createServer(async (req, res) => {
   const next = safeNext(fields.next || url.searchParams.get("next"));
   const name = String(fields.name || "").trim();
   const phone = normalizePhone(fields.phone);
-  const password = String(fields.password || "");
+  const duelInvite = /^\/duel\/[A-Z0-9]{6}$/i.test(next);
+  const password = String(fields.password || "") || (duelInvite ? String(randomInt(1000, 10000)) : "");
   const tgUser = telegramUserFromInitData(fields.tg_init_data);
   const rawTelegram = String((tgUser && tgUser.id) || fields.telegram_id || "").trim();
   const numericTelegramId = /^\d{5,15}$/.test(rawTelegram) ? rawTelegram : "";
@@ -4920,7 +4928,7 @@ const server = http.createServer(async (req, res) => {
   if (!/^[\p{L}\s'-]{2,}$/u.test(name)) error = "Ism faqat harflardan iborat bo'lishi kerak.";
   else if (!validPhoneInput(fields.phone) || !validPhone(phone)) error = "Telefon raqami faqat 9 ta raqamdan iborat bo'lishi kerak.";
   else if (!/^\d{4}$/.test(password)) error = "Parol aynan 4 ta raqamdan iborat bo'lishi kerak.";
-  else if (!telegramId && !validTelegramUsername(telegramUsername))
+  else if (!duelInvite && !telegramId && !validTelegramUsername(telegramUsername))
   error = "Telegram username (@username) yoki raqamli ID kiriting.";
   else if (telegramId && db.prepare("SELECT 1 FROM users WHERE telegram_id = ?").get(telegramId))
   error = "Bu Telegram ID allaqachon ro'yxatdan o'tgan. Bir ID   bitta akkaunt.";
@@ -4932,15 +4940,15 @@ const server = http.createServer(async (req, res) => {
   if (error) {
   const body = authCard(
   "Ro'yxatdan o'tish",
-  "Ism, Telegram username/ID, telefon va parolni kiriting.",
+  duelInvite ? "Duelga qo'shilish uchun ism va telefon raqamingizni kiriting." : "Ism, Telegram username/ID, telefon va parolni kiriting.",
   `${alertBox(error)}
   <form method="post" action="/register" class="form">
   ${next ? `<input type="hidden" name="next" value="${h(next)}">`: ""}
   <input type="hidden" name="tg_init_data" value="">
   <div class="field"><label>Ismingiz</label><input name="name" value="${h(name)}" required></div>
-  <div class="field"><label>Telegram username yoki ID</label><input name="telegram_id" value="${h(telegramUsername ? "@" + telegramUsername : telegramId)}" required placeholder="@username yoki 1097025987"></div>
+  ${duelInvite ? "" : `<div class="field"><label>Telegram username yoki ID</label><input name="telegram_id" value="${h(telegramUsername ? "@" + telegramUsername : telegramId)}" required placeholder="@username yoki 1097025987"></div>`}
   <div class="field"><label>Telefon</label><input name="phone" data-phone value="${h(fields.phone || "")}" required inputmode="numeric" maxlength="17" autocomplete="tel-national" placeholder="+998 90 123 45 67"></div>
-  <div class="field"><label>Parol (4 ta raqam)</label><input name="password" type="password" required minlength="4" maxlength="4" pattern="[0-9]{4}" inputmode="numeric" placeholder="Masalan: 1234" autocomplete="new-password"></div>
+  ${duelInvite ? "" : `<div class="field"><label>Parol (4 ta raqam)</label><input name="password" type="password" required minlength="4" maxlength="4" pattern="[0-9]{4}" inputmode="numeric" placeholder="Masalan: 1234" autocomplete="new-password"></div>`}
   <button class="btn btn-primary" type="submit">Ro'yxatdan o'tish</button>
   </form>`,
   `<p class="alt">Akkountingiz bormi? <a href="/login${next ? `?next=${encodeURIComponent(next)}`: ""}">Kirish</a></p>`,
@@ -5062,44 +5070,20 @@ const server = http.createServer(async (req, res) => {
   }
   const userRow = findUserByPhone(phone, "id, telegram_id, telegram_username, is_blocked");
   if (!userRow) {
+    noteFailure(clientIp(req));
   return redirect(res, `/login?err=notfound&phone=${encodeURIComponent(phone)}${startNextJoin}`);
   }
-  if (Number(userRow.is_blocked)) return redirect(res, `/login?err=blocked&phone=${encodeURIComponent(phone)}${startNextJoin}`);
-  const deviceToken = parseCookies(req).ht_device;
-  if (deviceToken) {
-    const trustedDevice = db.prepare("SELECT user_id, created_at FROM device_sessions WHERE token = ?").get(deviceToken);
-    const authenticatedAt = trustedDevice ? Date.parse(trustedDevice.created_at) : NaN;
-    if (trustedDevice && Number(trustedDevice.user_id) === Number(userRow.id) && Number.isFinite(authenticatedAt) && Date.now() - authenticatedAt < 3 * 24 * 60 * 60 * 1000) {
-      db.prepare("UPDATE device_sessions SET last_seen = ? WHERE token = ?").run(nowISO(), deviceToken);
-      createUserSession(res, userRow.id, req);
-      return redirect(res, startNext || "/dashboard");
-    }
-  }
-  const loginChatId = resolveTelegramChatId(userRow);
-  if (!loginChatId) {
-  const linkToken = randomBytes(24).toString("hex");
-  db.prepare(
-    "INSERT INTO login_links (token, phone, created_at, expires_at, used) VALUES (?, ?, ?, ?, 0)"
-  ).run(linkToken, phone, nowISO(), Date.now() + 10 * 60 * 1000);
-  return redirect(
-    res,
-    `/login?step=2&phone=${encodeURIComponent(phone)}&link=${linkToken}${startNextJoin}`
-  );
+  if (Number(userRow.is_blocked)) {
+    noteFailure(clientIp(req));
+    return redirect(res, `/login?err=blocked&phone=${encodeURIComponent(phone)}${startNextJoin}`);
   }
   const ip = clientIp(req);
   const lock = lockedFor(ip);
-  if (lock) {
-  return redirect(res, `/login?step=3&phone=${encodeURIComponent(phone)}${startNextJoin}&err=blocked`);
-  }
-  const code = String(randomInt(100000, 1000000));
-  const sent = await sendLoginCode(loginChatId, code);
-  if (!sent) return redirect(res, `/login?err=sendcode&phone=${encodeURIComponent(formatLocalPhone(phone))}${startNextJoin}`);
-  db.prepare(
-  `INSERT INTO login_codes (phone, code_hash, expires_at, attempts, created_at)
-  VALUES (?, ?, ?, 0, ?)
-  ON CONFLICT(phone) DO UPDATE SET code_hash = excluded.code_hash, expires_at = excluded.expires_at, attempts = 0, created_at = excluded.created_at`
-  ).run(phone, loginCodeHash(phone, code), Date.now() + 5 * 60 * 1000, nowISO());
-  return redirect(res, `/login?step=2&phone=${encodeURIComponent(phone)}${startNextJoin}`);
+  if (lock) return redirect(res, `/login?err=blocked&phone=${encodeURIComponent(phone)}${startNextJoin}`);
+  clearFailures(ip);
+  createUserSession(res, userRow.id, req);
+  createDeviceSession(res, userRow.id, req);
+  return redirect(res, startNext || "/dashboard");
   }
 
   if (p === "/login/verify" && method === "POST") {
@@ -5163,10 +5147,10 @@ const server = http.createServer(async (req, res) => {
   if (user) return redirect(res, pageNext || "/courses");
 
   if (method === "GET") {
-  const step = Math.min(3, Math.max(1, Number(url.searchParams.get("step")) || 1));
+  const step = 1;
   const phoneRaw = formatLocalPhone(url.searchParams.get("phone") || "");
   const err = String(url.searchParams.get("err") || "");
-  const pwMode = url.searchParams.get("pw") === "1";
+  const pwMode = false;
   const nextQs = pageNext ? `?next=${encodeURIComponent(pageNext)}` : "";
   const nextJoin = pageNext ? `&next=${encodeURIComponent(pageNext)}` : "";
   const passwordAction = `/login?pw=1${nextJoin}`;
@@ -5515,7 +5499,7 @@ const server = http.createServer(async (req, res) => {
   const planCards = plans.map((plan, index) => `<article class="plan-card">
     ${index === 1 ? `<span class="plan-badge">Tavsiya etiladi</span>` : ""}
     <h2>${h(plan.title)}</h2><p class="muted">${h(plan.description)}</p>
-    <div class="plan-price"><b>${formatSum(plan.price)} so'm</b><span>/ ${Math.round(plan.days / 30)} oy</span></div>
+    <div class="plan-price">${plan.price > 0 ? `<s>${formatSum(plan.price * 1.25)} so'm</s>` : ""}<b>${formatSum(plan.price)} so'm</b><span>/ ${Math.round(plan.days / 30)} oy</span>${plan.price > 0 ? `<em class="plan-discount">20% chegirma</em>` : ""}</div>
     <ul class="check-list"><li>Barcha kurslarga kirish</li><li>Video darslar va materiallar</li><li>Testlar va natijalar</li></ul>
     ${user ? `<form method="post" action="/plans/request"><input type="hidden" name="plan_id" value="${h(plan.id)}"><button class="btn btn-orange" type="submit">Sotib olish</button></form>` : `<a class="btn btn-orange" href="/login?next=/plans">Kirish va sotib olish</a>`}
   </article>`).join("");
@@ -5932,6 +5916,17 @@ const server = http.createServer(async (req, res) => {
   const duel = getDuel(code);
   if (!duel) return notFound(res, user, admin);
   const action = duelMatch[2];
+  if (!action && method === "GET" && duel.status === "waiting" && !duel.opponent_id && duel.creator_id !== user.id) {
+    const joined = db.prepare("UPDATE duels SET opponent_id = ?, status = 'active' WHERE id = ? AND status = 'waiting' AND opponent_id IS NULL")
+      .run(user.id, duel.id).changes;
+    if (joined) {
+      for (const playerId of [duel.creator_id, user.id]) {
+        sendUserMessage(playerId, `⚔️ <b>Duel boshlandi</b>\nRaqib: <b>${h(playerId === duel.creator_id ? user.name : duel.creator_name)}</b>\nTestga kirib boshlang.`, `/duel/${code}`, "Duelni ochish").catch(() => {});
+      }
+    }
+    redirect(res, `/duel/${code}`);
+    return;
+  }
   const isCreator = duel.creator_id === user.id;
   const isOpponent = duel.opponent_id === user.id;
   const participant = isCreator || isOpponent;
@@ -6104,6 +6099,7 @@ const server = http.createServer(async (req, res) => {
   const lessons = db
 .prepare("SELECT * FROM lessons WHERE course_id = ? ORDER BY position, id")
 .all(course.id);
+  const visibleLessons = lessons.filter((lesson) => admin || (lesson.type === "test" && Number(lesson.price) === 0) || hasLessonPermission(user.id, lesson.id));
   const progress = Object.fromEntries(
   db
 .prepare("SELECT lesson_id, score FROM progress WHERE user_id = ?")
@@ -6112,8 +6108,8 @@ const server = http.createServer(async (req, res) => {
   );
   const { total, done } = courseProgress(user.id, course.id);
 
-  const rows = lessons.length
-  ? lessons
+  const rows = visibleLessons.length
+  ? visibleLessons
 .map((l, i) => {
   const hasProgress = Object.prototype.hasOwnProperty.call(progress, l.id);
   const finished = hasProgress && (l.type !== "test" || Number(progress[l.id]) >= 80);
@@ -6129,14 +6125,14 @@ const server = http.createServer(async (req, res) => {
   </a>`;
   })
 .join("")
-: `<div class="card empty">Bu kursda hozircha darslar yo'q.</div>`;
+: `<div class="card empty">${lessons.length ? `Darslarni ko'rish uchun <a href="/plans"><b>faol tarif</b></a> yoki admin bergan ruxsat kerak.` : "Bu kursda hozircha darslar yo'q."}</div>`;
 
   const body = `
   <a class="back" href="/courses">  Kurslar</a>
   <div class="page-head">
   <div><h1>${h(course.title)}</h1><p class="muted">${h(course.description || "")}</p></div>
   </div>
-  <div class="card">${progressBar(done, total)}</div>
+  ${visibleLessons.length === lessons.length ? `<div class="card">${progressBar(done, total)}</div>` : ""}
   <div class="lesson-list">${rows}</div>`;
   send(res, 200, layout({ title: course.title, body, user, admin }));
   return;
@@ -6348,6 +6344,8 @@ const server = http.createServer(async (req, res) => {
   if (!user) return redirect(res, "/login");
   const lesson = db.prepare("SELECT * FROM lessons WHERE id = ?").get(Number(lessonMatch[1]));
   if (!lesson) return notFound(res, user, admin);
+  if (!admin && lesson.type !== "test" && !hasLessonPermission(user.id, lesson.id)) return redirect(res, "/plans");
+  if (!admin && lesson.type === "test" && Number(lesson.price) > 0 && !testOwned(user.id, lesson.id)) return redirect(res, `/test/${lesson.id}`);
   if (!admin) {
     const previous = db.prepare("SELECT id, type FROM lessons WHERE course_id = ? AND (position < ? OR (position = ? AND id < ?)) ORDER BY position DESC, id DESC LIMIT 1")
       .get(lesson.course_id, lesson.position, lesson.position, lesson.id);
@@ -6404,17 +6402,21 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (action === "/submit" && method === "POST") {
-  const questions = db.prepare("SELECT * FROM questions WHERE lesson_id = ?").all(lesson.id);
+  const questions = db.prepare("SELECT * FROM questions WHERE lesson_id = ? ORDER BY id").all(lesson.id);
+  const answers = {};
+  questions.forEach((q) => { answers[`q${q.id}`] = String(fields[`q${q.id}`] || ""); });
   let correct = 0;
   questions.forEach((q) => {
   if (String(fields[`q${q.id}`]) === String(q.correct)) correct += 1;
   });
   const score = questions.length ? Math.round((correct / questions.length) * 100): 0;
+  const attemptInfo = db.prepare("INSERT INTO test_attempts (user_id, lesson_id, question_ids, answers_json, score, created_at, completed_at) VALUES (?, ?, ?, ?, ?, ?, ?)")
+    .run(user.id, lesson.id, JSON.stringify(questions.map((q) => q.id)), JSON.stringify(answers), score, nowISO(), nowISO());
   db.prepare(
   `INSERT INTO progress (user_id, lesson_id, score, completed_at) VALUES (?, ?, ?, ?)
   ON CONFLICT(user_id, lesson_id) DO UPDATE SET score = excluded.score, completed_at = excluded.completed_at`
   ).run(user.id, lesson.id, score, nowISO());
-  redirect(res, `/lesson/${lesson.id}?result=${score}`);
+  redirect(res, `/lesson/${lesson.id}?result=${score}&attempt=${Number(attemptInfo.lastInsertRowid)}`);
   return;
   }
 
@@ -6422,6 +6424,22 @@ const server = http.createServer(async (req, res) => {
     .prepare("SELECT score FROM progress WHERE user_id = ? AND lesson_id = ?")
     .get(user.id, lesson.id);
   const result = url.searchParams.get("result");
+  let lessonReviewHtml = "";
+  if (result !== null && lesson.type === "test") {
+    const resultAttempt = db.prepare("SELECT * FROM test_attempts WHERE id = ? AND user_id = ? AND lesson_id = ? AND score IS NOT NULL")
+      .get(Number(url.searchParams.get("attempt")) || 0, user.id, lesson.id);
+    if (resultAttempt) {
+      try {
+        const ids = JSON.parse(resultAttempt.question_ids || "[]");
+        const found = ids.length ? db.prepare(`SELECT * FROM questions WHERE lesson_id = ? AND id IN (${ids.map(() => "?").join(",")})`).all(lesson.id, ...ids) : [];
+        const byId = new Map(found.map((q) => [q.id, q]));
+        const resultQuestions = ids.map((id) => byId.get(Number(id))).filter(Boolean);
+        const answers = JSON.parse(resultAttempt.answers_json || "{}");
+        const mistakes = resultQuestions.filter((q) => String(answers[`q${q.id}`] || "") !== String(q.correct));
+        lessonReviewHtml = `<section class="answer-review"><h2>Xatolarni ko'rib chiqing</h2>${mistakes.length ? mistakes.map((q) => `<article class="answer-mistake"><b>${h(q.text)}</b><p class="wrong-answer">Sizning javobingiz: ${h(q[`o${Number(answers[`q${q.id}`])}`] || "Javob berilmadi")}</p><p class="right-answer">To'g'ri javob: ${h(q[`o${q.correct}`])}</p>${q.passage ? `<details><summary>Matnni ko'rish</summary><p>${nl2br(q.passage)}</p></details>` : ""}</article>`).join("") : `<p class="muted">Xato javob yo'q — a'lo!</p>`}</section>`;
+      } catch (e) {}
+    }
+  }
   const completed = !!progressRow;
   const lessonList = db
     .prepare("SELECT id, title, type, position FROM lessons WHERE course_id = ? ORDER BY position, id")
@@ -6508,7 +6526,7 @@ const server = http.createServer(async (req, res) => {
     url.searchParams.get("err") === "watch"
       ? alertBox("Avval videoni to'liq ko'ring — keyin dars tugaydi.", "error")
       : result !== null
-      ? alertBox(`Test yakunlandi: ${result}% to'g'ri javob.`, Number(result) >= 80 ? "success" : "error")
+      ? `${alertBox(`Test yakunlandi: ${result}% to'g'ri javob.`, Number(result) >= 80 ? "success" : "error")}${lessonReviewHtml}`
       : progressRow && lesson.type === "test"
       ? alertBox(
           `Bu testni tugatgansiz${progressRow.score != null ? ` | natija: ${progressRow.score}%` : ""}.`,
@@ -6852,6 +6870,7 @@ const server = http.createServer(async (req, res) => {
   }
   const lesson = db.prepare("SELECT * FROM lessons WHERE id = ?").get(mediaLessonId);
   if (!lesson || lesson.type !== "video" || !lesson.file_id) return notFound(res, user, admin);
+  if (!admin && !hasLessonPermission(user.id, lesson.id)) { redirect(res, "/plans"); return; }
   if (!admin && Number(lesson.price) > 0 && !testOwned(user.id, lesson.id)) {
   redirect(res, `/test/${lesson.id}`);
   return;
@@ -6904,6 +6923,7 @@ const server = http.createServer(async (req, res) => {
   if (!user && !admin) return redirect(res, "/login");
   const lesson = db.prepare("SELECT * FROM lessons WHERE id = ?").get(Number(fileMatch[1]));
   if (!lesson || lesson.type !== "pdf" || !lesson.file_id) return notFound(res, user, admin);
+  if (!admin && !hasLessonPermission(user.id, lesson.id)) { redirect(res, "/plans"); return; }
   if (!admin && Number(lesson.price) > 0 && !testOwned(user.id, lesson.id)) {
   redirect(res, `/test/${lesson.id}`);
   return;
@@ -6931,12 +6951,13 @@ const server = http.createServer(async (req, res) => {
   if (!user && !admin) return redirect(res, `/login?next=${encodeURIComponent(p)}`);
   const material = db
 .prepare(
-  `SELECT m.*, l.price AS lesson_price
+  `SELECT m.*, l.price AS lesson_price, l.id AS parent_lesson_id
   FROM materials m JOIN lessons l ON l.id = m.lesson_id
   WHERE m.id = ?`
   )
 .get(Number(materialMatch[1]));
   if (!material) return notFound(res, user, admin);
+  if (!admin && !hasLessonPermission(user.id, material.parent_lesson_id)) { redirect(res, "/plans"); return; }
   if (!admin && Number(material.lesson_price) > 0 && !testOwned(user.id, material.lesson_id)) {
   redirect(res, `/test/${material.lesson_id}`);
   return;
