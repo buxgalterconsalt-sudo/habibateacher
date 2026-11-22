@@ -5809,6 +5809,8 @@ html:not([data-theme="light"]) .landing-hero-copy .eyebrow { color: #ff9a61; }
 .hero-float-card.two .hero-float-mark { background: #e9f5fa; color: #0c77a6; }
 .hero-float-card img { width: 42px; height: 42px; border-radius: 12px; object-fit: cover; }
 .section { padding-block: clamp(54px, 7vw, 88px); }
+.home-features { background: #eeebf7; }
+html:not([data-theme="light"]) .home-features { background: #201f20; }
 .section.tight { padding-block: 24px clamp(54px, 7vw, 82px); }
 .section-head h2 { letter-spacing: -.045em; }
 .eyebrow { background: rgba(12, 119, 166, .07); border-color: rgba(12, 119, 166, .14); color: #0c77a6; letter-spacing: .07em; }
@@ -5828,6 +5830,7 @@ html:not([data-theme="light"]) .card, html:not([data-theme="light"]) .test-card,
 .stat { background: #f7f7f7; border-color: rgba(19, 18, 19, .08); }
 .stat b { color: #ea5e04; }
 .about { background: #f1efed; border-color: rgba(19, 18, 19, .07); }
+html[data-theme="dark"] section.about { background: #201f20; border-color: rgba(247, 247, 247, .12); }
 .about-art, html[data-theme="light"] .about-art { background: #131213; color: #fff; border: 0; }
 .about-art p, .check-list li { color: var(--muted); }
 .about-art .about-mark { background: #ea5e04; color: #131213; }
@@ -6292,3 +6295,55 @@ body.is-dashboard .dash-quote .dash-quote-author { font-size: .64rem; }
 .app-refresh:disabled { opacity: .7; cursor: wait; }
 .app-refresh span { font-size: 1.1rem; line-height: 1; }
 mark.reading-highlight { padding: 0 .12em; border-radius: 3px; background: rgba(250, 204, 21, .28); color: inherit; font-weight: 800; }
+
+/* Modern public platform palette. Student and admin cabinets keep their own colors. */
+html body:not(.is-dashboard):not(.admin-page) {
+  --bg: #f4f6fb; --bg-soft: #e9edf6; --surface: #fff; --surface-solid: #fff; --surface-2: #edf1f8;
+  --line: rgba(48, 60, 91, .13); --line-strong: rgba(91, 82, 214, .38); --text: #182139; --muted: #64708a;
+  --primary: #5b52d6; --primary-soft: #766df0; --gold: #138f91; --shadow: 0 24px 60px -38px rgba(28, 39, 69, .24);
+  background-color: var(--bg);
+  background-image: radial-gradient(800px 480px at 88% 0%, rgba(91,82,214,.08), transparent 66%), radial-gradient(700px 430px at 4% 10%, rgba(19,143,145,.06), transparent 68%);
+  color: var(--text);
+}
+html[data-theme="dark"] body:not(.is-dashboard):not(.admin-page) {
+  --bg: #101522; --bg-soft: #171e2e; --surface: #1a2233; --surface-solid: #1a2233; --surface-2: #222c40;
+  --line: rgba(189,202,232,.13); --line-strong: rgba(151,143,255,.48); --text: #eef2ff; --muted: #a4afc6;
+  --primary: #9289ff; --primary-soft: #b0aaff; --gold: #55c4c0; --shadow: 0 24px 60px -34px rgba(0,0,0,.62);
+  background-color: var(--bg);
+  background-image: radial-gradient(800px 480px at 88% 0%, rgba(113,99,255,.14), transparent 66%), radial-gradient(700px 430px at 4% 10%, rgba(32,174,174,.08), transparent 68%);
+}
+body:not(.is-dashboard):not(.admin-page) .topbar { background: rgba(244,246,251,.9); border-color: var(--line); }
+html[data-theme="dark"] body:not(.is-dashboard):not(.admin-page) .topbar { background: rgba(16,21,34,.9); }
+body:not(.is-dashboard):not(.admin-page) .mark { background: linear-gradient(135deg,#635be0,#318dbb); color: #fff; }
+body:not(.is-dashboard):not(.admin-page) .btn-primary,
+html[data-theme="light"] body:not(.is-dashboard):not(.admin-page) .btn-primary { background: linear-gradient(120deg,#635be0,#4d74ca); border-color: #5b62d5; color: #fff; box-shadow: 0 12px 26px -17px rgba(91,82,214,.62); }
+body:not(.is-dashboard):not(.admin-page) .btn-primary:hover { background: linear-gradient(120deg,#5149c6,#3f63b4); border-color: #5149c6; color: #fff; }
+body:not(.is-dashboard):not(.admin-page) .btn { border-color: var(--line); }
+body:not(.is-dashboard):not(.admin-page) .btn:hover { background-color: color-mix(in srgb,var(--surface) 88%,var(--primary) 12%); }
+body:not(.is-dashboard):not(.admin-page) .tag,
+body:not(.is-dashboard):not(.admin-page) .eyebrow { border-color: color-mix(in srgb,var(--primary) 24%,transparent); background: color-mix(in srgb,var(--primary) 9%,var(--surface)); color: var(--primary); }
+body:not(.is-dashboard):not(.admin-page) .card,
+body:not(.is-dashboard):not(.admin-page) .test-card,
+body:not(.is-dashboard):not(.admin-page) .duel-card,
+body:not(.is-dashboard):not(.admin-page) .plan-card,
+body:not(.is-dashboard):not(.admin-page) .course-card,
+body:not(.is-dashboard):not(.admin-page) .direction-card { border-color: var(--line); background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
+body:not(.is-dashboard):not(.admin-page) .direction-card::before { background: linear-gradient(90deg,var(--primary),#20a6a5); }
+body:not(.is-dashboard):not(.admin-page) .direction-card .badge,
+body:not(.is-dashboard):not(.admin-page) .ico,
+body:not(.is-dashboard):not(.admin-page) .course-ico { border-color: color-mix(in srgb,var(--primary) 20%,transparent); background: color-mix(in srgb,var(--primary) 9%,var(--surface)); color: var(--primary); }
+body:not(.is-dashboard):not(.admin-page) .card-link,
+body:not(.is-dashboard):not(.admin-page) .check-list li::before { color: var(--gold); }
+body:not(.is-dashboard):not(.admin-page) .stats-band { border-color: var(--line); background: color-mix(in srgb,var(--surface) 78%,var(--primary) 4%); }
+body:not(.is-dashboard):not(.admin-page) .stat { border-color: var(--line); background: var(--surface); }
+body:not(.is-dashboard):not(.admin-page) .stat b { color: var(--primary); }
+body:not(.is-dashboard):not(.admin-page) .about,
+body:not(.is-dashboard):not(.admin-page) .home-features { border-color: var(--line); background: var(--bg-soft); }
+body:not(.is-dashboard):not(.admin-page) .about-art { background: linear-gradient(145deg,#202b42,#27365a); color: #f6f8ff; }
+body:not(.is-dashboard):not(.admin-page) .about-art p { color: #c1cce2; }
+body:not(.is-dashboard):not(.admin-page) .site-footer { border-color: var(--line); background: var(--bg-soft); }
+body:not(.is-dashboard):not(.admin-page) input,
+body:not(.is-dashboard):not(.admin-page) select,
+body:not(.is-dashboard):not(.admin-page) textarea { border-color: var(--line); background: var(--surface); color: var(--text); }
+body:not(.is-dashboard):not(.admin-page) .home-hero { background: radial-gradient(620px 420px at 86% 20%,rgba(49,141,187,.1),transparent 68%); }
+body:not(.is-dashboard):not(.admin-page) .hero-trust span::before { background: rgba(19,143,145,.12); color: var(--gold); }
