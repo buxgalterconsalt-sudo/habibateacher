@@ -1514,7 +1514,7 @@ ${body}
   <span class="mark">H</span>
   <span>${h(config.siteName)}</span>
   </a>
-  <p>Ingliz tili o'qituvchilari uchun atestatsiyaga tayyorlov platformasi.</p>
+  <p>Ingliz tili o'qituvchilari uchun imtihonlarga tayyorlov platformasi.</p>
   </div>
   <nav class="footer-links">
   <a href="/">Bosh sahifa</a>
