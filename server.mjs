@@ -1487,7 +1487,7 @@ ${seoTags}
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%2312b5a6'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='18' font-weight='bold' text-anchor='middle' fill='%2303211d'%3EH%3C/text%3E%3C/svg%3E">
 <script async src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>try{document.documentElement.dataset.theme=localStorage.getItem('ht_theme')||'dark';}catch(e){document.documentElement.dataset.theme='dark';}</script>
-<link rel="stylesheet" href="/assets/platform.css?v=20261122m">
+<link rel="stylesheet" href="/assets/platform.css?v=20261122p">
 </head>
 <body${admin && !publicPage ? ` class="admin-page"` : isStudentPage ? ` class="student-page${isDashboard ? " is-dashboard" : ""}"` : ""}>
 <header class="topbar">
@@ -1637,7 +1637,7 @@ c.addEventListener('change', function () { b.disabled = !c.checked; });
   var root = document.documentElement;
   var light = root.getAttribute('data-theme') === 'light';
   if (light) {
-  root.removeAttribute('data-theme');
+  root.setAttribute('data-theme', 'dark');
   try { localStorage.setItem('ht_theme', 'dark'); } catch (e) {}
   } else {
   root.setAttribute('data-theme', 'light');
@@ -4288,7 +4288,7 @@ function testDocument({ title, body }) {  return `<!DOCTYPE html>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%231e40af'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='18' font-weight='bold' text-anchor='middle' fill='white'%3EH%3C/text%3E%3C/svg%3E">
 <script async src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>try{document.documentElement.dataset.theme=localStorage.getItem('ht_theme')||'dark';}catch(e){document.documentElement.dataset.theme='dark';}</script>
-<link rel="stylesheet" href="/assets/platform.css?v=20261122m">
+<link rel="stylesheet" href="/assets/platform.css?v=20261122p">
 </head>
 <body class="test-body student-page">
 ${body}
