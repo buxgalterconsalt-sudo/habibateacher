@@ -4989,7 +4989,7 @@ const server = http.createServer(async (req, res) => {
   <div class="wrap landing-hero-grid">
   <div class="landing-hero-copy">
   <span class="eyebrow">Ingliz tili ustozlari uchun platforma</span>
-  <h1>Ingliz tili attestatsiyasiga <span class="accent">ishonch bilan</span> tayyorlaning</h1>
+  <h1>Ingliz tili imtihonlariga <span class="accent">ishonch bilan</span> tayyorlaning</h1>
   <p class="lead">Ingliz tili o'qituvchilari uchun attestatsiya testlari, TKT modullari, metodika va amaliy tayyorlov — barchasi bir platformada.</p>
   <div class="landing-actions">
   <a class="btn btn-primary" href="${user ? "/courses": "/register"}">Tayyorgarlikni boshlash</a>
@@ -5106,8 +5106,8 @@ const server = http.createServer(async (req, res) => {
   ${next ? `<input type="hidden" name="next" value="${h(next)}">`: ""}
   <input type="hidden" name="tg_init_data" value="">
   <div class="field"><label>Ismingiz</label><input name="name" required maxlength="40" autocomplete="off" placeholder="Habiba"></div>
-  <div class="field"><label>Familiyangiz</label><input name="surname" required maxlength="60" autocomplete="off" placeholder="Karimova"></div>
-  <div class="field"><label>Otangizning ismi (otchestvo)</label><input name="father_name" required maxlength="60" autocomplete="off" placeholder="Abdulla qizi / Abdulla o'g'li"></div>
+  <div class="field"><label>Familiyangiz</label><input name="surname" required maxlength="60" autocomplete="off" placeholder="Qoraboyeva"></div>
+  <div class="field"><label>Otangizning ismi (otchestvo)</label><input name="father_name" required maxlength="60" autocomplete="off" placeholder="Muminjonovna / yoki / vich / qizi / o'g'li"></div>
   <div class="field"><label>Tug'ilgan kun.oy.yil</label><input name="birth_date" data-birth-date required inputmode="numeric" maxlength="10" autocomplete="off" pattern="[0-9]{2}\\.[0-9]{2}\\.[0-9]{4}" placeholder="kun.oy.yil, masalan 05.09.1995"></div>
   <div class="field"><label>Telefon raqamingiz</label><input name="phone" data-phone required inputmode="tel" autocomplete="username" placeholder="+998 93 568 00 91"></div>
   <div class="field"><label>Parol</label><input name="password" type="password" required minlength="8" maxlength="64" autocomplete="new-password">${passwordRequirementsMarkup()}</div>
