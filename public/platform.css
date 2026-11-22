@@ -6298,26 +6298,26 @@ mark.reading-highlight { padding: 0 .12em; border-radius: 3px; background: rgba(
 
 /* Modern public platform palette. Student and admin cabinets keep their own colors. */
 html body:not(.is-dashboard):not(.admin-page) {
-  --bg: #f4f6fb; --bg-soft: #e9edf6; --surface: #fff; --surface-solid: #fff; --surface-2: #edf1f8;
-  --line: rgba(48, 60, 91, .13); --line-strong: rgba(91, 82, 214, .38); --text: #182139; --muted: #64708a;
-  --primary: #5b52d6; --primary-soft: #766df0; --gold: #138f91; --shadow: 0 24px 60px -38px rgba(28, 39, 69, .24);
+  --bg: #f2f7fa; --bg-soft: #e5f0f5; --surface: #fff; --surface-solid: #fff; --surface-2: #eaf3f7;
+  --line: rgba(22, 57, 78, .14); --line-strong: rgba(8, 126, 139, .4); --text: #102b40; --muted: #5c7485;
+  --primary: #087e8b; --primary-soft: #10a7b5; --gold: #0d7892; --shadow: 0 24px 60px -38px rgba(16, 49, 70, .25);
   background-color: var(--bg);
-  background-image: radial-gradient(800px 480px at 88% 0%, rgba(91,82,214,.08), transparent 66%), radial-gradient(700px 430px at 4% 10%, rgba(19,143,145,.06), transparent 68%);
+  background-image: radial-gradient(800px 480px at 88% 0%, rgba(8,126,139,.1), transparent 66%), radial-gradient(700px 430px at 4% 10%, rgba(33,124,171,.08), transparent 68%);
   color: var(--text);
 }
 html[data-theme="dark"] body:not(.is-dashboard):not(.admin-page) {
-  --bg: #101522; --bg-soft: #171e2e; --surface: #1a2233; --surface-solid: #1a2233; --surface-2: #222c40;
-  --line: rgba(189,202,232,.13); --line-strong: rgba(151,143,255,.48); --text: #eef2ff; --muted: #a4afc6;
-  --primary: #9289ff; --primary-soft: #b0aaff; --gold: #55c4c0; --shadow: 0 24px 60px -34px rgba(0,0,0,.62);
+  --bg: #071a2b; --bg-soft: #0c263b; --surface: #102d43; --surface-solid: #102d43; --surface-2: #153850;
+  --line: rgba(171, 217, 231, .14); --line-strong: rgba(67, 205, 213, .5); --text: #e8f7fb; --muted: #a0bdca;
+  --primary: #43c5ce; --primary-soft: #75e0e5; --gold: #62d5d5; --shadow: 0 24px 60px -34px rgba(0,0,0,.66);
   background-color: var(--bg);
-  background-image: radial-gradient(800px 480px at 88% 0%, rgba(113,99,255,.14), transparent 66%), radial-gradient(700px 430px at 4% 10%, rgba(32,174,174,.08), transparent 68%);
+  background-image: radial-gradient(800px 480px at 88% 0%, rgba(23,142,186,.2), transparent 66%), radial-gradient(700px 430px at 4% 10%, rgba(48,203,202,.11), transparent 68%);
 }
-body:not(.is-dashboard):not(.admin-page) .topbar { background: rgba(244,246,251,.9); border-color: var(--line); }
-html[data-theme="dark"] body:not(.is-dashboard):not(.admin-page) .topbar { background: rgba(16,21,34,.9); }
-body:not(.is-dashboard):not(.admin-page) .mark { background: linear-gradient(135deg,#635be0,#318dbb); color: #fff; }
+body:not(.is-dashboard):not(.admin-page) .topbar { background: rgba(242,247,250,.9); border-color: var(--line); }
+html[data-theme="dark"] body:not(.is-dashboard):not(.admin-page) .topbar { background: rgba(7,26,43,.92); }
+body:not(.is-dashboard):not(.admin-page) .mark { background: linear-gradient(135deg,#087e8b,#247bb0); color: #fff; }
 body:not(.is-dashboard):not(.admin-page) .btn-primary,
-html[data-theme="light"] body:not(.is-dashboard):not(.admin-page) .btn-primary { background: linear-gradient(120deg,#635be0,#4d74ca); border-color: #5b62d5; color: #fff; box-shadow: 0 12px 26px -17px rgba(91,82,214,.62); }
-body:not(.is-dashboard):not(.admin-page) .btn-primary:hover { background: linear-gradient(120deg,#5149c6,#3f63b4); border-color: #5149c6; color: #fff; }
+html[data-theme="light"] body:not(.is-dashboard):not(.admin-page) .btn-primary { background: linear-gradient(120deg,#087e8b,#176da0); border-color: #087e8b; color: #fff; box-shadow: 0 12px 26px -17px rgba(8,126,139,.62); }
+body:not(.is-dashboard):not(.admin-page) .btn-primary:hover { background: linear-gradient(120deg,#066873,#115b86); border-color: #066873; color: #fff; }
 body:not(.is-dashboard):not(.admin-page) .btn { border-color: var(--line); }
 body:not(.is-dashboard):not(.admin-page) .btn:hover { background-color: color-mix(in srgb,var(--surface) 88%,var(--primary) 12%); }
 body:not(.is-dashboard):not(.admin-page) .tag,
@@ -6328,7 +6328,7 @@ body:not(.is-dashboard):not(.admin-page) .duel-card,
 body:not(.is-dashboard):not(.admin-page) .plan-card,
 body:not(.is-dashboard):not(.admin-page) .course-card,
 body:not(.is-dashboard):not(.admin-page) .direction-card { border-color: var(--line); background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
-body:not(.is-dashboard):not(.admin-page) .direction-card::before { background: linear-gradient(90deg,var(--primary),#20a6a5); }
+body:not(.is-dashboard):not(.admin-page) .direction-card::before { background: linear-gradient(90deg,#087e8b,#39c4d0); }
 body:not(.is-dashboard):not(.admin-page) .direction-card .badge,
 body:not(.is-dashboard):not(.admin-page) .ico,
 body:not(.is-dashboard):not(.admin-page) .course-ico { border-color: color-mix(in srgb,var(--primary) 20%,transparent); background: color-mix(in srgb,var(--primary) 9%,var(--surface)); color: var(--primary); }
@@ -6339,11 +6339,11 @@ body:not(.is-dashboard):not(.admin-page) .stat { border-color: var(--line); back
 body:not(.is-dashboard):not(.admin-page) .stat b { color: var(--primary); }
 body:not(.is-dashboard):not(.admin-page) .about,
 body:not(.is-dashboard):not(.admin-page) .home-features { border-color: var(--line); background: var(--bg-soft); }
-body:not(.is-dashboard):not(.admin-page) .about-art { background: linear-gradient(145deg,#202b42,#27365a); color: #f6f8ff; }
-body:not(.is-dashboard):not(.admin-page) .about-art p { color: #c1cce2; }
+body:not(.is-dashboard):not(.admin-page) .about-art { background: linear-gradient(145deg,#0a304b,#075d6d); color: #effcff; }
+body:not(.is-dashboard):not(.admin-page) .about-art p { color: #b6dbe4; }
 body:not(.is-dashboard):not(.admin-page) .site-footer { border-color: var(--line); background: var(--bg-soft); }
 body:not(.is-dashboard):not(.admin-page) input,
 body:not(.is-dashboard):not(.admin-page) select,
 body:not(.is-dashboard):not(.admin-page) textarea { border-color: var(--line); background: var(--surface); color: var(--text); }
-body:not(.is-dashboard):not(.admin-page) .home-hero { background: radial-gradient(620px 420px at 86% 20%,rgba(49,141,187,.1),transparent 68%); }
-body:not(.is-dashboard):not(.admin-page) .hero-trust span::before { background: rgba(19,143,145,.12); color: var(--gold); }
+body:not(.is-dashboard):not(.admin-page) .home-hero { background: radial-gradient(620px 420px at 86% 20%,rgba(8,126,139,.12),transparent 68%); }
+body:not(.is-dashboard):not(.admin-page) .hero-trust span::before { background: rgba(8,126,139,.12); color: var(--gold); }
