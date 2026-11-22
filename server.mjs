@@ -801,6 +801,20 @@ function seedPreparedTests() {
       ]
     });
   }
+  for (const set of attestationSets) {
+    const sourceNumber = Number(set.number);
+    const number = set.category === "mock" ? sourceNumber + 10 : sourceNumber;
+    if (!Number.isInteger(number) || number < 2 || number > 20 || !Array.isArray(set.questions) || set.questions.length !== 50) continue;
+    sources[0].push({
+      category: "attestation",
+      number,
+      course: "Toifa testlari",
+      lesson: `Attestatsiya 2026 · Sinov ${number}`,
+      position: number,
+      layout: "attestation-50-sections",
+      questions: set.questions
+    });
+  }
   const readingSections = [
     ["1-bosqich · Mutaxassislik fani", 1, 35],
     ["2-bosqich · Kasbiy Standartlar", 36, 40],
@@ -901,7 +915,7 @@ function replaceToifaTestBank() {
   const replacement = db.prepare("SELECT id FROM lessons WHERE course_id = ? AND title = ? AND type = 'test' ORDER BY id LIMIT 1")
     .get(course.id, "Attestatsiya 2026 · Sinov 1");
   if (!replacement) return;
-  const oldLessons = db.prepare("SELECT id FROM lessons WHERE course_id = ? AND type = 'test' AND id <> ?")
+  const oldLessons = db.prepare("SELECT id FROM lessons WHERE course_id = ? AND type = 'test' AND id <> ? AND title NOT LIKE 'Attestatsiya 2026 · Sinov %'")
     .all(course.id, replacement.id);
   const lessonIds = oldLessons.map((lesson) => Number(lesson.id));
   db.exec("BEGIN IMMEDIATE");
