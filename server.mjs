@@ -715,16 +715,6 @@ function ensureDemoContent() {
   price
   });
 
-  const toifa = [
-  t("Attestatsiya Ingliz tili Mock test 1", 90, 50, 100, 5, 118),
-  t("Attestatsiya Ingliz tili Mock Test 2", 90, 50, 100, 0, 59),
-  t("Attestatsiya Demo test 2025, Bahor", 60, 35, 70, 2, 27),
-  t("Attestatsiya Demo test 2024, Kuz", 60, 35, 70, 1, 16),
-  t("Kasbiy Standartlash Demo testi 2025", 60, 40, 80, 5, 52),
-  t("SINOV.UZ DEMO TESTI 2025 KUZ", 90, 50, 100, 3, 110),
-  t("Ingliz tili Attestatsiya Repititsion test 2026 Bahor", 105, 50, 100, 17, 388)
-  ];
-
   const mockLikes = [4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0];
   const mockViews = [71, 19, 9, 5, 10, 12, 3, 12, 6, 4, 7, 7, 3, 8, 13, 2, 4, 4, 7, 1];
   const mocks = Array.from({ length: 20 }, (_, i) =>
@@ -743,8 +733,6 @@ function ensureDemoContent() {
   description: "O'qituvchilar uchun bepul toifa testlari.",
   category: "attestation"
   });
-  toifa.forEach((spec, i) => putTest(toifaId, spec, i + 1, i === 0 ? "MOCK 1   Reading": undefined));
-
   const mocksId = ensureCourse({
   title: "2026 KUZ PLATFORMA MOCKLARI",
   description: "2026 kuz mavsumi platforma mock testlari.",
@@ -796,14 +784,36 @@ for (const [title, description] of [
 }
 
 function seedPreparedTests() {
+  const attestationSets = JSON.parse(fs.readFileSync(path.join(__dirname, "seed-data", "attestation-mocks.json"), "utf8"));
   const sources = [
-    JSON.parse(fs.readFileSync(path.join(__dirname, "seed-data", "attestation-mocks.json"), "utf8")),
+    attestationSets.filter((set) => set.category === "mock"),
     JSON.parse(fs.readFileSync(path.join(__dirname, "seed-data", "tkt-modules-1-2.json"), "utf8")),
     JSON.parse(fs.readFileSync(path.join(__dirname, "seed-data", "tkt-module-3.json"), "utf8")),
   ];
   const readingRows = JSON.parse(fs.readFileSync(path.join(__dirname, "seed-data", "attestation-reading.json"), "utf8"));
   const readingPassages = new Map(readingRows.filter((q) => q.passageId && q.passage).map((q) => [q.passageId, q.passage]));
   const preparedReading = readingRows.map((q) => ({ ...q, passage: readingPassages.get(q.passageId) || q.passage || "" }));
+  const attestationSet1 = attestationSets.find((set) => set.category === "attestation" && Number(set.number) === 1);
+  const attestationSet3 = attestationSets.find((set) => set.category === "attestation" && Number(set.number) === 3);
+  const attestationSet5 = attestationSets.find((set) => set.category === "attestation" && Number(set.number) === 5);
+  if (attestationSet1 && attestationSet3 && attestationSet5) {
+    sources[0].push({
+      category: "attestation",
+      number: 11,
+      course: "Toifa testlari",
+      lesson: "Attestatsiya 2026 · Sinov 1",
+      position: 1,
+      layout: "attestation-50-sections",
+      questions: [
+        ...preparedReading,
+        ...attestationSet1.questions.slice(15, 35),
+        attestationSet1.questions[47], attestationSet1.questions[48], attestationSet1.questions[49],
+        attestationSet3.questions[46], attestationSet3.questions[47],
+        ...attestationSet1.questions.slice(38, 47),
+        attestationSet5.questions[49]
+      ]
+    });
+  }
   const readingSections = [
     ["Reading 1–6 · Neurolinguistics and Adult Language Acquisition", 1, 6],
     ["Reading 7–11 · The Explorer's Discovery", 7, 11],
@@ -826,8 +836,9 @@ function seedPreparedTests() {
   let addedSets = 0;
   for (const sets of sources) {
     for (const set of sets) {
-      const isAttestationFifty = set.category === "attestation" && Number(set.number) >= 1 && Number(set.number) <= 10 && set.questions.length === 50;
-      if (isAttestationFifty) set.questions.splice(0, preparedReading.length, ...preparedReading);
+      const isAttestationFifty = set.category === "attestation" && set.questions.length === 50 &&
+        ((Number(set.number) >= 1 && Number(set.number) <= 10) || set.layout === "attestation-50-sections");
+      if (isAttestationFifty && set.layout !== "attestation-50-sections") set.questions.splice(0, preparedReading.length, ...preparedReading);
       const course = db.prepare("SELECT id FROM courses WHERE title = ? ORDER BY id LIMIT 1").get(set.course || (set.category === "mock" ? "2026 KUZ PLATFORMA MOCKLARI" : "Toifa testlari"));
       if (!course) continue;
       let lessonTitle = set.lesson;
@@ -835,7 +846,7 @@ function seedPreparedTests() {
       if (!lessonTitle && set.category === "mock") lessonTitle = `2026 FALL MOCK ${set.number}`;
       let lesson = db.prepare("SELECT * FROM lessons WHERE course_id = ? AND title = ? ORDER BY id LIMIT 1").get(course.id, lessonTitle);
       if (!lesson) {
-        const position = Number(set.number) + (set.category === "attestation" ? 7 : 0);
+        const position = Number(set.position) || Number(set.number) + (set.category === "attestation" ? 7 : 0);
         const duration = set.category === "tkt" ? 80 : 90;
         const info = db.prepare(
           "INSERT INTO lessons (course_id, title, type, content, duration_min, position, price, is_pro, max_score, question_count, created_at) VALUES (?, ?, 'test', '', ?, ?, 0, 0, ?, ?, ?)"
@@ -890,11 +901,77 @@ function seedPreparedTests() {
       }
     }
   }
-  if (readingMigrationNeeded && migratedReadingSets === 10) metaSet("attestation_reading_layout", "2026-11-22-v1");
+  const expectedReadingSets = sources[0].filter((set) => set.category === "attestation" &&
+    set.questions.length === 50 && ((Number(set.number) >= 1 && Number(set.number) <= 10) || set.layout === "attestation-50-sections")).length;
+  if (readingMigrationNeeded && migratedReadingSets >= expectedReadingSets) metaSet("attestation_reading_layout", "2026-11-22-v1");
   if (addedSets) console.log(`[seed] ${addedSets} new test sets added from prepared question banks`);
 }
 
 seedPreparedTests();
+
+function replaceToifaTestBank() {
+  const migrationKey = "toifa_test_bank_replaced_2026_11";
+  if (metaGet(migrationKey, "") === "1") return;
+  const course = db.prepare("SELECT id FROM courses WHERE title = 'Toifa testlari' ORDER BY id LIMIT 1").get();
+  if (!course) return;
+  const replacement = db.prepare("SELECT id FROM lessons WHERE course_id = ? AND title = ? AND type = 'test' ORDER BY id LIMIT 1")
+    .get(course.id, "Attestatsiya 2026 · Sinov 1");
+  if (!replacement) return;
+  const oldLessons = db.prepare("SELECT id FROM lessons WHERE course_id = ? AND type = 'test' AND id <> ?")
+    .all(course.id, replacement.id);
+  const lessonIds = oldLessons.map((lesson) => Number(lesson.id));
+  db.exec("BEGIN IMMEDIATE");
+  try {
+    if (lessonIds.length) {
+      const marks = lessonIds.map(() => "?").join(",");
+      const questionIds = db.prepare(`SELECT id FROM questions WHERE lesson_id IN (${marks})`).all(...lessonIds).map((q) => Number(q.id));
+      const duelIds = db.prepare(`SELECT id FROM duels WHERE lesson_id IN (${marks})`).all(...lessonIds).map((d) => Number(d.id));
+      const tournamentIds = db.prepare(`SELECT id FROM tournaments WHERE test_id IN (${marks})`).all(...lessonIds).map((tournament) => Number(tournament.id));
+      if (duelIds.length) {
+        const duelMarks = duelIds.map(() => "?").join(",");
+        db.prepare(`DELETE FROM duel_questions WHERE duel_id IN (${duelMarks})`).run(...duelIds);
+        db.prepare(`DELETE FROM duel_starts WHERE duel_id IN (${duelMarks})`).run(...duelIds);
+        db.prepare(`DELETE FROM duel_plays WHERE duel_id IN (${duelMarks})`).run(...duelIds);
+        db.prepare(`DELETE FROM duels WHERE id IN (${duelMarks})`).run(...duelIds);
+      }
+      if (tournamentIds.length) {
+        const tournamentMarks = tournamentIds.map(() => "?").join(",");
+        const matchIds = db.prepare(`SELECT id FROM tournament_matches WHERE tournament_id IN (${tournamentMarks})`).all(...tournamentIds).map((match) => Number(match.id));
+        if (matchIds.length) {
+          const matchMarks = matchIds.map(() => "?").join(",");
+          db.prepare(`DELETE FROM tournament_starts WHERE match_id IN (${matchMarks})`).run(...matchIds);
+        }
+        db.prepare(`DELETE FROM tournament_matches WHERE tournament_id IN (${tournamentMarks})`).run(...tournamentIds);
+        db.prepare(`DELETE FROM tournament_entries WHERE tournament_id IN (${tournamentMarks})`).run(...tournamentIds);
+        db.prepare(`DELETE FROM tournament_questions WHERE tournament_id IN (${tournamentMarks})`).run(...tournamentIds);
+        db.prepare(`DELETE FROM tournaments WHERE id IN (${tournamentMarks})`).run(...tournamentIds);
+      }
+      if (questionIds.length) {
+        const questionMarks = questionIds.map(() => "?").join(",");
+        db.prepare(`DELETE FROM duel_questions WHERE question_id IN (${questionMarks})`).run(...questionIds);
+        db.prepare(`DELETE FROM tournament_questions WHERE question_id IN (${questionMarks})`).run(...questionIds);
+      }
+      db.prepare(`DELETE FROM test_attempts WHERE lesson_id IN (${marks})`).run(...lessonIds);
+      db.prepare(`DELETE FROM progress WHERE lesson_id IN (${marks})`).run(...lessonIds);
+      db.prepare(`DELETE FROM purchases WHERE lesson_id IN (${marks})`).run(...lessonIds);
+      db.prepare(`DELETE FROM likes WHERE lesson_id IN (${marks})`).run(...lessonIds);
+      db.prepare(`DELETE FROM video_watch WHERE lesson_id IN (${marks})`).run(...lessonIds);
+      db.prepare(`DELETE FROM lesson_viewers WHERE lesson_id IN (${marks})`).run(...lessonIds);
+      db.prepare(`DELETE FROM test_sections WHERE lesson_id IN (${marks})`).run(...lessonIds);
+      db.prepare(`DELETE FROM materials WHERE lesson_id IN (${marks})`).run(...lessonIds);
+      db.prepare(`DELETE FROM questions WHERE lesson_id IN (${marks})`).run(...lessonIds);
+      db.prepare(`DELETE FROM lessons WHERE id IN (${marks})`).run(...lessonIds);
+    }
+    db.prepare("UPDATE lessons SET position = 1 WHERE id = ?").run(replacement.id);
+    metaSet(migrationKey, "1");
+    db.exec("COMMIT");
+  } catch (error) {
+    db.exec("ROLLBACK");
+    throw error;
+  }
+}
+
+replaceToifaTestBank();
 
 /* Test guruhi kurslarini umumiy kurslar ro'yxatidan yashirish */
 db.prepare(
