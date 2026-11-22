@@ -129,6 +129,15 @@ function hasLessonPermission(userId, lessonId) {
     .get(userId, lessonId);
 }
 
+function isIntroVideoLesson(lessonId) {
+  const lesson = db.prepare("SELECT id, course_id, position FROM lessons WHERE id = ? AND type = 'video'").get(lessonId);
+  if (!lesson) return false;
+  const priorVideos = db.prepare(`SELECT COUNT(*) AS n FROM lessons
+    WHERE course_id = ? AND type = 'video' AND (position < ? OR (position = ? AND id < ?))`)
+    .get(lesson.course_id, lesson.position, lesson.position, lesson.id);
+  return Number(priorVideos && priorVideos.n) < 2;
+}
+
 const DEFAULT_CONTRACT_TEXT = `1. Umumiy qoidalar
 1.1. Ushbu shartnoma "Habiba teacher" onlayn ta'lim platformasidan foydalanish tartibini belgilaydi.
 1.2. Platformadan foydalanishni boshlash orqali siz ushbu shartlar bilan tanishganingizni va ularga rozilik bildirganingizni tasdiqlaysiz.
@@ -384,6 +393,9 @@ if (!userCols3.some((c) => c.name === "is_blocked")) {
 if (!userCols3.some((c) => c.name === "is_author")) {
   db.exec("ALTER TABLE users ADD COLUMN is_author INTEGER NOT NULL DEFAULT 0");
 }
+db.prepare(`UPDATE users SET is_author = 1
+  WHERE lower(trim(name || ' ' || surname)) LIKE '%habiba%qoraboyeva%'
+     OR lower(trim(name || ' ' || surname)) LIKE '%qoraboyeva%habiba%'`).run();
 const loginSecurityCols = db.prepare("PRAGMA table_info(users)").all();
 if (!loginSecurityCols.some((c) => c.name === "password_failures")) {
   db.exec("ALTER TABLE users ADD COLUMN password_failures INTEGER NOT NULL DEFAULT 0");
@@ -1427,7 +1439,7 @@ ${seoTags}
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%2312b5a6'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='18' font-weight='bold' text-anchor='middle' fill='%2303211d'%3EH%3C/text%3E%3C/svg%3E">
 <script async src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>try{document.documentElement.dataset.theme=localStorage.getItem('ht_theme')||'dark';}catch(e){document.documentElement.dataset.theme='dark';}</script>
-<link rel="stylesheet" href="/assets/platform.css?v=20261122f">
+<link rel="stylesheet" href="/assets/platform.css?v=20261122g">
 </head>
 <body${isStudentPage ? ` class="student-page${isDashboard ? " is-dashboard" : ""}"` : ""}>
 <header class="topbar">
@@ -1520,7 +1532,7 @@ ${body}
   </div>
   </div>
   <div class="wrap footer-bottom">
-  ${new Date().getFullYear()} ${h(config.siteName)}. Barcha huquqlar himoyalangan.
+  ${new Date().getFullYear()} ${h(config.siteName)}. Muallif: Habiba Qoraboyeva. Barcha huquqlar himoyalangan.
   </div>
 </footer>
 ${
@@ -1717,7 +1729,7 @@ c.addEventListener('change', function () { b.disabled = !c.checked; });
 })();
 </script>
 <script>
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=8').then(function (registration) { registration.update().catch(function () {}); }).catch(function () {});
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=9').then(function (registration) { registration.update().catch(function () {}); }).catch(function () {});
 document.querySelectorAll('[data-app-refresh]').forEach(function (button) {
   button.addEventListener('click', async function () {
     if (button.disabled) return;
@@ -3885,7 +3897,7 @@ function dashboardPage(user) {
           ru: { installed: "Приложение уже установлено.", help: "Откройте меню браузера и выберите «Установить приложение» или «Добавить на главный экран»." },
           en: { installed: "The app is already installed.", help: "Open your browser menu and choose Install app or Add to Home screen." }
         };
-        if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=8').catch(function () {});
+        if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=9').catch(function () {});
         window.addEventListener('beforeinstallprompt', function (event) {
           event.preventDefault();
           installPrompt = event;
@@ -4228,11 +4240,11 @@ function testDocument({ title, body }) {  return `<!DOCTYPE html>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%231e40af'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='18' font-weight='bold' text-anchor='middle' fill='white'%3EH%3C/text%3E%3C/svg%3E">
 <script async src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>try{document.documentElement.dataset.theme=localStorage.getItem('ht_theme')||'dark';}catch(e){document.documentElement.dataset.theme='dark';}</script>
-<link rel="stylesheet" href="/assets/platform.css?v=20261122f">
+<link rel="stylesheet" href="/assets/platform.css?v=20261122g">
 </head>
 <body class="test-body student-page">
 ${body}
-<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=8').then(function (registration) { registration.update().catch(function () {}); }).catch(function () {});</script>
+<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=9').then(function (registration) { registration.update().catch(function () {}); }).catch(function () {});</script>
 </body>
 </html>`;
 }
@@ -5190,9 +5202,9 @@ const server = http.createServer(async (req, res) => {
 
   const info = db
 .prepare(
-  "INSERT INTO users (name, surname, father_name, birth_date, phone, pass, telegram_id, telegram_username, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+  "INSERT INTO users (name, surname, father_name, birth_date, phone, pass, telegram_id, telegram_username, created_at, is_author) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CASE WHEN lower(? || ' ' || ?) LIKE '%habiba%qoraboyeva%' OR lower(? || ' ' || ?) LIKE '%qoraboyeva%habiba%' THEN 1 ELSE 0 END)"
 )
-.run(fullName, surname, fatherName, birthDate, phone, hashPassword(password), telegramId || null, telegramUsername || null, nowISO());
+.run(fullName, surname, fatherName, birthDate, phone, hashPassword(password), telegramId || null, telegramUsername || null, nowISO(), fullName, surname, fullName, surname);
   createUserSession(res, Number(info.lastInsertRowid), req);
   createDeviceSession(res, Number(info.lastInsertRowid), req);
   notifyTelegram(
@@ -6344,7 +6356,7 @@ const server = http.createServer(async (req, res) => {
   const lessons = db
 .prepare("SELECT * FROM lessons WHERE course_id = ? ORDER BY position, id")
 .all(course.id);
-  const visibleLessons = lessons.filter((lesson) => admin || (lesson.type === "test" && Number(lesson.price) === 0) || hasLessonPermission(user.id, lesson.id));
+  const visibleLessons = lessons.filter((lesson) => admin || lesson.type === "video" || (lesson.type === "test" && Number(lesson.price) === 0) || hasLessonPermission(user.id, lesson.id));
   const progress = Object.fromEntries(
   db
 .prepare("SELECT lesson_id, score FROM progress WHERE user_id = ?")
@@ -6366,7 +6378,7 @@ const server = http.createServer(async (req, res) => {
   l.type === "test" ? ". test": ""
   }</small>
   </span>
-  ${finished ? `<span class="badge done">Tugatilgan${typeof progress[l.id] === "number" ? `. ${progress[l.id]}%`: ""}</span>`: `<span class="badge">Ochish</span>`}
+  ${finished ? `<span class="badge done">Tugatilgan${typeof progress[l.id] === "number" ? `. ${progress[l.id]}%`: ""}</span>`: `<span class="badge">${l.type === "video" && isIntroVideoLesson(l.id) ? "Bepul ochiq" : l.type === "video" && !hasLessonPermission(user.id, l.id) ? "40% bepul ko'rish" : "Ochish"}</span>`}
   </a>`;
   })
 .join("")
@@ -6525,7 +6537,7 @@ const server = http.createServer(async (req, res) => {
   }
   const viewerLesson = db.prepare("SELECT id, type, price FROM lessons WHERE id = ?").get(Number(viewersMatch[1]));
   const viewerKey = String(req.headers["x-viewer-key"] || "");
-  if (!viewerLesson || viewerLesson.type !== "video" || !/^[a-f0-9-]{32,64}$/i.test(viewerKey) || (Number(viewerLesson.price) > 0 && !testOwned(user.id, viewerLesson.id))) {
+  if (!viewerLesson || viewerLesson.type !== "video" || !/^[a-f0-9-]{32,64}$/i.test(viewerKey)) {
   res.writeHead(404, { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" });
   res.end(JSON.stringify({ ok: false }));
   return;
@@ -6564,10 +6576,16 @@ const server = http.createServer(async (req, res) => {
     ? Math.max(0, Math.min(15, (now - lastUpdate) / 1000))
     : 0;
   const previousMax = Number(currentWatch && currentWatch.max_seconds) || 0;
-  const acceptedSeconds = lessonAlreadyCompleted
+  const previewOnly = !hasLessonPermission(user.id, watchedLesson.id) && !isIntroVideoLesson(watchedLesson.id);
+  const trackedSeconds = lessonAlreadyCompleted
     ? seconds
     : Math.min(seconds, previousMax + elapsedPlaying * 2.05);
-  const isPlaying = fields.playing === "1" ? 1 : 0;
+  const previewLimit = duration > 0 ? duration * 0.4 : 0;
+  const acceptedSeconds = previewOnly && previewLimit > 0
+    ? Math.min(trackedSeconds, previewLimit)
+    : trackedSeconds;
+  const locked = previewOnly && previewLimit > 0 && acceptedSeconds >= previewLimit - 0.25;
+  const isPlaying = fields.playing === "1" && !locked ? 1 : 0;
   db.prepare(
   `INSERT INTO video_watch (user_id, lesson_id, max_seconds, duration, updated_at)
   VALUES (?, ?, ?, ?, ?)
@@ -6580,7 +6598,7 @@ const server = http.createServer(async (req, res) => {
   const saved = db.prepare("SELECT max_seconds, duration FROM video_watch WHERE user_id = ? AND lesson_id = ?").get(user.id, watchedLesson.id);
   const pct = saved && saved.duration > 0 ? Math.min(100, Math.round((saved.max_seconds / saved.duration) * 100)) : 0;
   res.writeHead(200, { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" });
-  res.end(JSON.stringify({ ok: true, pct, seconds: Number(saved && saved.max_seconds) || 0, limited: acceptedSeconds + 0.25 < seconds }));
+  res.end(JSON.stringify({ ok: true, pct, seconds: Number(saved && saved.max_seconds) || 0, limited: acceptedSeconds + 0.25 < seconds, locked }));
   return;
   }
 
@@ -6589,7 +6607,8 @@ const server = http.createServer(async (req, res) => {
   if (!user) return redirect(res, "/login");
   const lesson = db.prepare("SELECT * FROM lessons WHERE id = ?").get(Number(lessonMatch[1]));
   if (!lesson) return notFound(res, user, admin);
-  if (!admin && lesson.type !== "test" && !hasLessonPermission(user.id, lesson.id)) return redirect(res, "/plans");
+  if (!admin && lesson.type !== "test" && lesson.type !== "video" && !hasLessonPermission(user.id, lesson.id)) return redirect(res, "/plans");
+  const videoPreviewOnly = lesson.type === "video" && !admin && !hasLessonPermission(user.id, lesson.id) && !isIntroVideoLesson(lesson.id);
   if (!admin && lesson.type === "test" && Number(lesson.price) > 0 && !testOwned(user.id, lesson.id)) return redirect(res, `/test/${lesson.id}`);
   if (!admin) {
     const previous = db.prepare("SELECT id, type FROM lessons WHERE course_id = ? AND (position < ? OR (position = ? AND id < ?)) ORDER BY position DESC, id DESC LIMIT 1")
@@ -6890,6 +6909,7 @@ const server = http.createServer(async (req, res) => {
         <div class="lesson-video-card">
           ${videoHead}
           ${lesson.type === "video" || lesson.type === "test" ? contentHtml : ""}
+          ${videoPreviewOnly ? `<div class="video-plan-lock" id="videoPlanLock" ${savedWatchDuration > 0 && savedWatchSeconds >= savedWatchDuration * 0.4 - 0.25 ? "" : "hidden"}><div class="video-plan-lock-card"><span class="video-plan-lock-icon">&#128274;</span><p class="video-plan-kicker">Bepul ko'rish chegarasi</p><h2>Videoning 40% qismi tugadi</h2><p>Siz tarif sotib olmagansiz. Davom ettirishni istasangiz, to'lovni amalga oshiring.</p><a class="btn btn-primary" href="/plans">Tarifni tanlash va to'lov</a></div></div>` : ""}
           ${lesson.type === "video" ? `<label class="video-speed-control" for="videoSpeed">Video tezligi <select id="videoSpeed"><option value="0.75">0.75×</option><option value="1" selected>1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2">2×</option></select></label>` : ""}
           ${
             lesson.type === "video"
@@ -6950,9 +6970,30 @@ const server = http.createServer(async (req, res) => {
         var note = document.getElementById('lessonWatchPercent');
         var watchBar = document.getElementById('lessonWatchBar');
         var viewerCount = document.getElementById('lessonViewerCount');
+        var planLock = document.getElementById('videoPlanLock');
         var lessonId = ${lesson.id};
         var sent = false, videoEnded = ${completed ? "true" : "false"}, correctingSeek = false, maxWatched = ${savedWatchSeconds}, duration = ${savedWatchDuration}, lastSync = 0;
         var alreadyCompleted = ${completed ? "true" : "false"};
+        var needsPlan = ${videoPreviewOnly ? "true" : "false"};
+        var planLocked = needsPlan && duration > 0 && maxWatched >= duration * 0.4 - 0.25;
+        function lockForPlan() {
+          if (!needsPlan || alreadyCompleted) return;
+          planLocked = true;
+          if (v) v.pause();
+          if (player && player.pauseVideo) player.pauseVideo();
+          if (planLock) planLock.hidden = false;
+        }
+        function checkPlanLimit(currentTime) {
+          if (!needsPlan || alreadyCompleted || !duration || currentTime < duration * 0.4) return false;
+          var limit = duration * 0.4;
+          maxWatched = limit;
+          correctingSeek = true;
+          if (v) { v.pause(); v.currentTime = limit; }
+          if (player && player.pauseVideo) { player.pauseVideo(); player.seekTo(limit, true); }
+          sync(true, false).then(lockForPlan);
+          setTimeout(function () { correctingSeek = false; }, 500);
+          return true;
+        }
         var viewerKey = '';
         try {
           viewerKey = localStorage.getItem('ht_viewer_key') || '';
@@ -6994,6 +7035,7 @@ const server = http.createServer(async (req, res) => {
             body: body.toString()
           }).then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
             if (!d || !d.ok) return;
+            if (d.locked) { maxWatched = Math.min(Number(d.seconds) || maxWatched, duration * 0.4); lockForPlan(); paint(); return; }
             if (!alreadyCompleted && Number(d.seconds) + 0.35 < maxWatched) {
               maxWatched = Number(d.seconds) || 0;
               if (v && Math.abs(v.currentTime - maxWatched) > 0.5) { correctingSeek = true; v.pause(); v.currentTime = maxWatched; setTimeout(function () { correctingSeek = false; }, 500); }
@@ -7032,15 +7074,17 @@ const server = http.createServer(async (req, res) => {
             if (duration > 0) {
               maxWatched = alreadyCompleted ? duration : Math.min(maxWatched, duration);
               v.currentTime = maxWatched;
+              if (needsPlan && maxWatched >= duration * 0.4 - 0.25) lockForPlan();
             }
             paint();
           });
           v.addEventListener('timeupdate', function () {
+            if (checkPlanLimit(v.currentTime)) return;
             if (v.currentTime > maxWatched) maxWatched = v.currentTime;
             paint();
             sync(false, !v.paused && !v.ended);
           });
-          v.addEventListener('play', function () { sync(true, true); });
+          v.addEventListener('play', function () { if (planLocked) { v.pause(); return; } sync(true, true); });
           v.addEventListener('pause', function () { sync(true, false); });
           v.addEventListener('seeking', function () {
             if (alreadyCompleted || correctingSeek || v.currentTime <= maxWatched + 0.25) return;
@@ -7063,6 +7107,7 @@ const server = http.createServer(async (req, res) => {
                 if (duration > 0) {
                   maxWatched = alreadyCompleted ? duration : Math.min(maxWatched, duration);
                   event.target.seekTo(maxWatched, true);
+                  if (needsPlan && maxWatched >= duration * 0.4 - 0.25) lockForPlan();
                 }
                 paint();
               },
@@ -7080,6 +7125,8 @@ const server = http.createServer(async (req, res) => {
             if (!player) return;
             duration = Number(player.getDuration()) || duration;
             var current = Number(player.getCurrentTime()) || 0;
+            if (planLocked) { player.pauseVideo(); return; }
+            if (checkPlanLimit(current)) return;
             if (!alreadyCompleted && !correctingSeek && current > maxWatched + 0.25) {
               correctingSeek = true;
               player.pauseVideo();
@@ -7115,10 +7162,14 @@ const server = http.createServer(async (req, res) => {
   }
   const lesson = db.prepare("SELECT * FROM lessons WHERE id = ?").get(mediaLessonId);
   if (!lesson || lesson.type !== "video" || !lesson.file_id) return notFound(res, user, admin);
-  if (!admin && !hasLessonPermission(user.id, lesson.id)) { redirect(res, "/plans"); return; }
-  if (!admin && Number(lesson.price) > 0 && !testOwned(user.id, lesson.id)) {
-  redirect(res, `/test/${lesson.id}`);
-  return;
+  const previewOnly = !admin && !hasLessonPermission(user.id, lesson.id) && !isIntroVideoLesson(lesson.id);
+  if (previewOnly) {
+    const watched = db.prepare("SELECT max_seconds, duration FROM video_watch WHERE user_id = ? AND lesson_id = ?").get(user.id, lesson.id);
+    if (watched && Number(watched.duration) > 0 && Number(watched.max_seconds) >= Number(watched.duration) * 0.4 - 0.25) {
+      res.writeHead(403, { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" });
+      res.end("Bepul video ko'rish chegarasi tugadi. Davom ettirish uchun tarifni tanlang.");
+      return;
+    }
   }
   const videoPath = path.join(STORAGE_DIR, lesson.file_id);
   if (!fs.existsSync(videoPath)) return notFound(res, user, admin);
