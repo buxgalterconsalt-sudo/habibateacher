@@ -785,6 +785,7 @@ function seedPreparedTests() {
   const readingRows = JSON.parse(fs.readFileSync(path.join(__dirname, "seed-data", "attestation-reading.json"), "utf8"));
   const readingPassages = new Map(readingRows.filter((q) => q.passageId && q.passage).map((q) => [q.passageId, q.passage]));
   const preparedReading = readingRows.map((q) => ({ ...q, passage: readingPassages.get(q.passageId) || q.passage || "" }));
+  const attestationPassageGroups = JSON.parse(fs.readFileSync(path.join(__dirname, "seed-data", "attestation-passages.json"), "utf8"));
   const attestationSet1 = attestationSets.find((set) => set.category === "attestation" && Number(set.number) === 1);
   const attestationSet3 = attestationSets.find((set) => set.category === "attestation" && Number(set.number) === 3);
   const attestationSet5 = attestationSets.find((set) => set.category === "attestation" && Number(set.number) === 5);
@@ -812,9 +813,10 @@ function seedPreparedTests() {
     if (!Number.isInteger(number) || number < 2 || number > 20 || !Array.isArray(set.questions) || set.questions.length !== 50) continue;
     const questions = set.questions.map((question, index) => {
       const prepared = replacementsByTest.get(`${number}:${index + 1}`) || question;
-      return index < preparedReading.length && preparedReading[index]?.passage
-        ? { ...prepared, passage: preparedReading[index].passage }
-        : prepared;
+      if (index >= 15) return prepared;
+      const groupIndex = index < 6 ? 0 : index < 11 ? 1 : 2;
+      const passage = attestationPassageGroups[String(number)]?.[groupIndex];
+      return passage ? { ...prepared, passage } : prepared;
     });
     sources[0].push({
       category: "attestation",
@@ -847,7 +849,6 @@ function seedPreparedTests() {
     for (const set of sets) {
       const isAttestationFifty = set.category === "attestation" && set.questions.length === 50 &&
         ((Number(set.number) >= 1 && Number(set.number) <= 10) || set.layout === "attestation-50-sections");
-      if (isAttestationFifty && set.layout !== "attestation-50-sections") set.questions.splice(0, preparedReading.length, ...preparedReading);
       const course = db.prepare("SELECT id FROM courses WHERE title = ? ORDER BY id LIMIT 1").get(set.course || (set.category === "mock" ? "2026 KUZ PLATFORMA MOCKLARI" : "Toifa testlari"));
       if (!course) continue;
       let lessonTitle = set.lesson;
@@ -871,8 +872,17 @@ function seedPreparedTests() {
         });
       }
       if (currentCount >= set.questions.length) {
+        const restoreUniqueFirst15 = set.category === "attestation" && Number(set.number) >= 2 && Number(set.number) <= 20 && Number(set.number) !== 11;
+        if (restoreUniqueFirst15 && metaGet("attestation_unique_first15_2026_11_v1", "") !== "1") {
+          const existingRows = db.prepare("SELECT id FROM questions WHERE lesson_id = ? ORDER BY id LIMIT 15").all(lesson.id);
+          for (let index = 0; index < Math.min(15, existingRows.length); index += 1) {
+            const q = set.questions[index];
+            const correct = typeof q.answer === "string" ? "ABCD".indexOf(q.answer.toUpperCase()) + 1 : Number(q.correct);
+            updateReadingQuestion.run(q.q || q.text, q.a || q.options?.[0], q.b || q.options?.[1], q.c || q.options?.[2], q.d || q.options?.[3], correct, q.passage || "", existingRows[index].id);
+          }
+        }
         if (set.category === "attestation" && set.layout === "attestation-50-sections" &&
-            metaGet("attestation_first15_passages_2026_11_v2", "") !== "1") {
+            metaGet("attestation_first15_passages_2026_11_v3", "") !== "1") {
           const existingRows = db.prepare("SELECT id, passage FROM questions WHERE lesson_id = ? ORDER BY id").all(lesson.id);
           const updatePassage = db.prepare("UPDATE questions SET passage = ? WHERE id = ?");
           for (let index = 0; index < Math.min(15, set.questions.length, existingRows.length); index += 1) {
@@ -938,7 +948,16 @@ function seedPreparedTests() {
     });
     if (migrated.length === expected.size) metaSet("attestation_unique_questions_2026_11", "1");
   }
-  if (metaGet("attestation_first15_passages_2026_11_v2", "") !== "1") {
+  if (metaGet("attestation_unique_first15_2026_11_v1", "") !== "1") {
+    const expected = sources[0].filter((set) => set.category === "attestation" && Number(set.number) >= 2 && Number(set.number) <= 20 && Number(set.number) !== 11);
+    const migrated = expected.filter((set) => {
+      const number = set.category === "mock" ? Number(set.number) + 10 : Number(set.number);
+      const lesson = db.prepare("SELECT id FROM lessons WHERE title = ? ORDER BY id LIMIT 1").get(`Attestatsiya 2026 · Sinov ${number}`);
+      return lesson && db.prepare("SELECT COUNT(*) AS n FROM questions WHERE lesson_id = ?").get(lesson.id)?.n >= 50;
+    });
+    if (migrated.length === expected.length) metaSet("attestation_unique_first15_2026_11_v1", "1");
+  }
+  if (metaGet("attestation_first15_passages_2026_11_v3", "") !== "1") {
     const expected = new Set(sources[0].filter((set) => Number(set.number) >= 2 && Number(set.number) <= 20).map((set) => Number(set.number)));
     const migrated = [...expected].filter((number) => {
       const lesson = db.prepare("SELECT id FROM lessons WHERE title = ? ORDER BY id LIMIT 1").get(`Attestatsiya 2026 · Sinov ${number}`);
@@ -946,7 +965,7 @@ function seedPreparedTests() {
       const rows = db.prepare("SELECT passage FROM questions WHERE lesson_id = ? ORDER BY id LIMIT 15").all(lesson.id);
       return rows.length === 15 && rows.every((row) => String(row.passage || "").trim());
     });
-    if (migrated.length === expected.size) metaSet("attestation_first15_passages_2026_11_v2", "1");
+    if (migrated.length === expected.size) metaSet("attestation_first15_passages_2026_11_v3", "1");
   }
   const expectedReadingSets = sources[0].filter((set) => set.category === "attestation" &&
     set.questions.length === 50 && ((Number(set.number) >= 1 && Number(set.number) <= 10) || set.layout === "attestation-50-sections")).length;
