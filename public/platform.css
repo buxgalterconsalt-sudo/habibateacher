@@ -6354,3 +6354,87 @@ body:not(.is-dashboard):not(.admin-page) select,
 body:not(.is-dashboard):not(.admin-page) textarea { border-color: var(--line); background: var(--surface); color: var(--text); }
 body:not(.is-dashboard):not(.admin-page) .home-hero { background: radial-gradient(620px 420px at 86% 20%,rgba(8,126,139,.12),transparent 68%); }
 body:not(.is-dashboard):not(.admin-page) .hero-trust span::before { background: rgba(8,126,139,.12); color: var(--gold); }
+
+/* MC Academy inspired test solving layout */
+.mcacademy-solve .solve-stack { max-width: none; }
+.mcacademy-solve .q-row { min-height: clamp(280px, 36vh, 430px); }
+.mcacademy-solve .q-reading,
+.mcacademy-solve .q-panel { max-height: clamp(280px, 36vh, 430px); }
+.mcacademy-solve .q-panel { padding: clamp(16px, 1.8vw, 24px); border-radius: 16px; }
+.mcacademy-solve .q-head { color: #2449c4; font-size: .78rem; }
+.mcacademy-solve .q-title { margin-bottom: 16px; font-size: calc(1rem * var(--fs, 1)); line-height: 1.55; }
+.mcacademy-solve .q-panel .q-options { gap: 8px; }
+.mcacademy-solve .q-panel .q-opt { min-height: 42px; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 11px; }
+.mcacademy-solve .q-panel .q-opt::after { content: ""; width: 13px; height: 13px; flex: 0 0 13px; margin-left: auto; border: 1px solid #d8e1f2; border-radius: 50%; }
+.mcacademy-solve .q-panel .q-opt.selected::after { border: 4px solid #2449c4; }
+.mcacademy-solve .q-panel .q-letter { width: 22px; height: 22px; font-size: .68rem; }
+.mcacademy-solve .q-panel .q-text { padding-top: 0; font-size: calc(.86rem * var(--fs, 1)); }
+.mcacademy-solve .q-nav-row { justify-content: center; margin: 12px 0; }
+.mcacademy-solve .nav-pill { padding: 8px 16px; }
+.mcacademy-solve .aside-card { padding: 14px; border-radius: 16px; }
+.mcacademy-solve .step-block + .step-block { margin-top: 13px; }
+.mcacademy-solve .step-title { margin-bottom: 6px; font-size: .7rem; font-weight: 600; }
+.mcacademy-solve .palette { gap: 5px; }
+.mcacademy-solve .pal { width: 29px; height: 30px; border-radius: 7px; font-size: .69rem; }
+.mcacademy-solve .solve-legend { gap: 13px; margin: 14px 0; padding-top: 10px; border-top: 1px solid var(--line); font-size: .68rem; }
+.mcacademy-solve .legend-item i { width: 9px; height: 9px; border-radius: 3px; }
+.mcacademy-solve .btn-finish { padding: 10px; border-radius: 999px; }
+
+html[data-theme="light"] body.test-body.student-page:has(.mcacademy-solve) {
+  color: #17213b;
+  background: #f4f7fc;
+  background-image: none;
+}
+html[data-theme="light"] .mcacademy-solve {
+  --text: #17213b;
+  --muted: #75819a;
+  --line: #dfe6f2;
+  --line-strong: #bdcbe0;
+  --primary: #2449c4;
+  --primary-soft: #5879e3;
+  color: #17213b;
+}
+html[data-theme="light"] .mcacademy-solve .solve-topbar { background: rgba(255,255,255,.97); }
+html[data-theme="light"] .mcacademy-solve .solve-brand .mark { background: #2449c4; color: #fff; }
+html[data-theme="light"] .mcacademy-solve .solve-timer { background: #eff4ff; color: #2449c4; }
+html[data-theme="light"] .mcacademy-solve .q-reading-pane,
+html[data-theme="light"] .mcacademy-solve .q-panel,
+html[data-theme="light"] .mcacademy-solve .aside-card { background: #fff; box-shadow: 0 3px 12px rgba(31,55,100,.06); }
+html[data-theme="light"] .mcacademy-solve .q-reading { color: #253351; }
+html[data-theme="light"] .mcacademy-solve .q-panel .q-opt { background: #fff; }
+html[data-theme="light"] .mcacademy-solve .q-panel .q-opt:hover,
+html[data-theme="light"] .mcacademy-solve .q-panel .q-opt.selected { border-color: #8ca5eb; background: #f5f8ff; }
+html[data-theme="light"] .mcacademy-solve .q-panel .q-letter { background: #eef2ff; color: #2449c4; }
+html[data-theme="light"] .mcacademy-solve .q-panel .q-opt.selected .q-letter,
+html[data-theme="light"] .mcacademy-solve .pal.current { background: #2449c4; color: #fff; }
+html[data-theme="light"] .mcacademy-solve .q-panel .q-text { color: #253351; }
+html[data-theme="light"] .mcacademy-solve .pal { background: #f7f9fd; color: #33405f; }
+html[data-theme="light"] .mcacademy-solve .pal.done:not(.current) { border-color: #d4e0ff; background: #eaf0ff; color: #2449c4; }
+html[data-theme="light"] .mcacademy-solve .btn-finish { background: #ff8950; color: #fff; box-shadow: 0 5px 12px rgba(255,137,80,.2); }
+html[data-theme="light"] .mcacademy-solve .btn-finish:hover { background: #f7793f; }
+
+html:not([data-theme="light"]) .mcacademy-solve .q-panel,
+html:not([data-theme="light"]) .mcacademy-solve .q-reading-pane,
+html:not([data-theme="light"]) .mcacademy-solve .aside-card { box-shadow: 0 4px 18px rgba(0,0,0,.12); }
+html:not([data-theme="light"]) .mcacademy-solve .q-panel .q-opt::after { border-color: rgba(194,207,235,.4); }
+
+@media (min-width: 1001px) {
+  .mcacademy-solve .q-row { min-height: clamp(280px, 36vh, 430px); }
+  .mcacademy-solve .q-reading,
+  .mcacademy-solve .q-panel { max-height: clamp(280px, 36vh, 430px); }
+  .mcacademy-solve .q-nav-row { justify-content: center; }
+}
+@media (max-width: 1000px) {
+  .mcacademy-solve .q-row { min-height: 0; }
+  .mcacademy-solve .q-reading,
+  .mcacademy-solve .q-panel { max-height: none; }
+  .mcacademy-solve .q-reading { max-height: 38vh; }
+}
+@media (max-width: 640px) {
+  .mcacademy-solve .solve-inner { align-items: center; }
+  .mcacademy-solve .solve-head { order: 3; flex-basis: 100%; }
+  .mcacademy-solve .solve-titles { flex-basis: 0; order: initial; }
+  .mcacademy-solve .fs-group > span { display: none; }
+  .mcacademy-solve .q-panel { padding: 15px; }
+  .mcacademy-solve .q-panel .q-opt { padding: 8px; }
+}

@@ -802,14 +802,11 @@ function seedPreparedTests() {
     });
   }
   const readingSections = [
-    ["Reading 1–6 · Neurolinguistics and Adult Language Acquisition", 1, 6],
-    ["Reading 7–11 · The Explorer's Discovery", 7, 11],
-    ["Reading 12–15 · Urban Green Spaces and Public Health", 12, 15],
-    ["1-bosqich · Mutaxassislik fani", 16, 35],
+    ["1-bosqich · Mutaxassislik fani", 1, 35],
     ["2-bosqich · Kasbiy Standartlar", 36, 40],
     ["3-bosqich · Pedagogik Mahorat", 41, 50]
   ];
-  const readingMigrationNeeded = metaGet("attestation_reading_layout", "") !== "2026-11-22-v1";
+  const readingMigrationNeeded = metaGet("attestation_reading_layout", "") !== "2026-11-22-v2";
   let migratedReadingSets = 0;
   const replaceReadingSections = (lessonId) => {
     db.prepare("DELETE FROM test_sections WHERE lesson_id = ?").run(lessonId);
@@ -890,7 +887,7 @@ function seedPreparedTests() {
   }
   const expectedReadingSets = sources[0].filter((set) => set.category === "attestation" &&
     set.questions.length === 50 && ((Number(set.number) >= 1 && Number(set.number) <= 10) || set.layout === "attestation-50-sections")).length;
-  if (readingMigrationNeeded && migratedReadingSets >= expectedReadingSets) metaSet("attestation_reading_layout", "2026-11-22-v1");
+  if (readingMigrationNeeded && migratedReadingSets >= expectedReadingSets) metaSet("attestation_reading_layout", "2026-11-22-v2");
   if (addedSets) console.log(`[seed] ${addedSets} new test sets added from prepared question banks`);
 }
 
@@ -1607,7 +1604,7 @@ ${seoTags}
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%2312b5a6'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='18' font-weight='bold' text-anchor='middle' fill='%2303211d'%3EH%3C/text%3E%3C/svg%3E">
 <script async src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>try{document.documentElement.dataset.theme=localStorage.getItem('ht_theme')||'dark';}catch(e){document.documentElement.dataset.theme='dark';}</script>
-<link rel="stylesheet" href="/assets/platform.css?v=20261122p">
+<link rel="stylesheet" href="/assets/platform.css?v=20261122q">
 </head>
 <body${admin && !publicPage ? ` class="admin-page"` : isStudentPage ? ` class="student-page${isDashboard ? " is-dashboard" : ""}"` : ""}>
 <header class="topbar">
@@ -4408,7 +4405,7 @@ function testDocument({ title, body }) {  return `<!DOCTYPE html>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%231e40af'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='18' font-weight='bold' text-anchor='middle' fill='white'%3EH%3C/text%3E%3C/svg%3E">
 <script async src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>try{document.documentElement.dataset.theme=localStorage.getItem('ht_theme')||'dark';}catch(e){document.documentElement.dataset.theme='dark';}</script>
-<link rel="stylesheet" href="/assets/platform.css?v=20261122p">
+<link rel="stylesheet" href="/assets/platform.css?v=20261122q">
 </head>
 <body class="test-body student-page">
 ${body}
@@ -4508,7 +4505,7 @@ function testPage(lesson, questions, testSections = [], attemptId = 0) {
 .join("");
 
   const body = `
-  <div class="solve" style="--fs:1;--fs-reading:1">
+  <div class="solve mcacademy-solve" style="--fs:1;--fs-reading:1">
   <header class="solve-topbar">
   <div class="solve-inner">
   <a class="solve-brand" href="/courses"><span class="mark">H</span><b>${h(config.siteName)}</b></a>
