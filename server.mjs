@@ -372,6 +372,9 @@ if (!userCols3.some((c) => c.name === "last_nudge_at")) {
 if (!userCols3.some((c) => c.name === "is_blocked")) {
   db.exec("ALTER TABLE users ADD COLUMN is_blocked INTEGER NOT NULL DEFAULT 0");
 }
+if (!userCols3.some((c) => c.name === "is_author")) {
+  db.exec("ALTER TABLE users ADD COLUMN is_author INTEGER NOT NULL DEFAULT 0");
+}
 const loginSecurityCols = db.prepare("PRAGMA table_info(users)").all();
 if (!loginSecurityCols.some((c) => c.name === "password_failures")) {
   db.exec("ALTER TABLE users ADD COLUMN password_failures INTEGER NOT NULL DEFAULT 0");
@@ -1090,7 +1093,7 @@ function currentUser(req) {
   if (!token) return null;
   const row = db
 .prepare(
-  `SELECT u.id, u.name, u.phone, u.created_at, u.contract_accepted_at, u.is_blocked
+  `SELECT u.id, u.name, u.phone, u.created_at, u.contract_accepted_at, u.is_blocked, u.is_author
   FROM sessions s JOIN users u ON u.id = s.user_id
   WHERE s.token = ? AND s.expires_at > ?`
   )
@@ -1212,6 +1215,7 @@ function navFor(user, admin, publicPage = false) {
   <a href="/duel">Duel</a>
   <a href="/courses">Kurslar</a>
   <a href="/dashboard">Kabinet</a>
+  ${Number(user.is_author) ? `<a href="/author">Muallif paneli</a>` : ""}
   <a href="/leaderboard">Reyting</a>
   <a class="btn btn-sm student-plan" href="/plans">Tariflar</a>
   <span class="who">${h(user.name)}</span>
@@ -4435,9 +4439,18 @@ const server = http.createServer(async (req, res) => {
   }
   const user = currentUser(req);
   const admin = isAdmin(req);
+  const author = Boolean(user && Number(user.is_author));
+  const contentManager = admin || author;
   res.lang = detectLang(req);
 
+  const authorContentRoute = method === "GET" && /^\/admin\/course\/\d+$/.test(p)
+    || method === "POST" && (p === "/admin/course" || p === "/admin/lesson" || /^\/admin\/course\/\d+$/.test(p)
+      || /^\/admin\/lesson\/\d+(?:\/(?:questions|sections|rename|update|delete|materials|about|question|section|import|add-test))?$/.test(p)
+      || /^\/admin\/(?:question\/\d+\/(?:update|delete)|section\/\d+(?:\/delete)?)$/.test(p)
+      || /^\/admin\/video-upload\/(?:start|[a-f0-9-]{24,64})$/.test(p));
+
   /* Admin panelga tashqaridan har kirishda parol so'raladi */
+  if (!admin && author && p.startsWith("/admin") && !authorContentRoute) return redirect(res, "/author");
   if (admin && method === "GET" && p.startsWith("/admin") && p !== "/admin/login" && p !== "/admin/logout") {
     let refPath = "";
     try {
@@ -4706,7 +4719,7 @@ const server = http.createServer(async (req, res) => {
   const files = form.files;
 
   if (p === "/admin/video-upload/start" && method === "POST") {
-    if (!admin) return json(res, 401, { error: "Admin tizimiga kiring." });
+    if (!contentManager) return json(res, 401, { error: "Tizimga kiring." });
     const fileName = path.basename(String(fields.name || "video.mp4")).slice(0, 180);
     const fileSize = Number(fields.size);
     const ext = path.extname(fileName).toLowerCase();
@@ -4896,7 +4909,7 @@ const server = http.createServer(async (req, res) => {
   <div class="field"><label>Ismingiz</label><input name="name" required maxlength="60" placeholder="Habiba"></div>
   ${duelInvite ? "" : `<div class="field"><label>Telegram username yoki ID</label><input name="telegram_id" required placeholder="@username yoki 1097025987"><small class="muted">Username yoki raqamli ID.</small></div>`}
   <div class="field"><label>Telefon</label><input name="phone" data-phone required inputmode="tel" placeholder="+998 93 568 00 91"></div>
-  ${duelInvite ? "" : `<div class="field"><label>Parol (4 ta raqam)</label><input name="password" type="password" required minlength="4" maxlength="4" pattern="[0-9]{4}" inputmode="numeric" placeholder="Masalan: 1234"></div>`}
+  <div class="field"><label>Parol (4 ta raqam)</label><input name="password" type="password" required minlength="4" maxlength="4" pattern="[0-9]{4}" inputmode="numeric" placeholder="Masalan: 1234"></div>
   <button class="btn btn-primary" type="submit">Ro'yxatdan o'tish</button>
   </form>`,
   `<p class="alt">Akkountingiz bormi? <a href="/login${next ? `?next=${encodeURIComponent(next)}`: ""}">Kirish</a></p>`,
@@ -4910,7 +4923,7 @@ const server = http.createServer(async (req, res) => {
   const name = String(fields.name || "").trim();
   const phone = normalizePhone(fields.phone);
   const duelInvite = /^\/duel\/[A-Z0-9]{6}$/i.test(next);
-  const password = String(fields.password || "") || (duelInvite ? String(randomInt(1000, 10000)) : "");
+  const password = String(fields.password || "");
   const tgUser = telegramUserFromInitData(fields.tg_init_data);
   const rawTelegram = String((tgUser && tgUser.id) || fields.telegram_id || "").trim();
   const numericTelegramId = /^\d{5,15}$/.test(rawTelegram) ? rawTelegram : "";
@@ -4948,7 +4961,7 @@ const server = http.createServer(async (req, res) => {
   <div class="field"><label>Ismingiz</label><input name="name" value="${h(name)}" required></div>
   ${duelInvite ? "" : `<div class="field"><label>Telegram username yoki ID</label><input name="telegram_id" value="${h(telegramUsername ? "@" + telegramUsername : telegramId)}" required placeholder="@username yoki 1097025987"></div>`}
   <div class="field"><label>Telefon</label><input name="phone" data-phone value="${h(fields.phone || "")}" required inputmode="numeric" maxlength="17" autocomplete="tel-national" placeholder="+998 90 123 45 67"></div>
-  ${duelInvite ? "" : `<div class="field"><label>Parol (4 ta raqam)</label><input name="password" type="password" required minlength="4" maxlength="4" pattern="[0-9]{4}" inputmode="numeric" placeholder="Masalan: 1234" autocomplete="new-password"></div>`}
+  <div class="field"><label>Parol (4 ta raqam)</label><input name="password" type="password" value="${h(password)}" required minlength="4" maxlength="4" pattern="[0-9]{4}" inputmode="numeric" placeholder="Masalan: 1234" autocomplete="new-password"></div>
   <button class="btn btn-primary" type="submit">Ro'yxatdan o'tish</button>
   </form>`,
   `<p class="alt">Akkountingiz bormi? <a href="/login${next ? `?next=${encodeURIComponent(next)}`: ""}">Kirish</a></p>`,
@@ -5064,26 +5077,8 @@ const server = http.createServer(async (req, res) => {
   if (p === "/login/start" && method === "POST") {
   const startNext = safeNext(fields.next || url.searchParams.get("next"));
   const startNextJoin = startNext ? `&next=${encodeURIComponent(startNext)}` : "";
-  const phone = normalizePhone(fields.phone);
-  if (!validPhoneInput(fields.phone) || !validPhone(phone)) {
-    return redirect(res, `/login?err=phone&phone=${encodeURIComponent(formatLocalPhone(fields.phone))}${startNextJoin}`);
-  }
-  const userRow = findUserByPhone(phone, "id, telegram_id, telegram_username, is_blocked");
-  if (!userRow) {
-    noteFailure(clientIp(req));
-  return redirect(res, `/login?err=notfound&phone=${encodeURIComponent(phone)}${startNextJoin}`);
-  }
-  if (Number(userRow.is_blocked)) {
-    noteFailure(clientIp(req));
-    return redirect(res, `/login?err=blocked&phone=${encodeURIComponent(phone)}${startNextJoin}`);
-  }
-  const ip = clientIp(req);
-  const lock = lockedFor(ip);
-  if (lock) return redirect(res, `/login?err=blocked&phone=${encodeURIComponent(phone)}${startNextJoin}`);
-  clearFailures(ip);
-  createUserSession(res, userRow.id, req);
-  createDeviceSession(res, userRow.id, req);
-  return redirect(res, startNext || "/dashboard");
+  const phone = formatLocalPhone(fields.phone);
+  return redirect(res, `/login?pw=1&phone=${encodeURIComponent(phone)}${startNextJoin}`);
   }
 
   if (p === "/login/verify" && method === "POST") {
@@ -5150,7 +5145,7 @@ const server = http.createServer(async (req, res) => {
   const step = 1;
   const phoneRaw = formatLocalPhone(url.searchParams.get("phone") || "");
   const err = String(url.searchParams.get("err") || "");
-  const pwMode = false;
+  const pwMode = true;
   const nextQs = pageNext ? `?next=${encodeURIComponent(pageNext)}` : "";
   const nextJoin = pageNext ? `&next=${encodeURIComponent(pageNext)}` : "";
   const passwordAction = `/login?pw=1${nextJoin}`;
@@ -5306,7 +5301,7 @@ const server = http.createServer(async (req, res) => {
 
   const next = safeNext(fields.next || url.searchParams.get("next"));
 
-  // Telegram OTP is the default; password sign-in remains available as a recovery path.
+  // Phone and the four-digit password are required for sign-in.
   if (url.searchParams.get("pw") !== "1") {
     return redirect(res, `/login?phone=${encodeURIComponent(formatLocalPhone(fields.phone))}${next ? `&next=${encodeURIComponent(next)}` : ""}`);
   }
@@ -7174,6 +7169,26 @@ const server = http.createServer(async (req, res) => {
   return;
   }
 
+  if (p === "/author" && method === "GET") {
+    if (!user) return redirect(res, "/login?next=/author");
+    if (!author && !admin) return redirect(res, "/courses");
+    const courses = db.prepare(`SELECT c.id, c.title, c.category, c.is_published,
+      (SELECT COUNT(*) FROM lessons l WHERE l.course_id = c.id) AS lesson_count
+      FROM courses c ORDER BY c.id DESC`).all();
+    const courseRows = courses.length ? courses.map((course) => `<a class="card course-card" href="/admin/course/${course.id}">
+      <div class="course-top"><div class="course-ico">${icon("layers")}</div><span class="badge">${course.lesson_count} dars</span></div>
+      <h3>${h(course.title)}</h3><p class="muted">${h(categoryLabel(course.category))} · ${Number(course.is_published) ? "E'lon qilingan" : "Qoralama"}</p><span class="card-link">Tahrirlash</span>
+      </a>`).join("") : `<div class="card empty">Hozircha kurs yo'q.</div>`;
+    const body = `<div class="page-head"><div><h1>Muallif paneli</h1><p class="muted">Kurslar, darslar va test materiallarini boshqaring.</p></div></div>
+      <div class="grid three">${courseRows}</div>
+      <div class="card" style="margin-top:22px"><h2>Yangi kurs</h2><form method="post" action="/admin/course" class="form">
+      <div class="field"><label>Yo'nalish</label><select name="category"><option value="attestation">Attestatsiya</option><option value="tkt">TKT</option><option value="other">${h(categoryLabel("other"))}</option></select></div>
+      <div class="field"><label>Kurs nomi</label><input name="title" required maxlength="160"></div><div class="field"><label>Tavsif</label><textarea name="description" rows="2"></textarea></div>
+      <button class="btn btn-primary" type="submit">Kurs yaratish</button></form></div>`;
+    send(res, 200, layout({ title: "Muallif paneli", body, user, admin }));
+    return;
+  }
+
   if (p === "/admin" && method === "GET") {
   if (!admin) return redirect(res, "/admin/login");
 
@@ -7261,12 +7276,44 @@ const server = http.createServer(async (req, res) => {
   return;
   }
 
-  const studentAction = p.match(/^\/admin\/student\/(\d+)\/(block|unblock|grant|revoke)$/);
+  const studentAction = p.match(/^\/admin\/student\/(\d+)\/(block|unblock|grant|revoke|author|delete)$/);
   if (studentAction && method === "POST") {
   if (!admin) return redirect(res, "/admin/login");
   const studentId = Number(studentAction[1]);
   const action = studentAction[2];
-  if (action === "block" || action === "unblock") {
+  if (action === "author") {
+    db.prepare("UPDATE users SET is_author = CASE WHEN is_author = 1 THEN 0 ELSE 1 END WHERE id = ?").run(studentId);
+  } else if (action === "delete") {
+    const target = db.prepare("SELECT id, phone, telegram_id, telegram_username FROM users WHERE id = ?").get(studentId);
+    if (target) {
+      db.exec("BEGIN IMMEDIATE");
+      try {
+        const duelIds = db.prepare("SELECT id FROM duels WHERE creator_id = ? OR opponent_id = ?").all(studentId, studentId).map((d) => d.id);
+        const matchIds = db.prepare("SELECT id FROM tournament_matches WHERE p1 = ? OR p2 = ? OR winner = ?").all(studentId, studentId, studentId).map((m) => m.id);
+        for (const duelId of duelIds) {
+          db.prepare("DELETE FROM duel_questions WHERE duel_id = ?").run(duelId);
+          db.prepare("DELETE FROM duel_plays WHERE duel_id = ?").run(duelId);
+          db.prepare("DELETE FROM duel_starts WHERE duel_id = ?").run(duelId);
+        }
+        for (const matchId of matchIds) db.prepare("DELETE FROM tournament_starts WHERE match_id = ?").run(matchId);
+        db.prepare("DELETE FROM duels WHERE creator_id = ? OR opponent_id = ?").run(studentId, studentId);
+        db.prepare("DELETE FROM tournament_entries WHERE user_id = ?").run(studentId);
+        db.prepare("DELETE FROM tournament_starts WHERE user_id = ?").run(studentId);
+        db.prepare("UPDATE tournament_matches SET p1 = CASE WHEN p1 = ? THEN NULL ELSE p1 END, p2 = CASE WHEN p2 = ? THEN NULL ELSE p2 END, winner = CASE WHEN winner = ? THEN NULL ELSE winner END, status = CASE WHEN p1 = ? OR p2 = ? THEN 'pending' ELSE status END, s1 = CASE WHEN p1 = ? OR p2 = ? THEN NULL ELSE s1 END, s2 = CASE WHEN p1 = ? OR p2 = ? THEN NULL ELSE s2 END, t1 = CASE WHEN p1 = ? OR p2 = ? THEN NULL ELSE t1 END, t2 = CASE WHEN p1 = ? OR p2 = ? THEN NULL ELSE t2 END, finished_at = CASE WHEN p1 = ? OR p2 = ? THEN NULL ELSE finished_at END WHERE p1 = ? OR p2 = ? OR winner = ?").run(...Array(18).fill(studentId));
+        for (const table of ["sessions", "device_sessions", "progress", "enrollments", "purchases", "likes", "video_watch", "test_attempts", "plan_subscriptions", "payment_requests", "tournament_entries"]) db.prepare(`DELETE FROM ${table} WHERE user_id = ?`).run(studentId);
+        db.prepare("DELETE FROM login_codes WHERE phone = ?").run(target.phone);
+        db.prepare("DELETE FROM login_links WHERE phone = ?").run(target.phone);
+        if (target.telegram_username) db.prepare("DELETE FROM telegram_users WHERE username = ?").run(target.telegram_username);
+        if (target.telegram_id) db.prepare("DELETE FROM telegram_users WHERE chat_id = ?").run(String(target.telegram_id));
+        db.prepare("DELETE FROM users WHERE id = ?").run(studentId);
+        db.exec("COMMIT");
+      } catch (error) {
+        db.exec("ROLLBACK");
+        throw error;
+      }
+    }
+    return redirect(res, "/admin/students");
+  } else if (action === "block" || action === "unblock") {
     db.prepare("UPDATE users SET is_blocked = ? WHERE id = ?").run(action === "block" ? 1 : 0, studentId);
     if (action === "block") {
       db.prepare("DELETE FROM sessions WHERE user_id = ?").run(studentId);
@@ -7301,7 +7348,7 @@ const server = http.createServer(async (req, res) => {
   if (!admin) return redirect(res, "/admin/login");
   const students = db
 .prepare(
-  `SELECT u.id, u.name, u.phone, u.telegram_id, u.telegram_username, u.created_at, u.is_blocked,
+  `SELECT u.id, u.name, u.phone, u.telegram_id, u.telegram_username, u.created_at, u.is_blocked, u.is_author,
   (SELECT COUNT(*) FROM progress p WHERE p.user_id = u.id) AS done,
   (SELECT MAX(expires_at) FROM plan_subscriptions s WHERE s.user_id = u.id AND s.status = 'active' AND s.expires_at > ?) AS plan_expires
   FROM users u ORDER BY u.id DESC`
@@ -7318,6 +7365,8 @@ const server = http.createServer(async (req, res) => {
   <td>${s.plan_expires ? String(s.plan_expires).startsWith("9999-") ? "To'liq ruxsat" : `Faol: ${h(String(s.plan_expires).slice(0, 10))}` : "Ruxsat yo'q"}</td>
   <td>${Number(s.is_blocked) ? `<span class="badge danger">Cheklangan</span>` : `<span class="badge done">Faol</span>`}</td>
   <td><form method="post" action="/admin/student/${s.id}/${Number(s.is_blocked) ? "unblock" : "block"}" class="inline"><button class="btn btn-sm ${Number(s.is_blocked) ? "btn-primary" : "btn-danger"}">${Number(s.is_blocked) ? "Ruxsat berish" : "Cheklash"}</button></form>
+  <form method="post" action="/admin/student/${s.id}/author" class="inline"><button class="btn btn-sm">${Number(s.is_author) ? "Mualliflikni bekor qilish" : "Muallif tayinlash"}</button></form>
+  <form method="post" action="/admin/student/${s.id}/delete" class="inline" onsubmit="return confirm('Foydalanuvchi va unga tegishli ma’lumotlar o‘chiriladi. Davom etilsinmi?')"><button class="btn btn-sm btn-danger">O‘chirish</button></form>
   <form method="post" action="/admin/student/${s.id}/grant" class="inline"><label class="small">Muddat <select name="months" style="min-width:100px">${Array.from({length:120},(_,i)=>`<option value="${i+1}"${i===2?" selected":""}>${i+1} oy</option>`).join("")}</select></label><button class="btn btn-sm" name="duration" value="set">Ruxsat berish</button><label class="small">Tugash sanasi <input type="date" name="expiry_date" value="${s.plan_expires && !String(s.plan_expires).startsWith("9999-") ? h(String(s.plan_expires).slice(0, 10)) : ""}"></label><button class="btn btn-sm" name="duration" value="date">Sanani belgilash</button><button class="btn btn-sm" name="duration" value="full">To'liq ochish</button></form>
   ${s.plan_expires ? `<form method="post" action="/admin/student/${s.id}/revoke" class="inline"><button class="btn btn-sm btn-danger">Tarifni yopish</button></form>` : ""}</td>
   <td>${h(String(s.created_at).slice(0, 10))}</td>
@@ -7372,7 +7421,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (p === "/admin/course" && method === "POST") {
-  if (!admin) return redirect(res, "/admin/login");
+  if (!contentManager) return redirect(res, "/admin/login");
   const title = String(fields.title || "").trim();
   const description = String(fields.description || "").trim();
   const category = ["attestation", "tkt", "other"].includes(fields.category)
@@ -7388,7 +7437,7 @@ const server = http.createServer(async (req, res) => {
 
   const adminCourseMatch = p.match(/^\/admin\/course\/(\d+)(\/delete)?$/);
   if (adminCourseMatch) {
-  if (!admin) return redirect(res, "/admin/login");
+  if (!contentManager || (author && adminCourseMatch[2] === "/delete")) return redirect(res, author ? "/author" : "/admin/login");
   const courseId = Number(adminCourseMatch[1]);
   const course = db.prepare("SELECT * FROM courses WHERE id = ?").get(courseId);
   if (!course) return notFound(res, user, admin);
@@ -7500,7 +7549,7 @@ const server = http.createServer(async (req, res) => {
 : `<tr><td colspan="5" class="muted">Hozircha darslar yo'q.</td></tr>`;
 
   const body = `
-  <a class="back" href="/admin">  Admin panel</a>
+  <a class="back" href="${author ? "/author" : "/admin"}">  ${author ? "Muallif paneli" : "Admin panel"}</a>
   <div class="page-head">
   <div><h1>${h(course.title)}</h1><p class="muted">${h(course.description || "")}</p></div>
   </div>
@@ -7672,7 +7721,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (p === "/admin/lesson" && method === "POST") {
-  if (!admin) return redirect(res, "/admin/login");
+  if (!contentManager) return redirect(res, "/admin/login");
   const courseId = Number(fields.course_id);
   const course = db.prepare("SELECT * FROM courses WHERE id = ?").get(courseId);
   if (!course) return redirect(res, "/admin");
@@ -7800,7 +7849,7 @@ const server = http.createServer(async (req, res) => {
 
   const addVideoTestMatch = p.match(/^\/admin\/lesson\/(\d+)\/add-test$/);
   if (addVideoTestMatch && method === "POST") {
-    if (!admin) return redirect(res, "/admin/login");
+    if (!contentManager) return redirect(res, "/admin/login");
     const video = db.prepare("SELECT * FROM lessons WHERE id = ? AND type = 'video'").get(Number(addVideoTestMatch[1]));
     if (!video) return redirect(res, "/admin");
     const immediateNext = db.prepare("SELECT id, type FROM lessons WHERE course_id = ? AND (position > ? OR (position = ? AND id > ?)) ORDER BY position, id LIMIT 1")
@@ -7824,7 +7873,7 @@ const server = http.createServer(async (req, res) => {
 
   const adminLessonMatch = p.match(/^\/admin\/lesson\/(\d+)(\/questions|\/sections|\/rename|\/update|\/delete|\/access|\/materials|\/about)?$/);
   if (adminLessonMatch) {
-  if (!admin) return redirect(res, "/admin/login");
+  if (!contentManager || (author && adminLessonMatch[2] === "/access")) return redirect(res, author ? "/author" : "/admin/login");
   const lesson = db.prepare("SELECT * FROM lessons WHERE id = ?").get(Number(adminLessonMatch[1]));
   if (!lesson) return notFound(res, user, admin);
 
@@ -8294,7 +8343,7 @@ Matn: passage matni (ixtiyoriy)</p>
   }
 
   if (p.match(/^\/admin\/lesson\/\d+\/question$/) && method === "POST") {
-  if (!admin) return redirect(res, "/admin/login");
+  if (!contentManager) return redirect(res, "/admin/login");
   const lessonId = Number(p.split("/")[3]);
   const lesson = db.prepare("SELECT * FROM lessons WHERE id = ?").get(lessonId);
   if (!lesson) return redirect(res, "/admin");
@@ -8318,7 +8367,7 @@ Matn: passage matni (ixtiyoriy)</p>
 
   const questionUpdate = p.match(/^\/admin\/question\/(\d+)\/update$/);
   if (questionUpdate && method === "POST") {
-  if (!admin) return redirect(res, "/admin/login");
+  if (!contentManager) return redirect(res, "/admin/login");
   const q = db.prepare("SELECT * FROM questions WHERE id = ?").get(Number(questionUpdate[1]));
   if (!q) return redirect(res, "/admin");
   const text = String(fields.text || "").trim();
@@ -8339,7 +8388,7 @@ Matn: passage matni (ixtiyoriy)</p>
 
   const sectionAdd = p.match(/^\/admin\/lesson\/(\d+)\/section$/);
   if (sectionAdd && method === "POST") {
-  if (!admin) return redirect(res, "/admin/login");
+  if (!contentManager) return redirect(res, "/admin/login");
   const lessonId = Number(sectionAdd[1]);
   const lesson = db.prepare("SELECT * FROM lessons WHERE id = ?").get(lessonId);
   if (!lesson) return redirect(res, "/admin");
@@ -8359,7 +8408,7 @@ Matn: passage matni (ixtiyoriy)</p>
 
   const sectionEdit = p.match(/^\/admin\/section\/(\d+)(\/delete)?$/);
   if (sectionEdit && method === "POST") {
-  if (!admin) return redirect(res, "/admin/login");
+  if (!contentManager) return redirect(res, "/admin/login");
   const section = db.prepare("SELECT * FROM test_sections WHERE id = ?").get(Number(sectionEdit[1]));
   if (!section) return redirect(res, "/admin");
   if (sectionEdit[2] === "/delete") {
@@ -8383,7 +8432,7 @@ Matn: passage matni (ixtiyoriy)</p>
 
   const lessonImport = p.match(/^\/admin\/lesson\/(\d+)\/import$/);
   if (lessonImport && method === "POST") {
-  if (!admin) return redirect(res, "/admin/login");
+  if (!contentManager) return redirect(res, "/admin/login");
   const lessonId = Number(lessonImport[1]);
   const lesson = db.prepare("SELECT * FROM lessons WHERE id = ?").get(lessonId);
   if (!lesson) return redirect(res, "/admin");
@@ -8422,7 +8471,7 @@ Matn: passage matni (ixtiyoriy)</p>
 
   const questionDelete = p.match(/^\/admin\/question\/(\d+)\/delete$/);
   if (questionDelete && method === "POST") {
-  if (!admin) return redirect(res, "/admin/login");
+  if (!contentManager) return redirect(res, "/admin/login");
   const q = db.prepare("SELECT * FROM questions WHERE id = ?").get(Number(questionDelete[1]));
   if (q) {
   db.prepare("DELETE FROM questions WHERE id = ?").run(q.id);
