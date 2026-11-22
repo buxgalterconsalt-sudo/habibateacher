@@ -2163,7 +2163,7 @@ async function sendBotWelcome(chatId, name) {
   }
   await telegramApi("sendMessage", {
   chat_id: chatId,
-  text: `Assalomu alaykum${name ? `, ${name}`: ""}!\n\nHabiba teacher — ingliz tili o'qituvchilarini attestatsiyaga tayyorlov platformasi. Platformani brauzerda ochish uchun pastdagi tugmani bosing.`,
+  text: `Assalomu alaykum${name ? `, ${name}`: ""}!\n\nHabiba teacher — ingliz tili o'qituvchilarini imtihonga tayyorlov platformasi. Platformani brauzerda ochish uchun pastdagi tugmani bosing.`,
   parse_mode: "HTML",
   disable_web_page_preview: true,
   reply_markup: botKeyboard()
@@ -5091,7 +5091,7 @@ const server = http.createServer(async (req, res) => {
   </div>
   </section>`;
 
-  send(res, 200, layout({ title: "Ingliz tili attestatsiya testlari va TKT", body, user, admin, seo: { path: "/", title: "Ingliz tili attestatsiya testlari va TKT | Habiba teacher", description: "Ingliz tili o'qituvchilari uchun attestatsiya testlari, TKT modullari, onlayn mock testlar va metodika. Toifa sinoviga amaliy tayyorgarlikni boshlang.", keywords: "ingliz tili attestatsiya testlari, pedagog attestatsiya testlari, o'qituvchi toifa testi, attestatsiyaga tayyorlov, TKT testlari, TKT 1-modul, TKT 2-modul, TKT 3-modul" } }));
+  send(res, 200, layout({ title: "Ingliz tili attestatsiya testlari va TKT", body, user, admin, seo: { path: "/", title: "Ingliz tili attestatsiya testlari va TKT | Habiba teacher", description: "Ingliz tili o'qituvchilari uchun attestatsiya testlari, TKT modullari, onlayn mock testlar va metodika. Toifa sinoviga amaliy tayyorgarlikni boshlang.", keywords: "ingliz tili attestatsiya testlari, pedagog attestatsiya testlari, o'qituvchi toifa testi, imtihonlarga tayyorlov, TKT testlari, TKT 1-modul, TKT 2-modul, TKT 3-modul" } }));
   return;
   }
 
@@ -5674,7 +5674,7 @@ const server = http.createServer(async (req, res) => {
   <div class="center-actions"><a class="btn btn-primary" href="/register">Ro'yxatdan o'tish</a></div>
   </div>
   </section>`;
-  send(res, 200, layout({ title: "Ingliz tili o'qituvchilari uchun kurslar", body, user, admin, seo: { path: "/courses", title: "Ingliz tili o'qituvchilari uchun kurslar | Habiba teacher", description: "Attestatsiyaga tayyorlov kurslari, TKT darslari, mock testlar va metodik materiallar ingliz tili o'qituvchilari uchun.", keywords: "ingliz tili o'qituvchilari uchun kurs, attestatsiya tayyorlov kursi, pedagogika kurslari, TKT kursi, metodika darslari" } }));
+  send(res, 200, layout({ title: "Ingliz tili o'qituvchilari uchun kurslar", body, user, admin, seo: { path: "/courses", title: "Ingliz tili o'qituvchilari uchun kurslar | Habiba teacher", description: "Imtihonlarga tayyorlov kurslari, TKT darslari, mock testlar va metodik materiallar ingliz tili o'qituvchilari uchun.", keywords: "ingliz tili o'qituvchilari uchun kurs, imtihonlarga tayyorlov kursi, pedagogika kurslari, TKT kursi, metodika darslari" } }));
   return;
   }
 
@@ -5862,7 +5862,7 @@ const server = http.createServer(async (req, res) => {
   ${sections || `<div class="card empty">Bu yo'nalishda testlar tez orada qo'shiladi.</div>`}
   </div>
   </section>`;
-  send(res, 200, layout({ title: meta.title, body, user, admin, seo: { path: p, title: `${meta.title} | Habiba teacher`, description: cat === "attestation" ? "Ingliz tili fani o'qituvchilari attestatsiyasi uchun onlayn testlar, mock imtihonlar, javoblar va tayyorlov kurslari." : "TKT (Teaching Knowledge Test) imtihoniga tayyorlanish: 1, 2 va 3-modul bo'yicha testlar, metodika va onlayn kurslar.", keywords: cat === "attestation" ? "ingliz tili attestatsiya testlari, pedagog attestatsiya testi, toifa olish testi, attestatsiyaga tayyorlov, ingliz tili o'qituvchisi testi" : "TKT testlari, Teaching Knowledge Test, TKT 1-modul, TKT 2-modul, TKT 3-modul, TKT imtihoniga tayyorlov" } }));
+  send(res, 200, layout({ title: meta.title, body, user, admin, seo: { path: p, title: `${meta.title} | Habiba teacher`, description: cat === "attestation" ? "Ingliz tili fani o'qituvchilari attestatsiyasi uchun onlayn testlar, mock imtihonlar, javoblar va tayyorlov kurslari." : "TKT (Teaching Knowledge Test) imtihoniga tayyorlanish: 1, 2 va 3-modul bo'yicha testlar, metodika va onlayn kurslar.", keywords: cat === "attestation" ? "ingliz tili attestatsiya testlari, pedagog attestatsiya testi, toifa olish testi, imtihonlarga tayyorlov, ingliz tili o'qituvchisi testi" : "TKT testlari, Teaching Knowledge Test, TKT 1-modul, TKT 2-modul, TKT 3-modul, TKT imtihoniga tayyorlov" } }));
   return;
   }
 
