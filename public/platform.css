@@ -6258,7 +6258,8 @@ img, video, iframe { max-width: 100%; }
 .lesson-file-input:focus + button { outline: 2px solid var(--primary); }
 .lesson-file-actions small { max-width: 100%; overflow-wrap: anywhere; }
 .password-hint { color: #e5484d !important; font-size: .7rem; line-height: 1.4; }
-body.is-dashboard .dash-quote .dash-quote-label { display: block; margin-bottom: 5px; color: var(--primary-soft); font-size: .68rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+body.is-dashboard .dash-quote .dash-quote-label { display: block; margin-bottom: 5px; color: var(--primary-soft); font-size: .72rem; font-weight: 800; letter-spacing: .02em; text-transform: none; }
+body.is-dashboard .dash-quote .dash-quote-author { font-size: .64rem; }
 .app-refresh {
   display: inline-flex;
   align-items: center;

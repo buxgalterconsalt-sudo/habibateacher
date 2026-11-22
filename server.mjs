@@ -1427,7 +1427,7 @@ ${seoTags}
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%2312b5a6'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='18' font-weight='bold' text-anchor='middle' fill='%2303211d'%3EH%3C/text%3E%3C/svg%3E">
 <script async src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>try{document.documentElement.dataset.theme=localStorage.getItem('ht_theme')||'dark';}catch(e){document.documentElement.dataset.theme='dark';}</script>
-<link rel="stylesheet" href="/assets/platform.css?v=20261122e">
+<link rel="stylesheet" href="/assets/platform.css?v=20261122f">
 </head>
 <body${isStudentPage ? ` class="student-page${isDashboard ? " is-dashboard" : ""}"` : ""}>
 <header class="topbar">
@@ -1450,7 +1450,7 @@ ${seoTags}
   <span class="theme-moon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A8.5 8.5 0 1 1 11.2 3a6.6 6.6 0 0 0 9.8 9.8Z"/></svg></span>
   </button>
   </div>
-  <button class="app-refresh" type="button" data-app-refresh aria-label="Ilovani serverdan yangilash" title="Serverdagi so'nggi o'zgarishlarni yuklash"><span aria-hidden="true">⟳</span><b>Yangilash</b></button>
+  ${isDashboard ? "" : `<button class="app-refresh" type="button" data-app-refresh aria-label="Ilovani serverdan yangilash" title="Serverdagi so'nggi o'zgarishlarni yuklash"><span aria-hidden="true">⟳</span><b>Yangilash</b></button>`}
   <button class="menu-toggle" type="button" id="menuToggle" aria-label="Menyu" aria-expanded="false">
   <span></span><span></span><span></span>
   </button>
@@ -1717,7 +1717,7 @@ c.addEventListener('change', function () { b.disabled = !c.checked; });
 })();
 </script>
 <script>
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=7').then(function (registration) { registration.update().catch(function () {}); }).catch(function () {});
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=8').then(function (registration) { registration.update().catch(function () {}); }).catch(function () {});
 document.querySelectorAll('[data-app-refresh]').forEach(function (button) {
   button.addEventListener('click', async function () {
     if (button.disabled) return;
@@ -3771,6 +3771,9 @@ function dashboardPage(user) {
   const dayIndex = Math.floor(dayStamp(clock.day) / 86400000);
   const quote = quotes[((dayIndex % quotes.length) + quotes.length) % quotes.length];
   const [quoteText, quoteSource = ""] = quote.split(" — ");
+  const quoteAttribution = quoteSource.startsWith("Sahih ")
+    ? `Sahih hadis · ${quoteSource}`
+    : /maqoli/i.test(quoteSource) ? quoteSource : "";
 
   const nextCard = next
     ? `<a class="dash-hero-card" href="${
@@ -3834,14 +3837,14 @@ function dashboardPage(user) {
 
   return `<section class="dash-hero">
     <div class="wrap dash-welcome-wrap">
-      <div class="dash-quote"><span class="dash-quote-symbol" aria-hidden="true">&#128172;</span><div><small class="dash-quote-label">Bugungi kun hikmati</small><span>${h(quoteText)}</span><small class="dash-quote-author">— ${h(quoteSource)}</small></div></div>
+      <div class="dash-quote"><span class="dash-quote-symbol" aria-hidden="true">&#128172;</span><div><small class="dash-quote-label">Bugungi kun hikmati</small><span>${h(quoteText)}</span>${quoteAttribution ? `<small class="dash-quote-author">— ${h(quoteAttribution)}</small>` : ""}</div></div>
       <div class="dash-welcome-row">
         <div>
           <span class="eyebrow">Xush kelibsiz</span>
           <h1>Salom, ${h(user.name.split(" ")[0])}! <span aria-hidden="true">&#128075;</span></h1>
           <p class="lead">O'rganishni davom eting va maqsadingizga erishing!</p>
         </div>
-        <div class="dash-welcome-actions"><div class="dash-streak"><span aria-hidden="true">&#128293;</span><div><b>${streak}</b><small>kunlik streak</small></div></div><button class="dash-install" id="installApp" type="button"><span aria-hidden="true">&#8681;</span> Ilovani o'rnatish</button></div>
+        <div class="dash-welcome-actions"><div class="dash-streak"><span aria-hidden="true">&#128293;</span><div><b>${streak}</b><small>kunlik streak</small></div></div><button class="dash-install dash-refresh" type="button" data-app-refresh aria-label="Platformani yangilash" title="Serverdagi so'nggi o'zgarishlarni yuklash"><span aria-hidden="true">&#8635;</span> Yangilash</button><button class="dash-install" id="installApp" type="button"><span aria-hidden="true">&#8681;</span> Ilovani o'rnatish</button></div>
       </div>
     </div>
   </section>
@@ -3882,7 +3885,7 @@ function dashboardPage(user) {
           ru: { installed: "Приложение уже установлено.", help: "Откройте меню браузера и выберите «Установить приложение» или «Добавить на главный экран»." },
           en: { installed: "The app is already installed.", help: "Open your browser menu and choose Install app or Add to Home screen." }
         };
-        if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=7').catch(function () {});
+        if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=8').catch(function () {});
         window.addEventListener('beforeinstallprompt', function (event) {
           event.preventDefault();
           installPrompt = event;
@@ -4225,11 +4228,11 @@ function testDocument({ title, body }) {  return `<!DOCTYPE html>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%231e40af'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='18' font-weight='bold' text-anchor='middle' fill='white'%3EH%3C/text%3E%3C/svg%3E">
 <script async src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>try{document.documentElement.dataset.theme=localStorage.getItem('ht_theme')||'dark';}catch(e){document.documentElement.dataset.theme='dark';}</script>
-<link rel="stylesheet" href="/assets/platform.css?v=20261122e">
+<link rel="stylesheet" href="/assets/platform.css?v=20261122f">
 </head>
 <body class="test-body student-page">
 ${body}
-<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=7').then(function (registration) { registration.update().catch(function () {}); }).catch(function () {});</script>
+<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=8').then(function (registration) { registration.update().catch(function () {}); }).catch(function () {});</script>
 </body>
 </html>`;
 }
