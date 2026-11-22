@@ -275,6 +275,456 @@
         "d": "A circle or horseshoe",
         "answer": "D",
         "passage": ""
+      },
+      {
+        "q": "A teacher shows three objects and asks learners, ‘Which one is the lightest? How do you know?’ The teacher is mainly:",
+        "a": "Giving delayed feedback",
+        "b": "Assigning group roles",
+        "c": "Eliciting comparison language",
+        "d": "Checking task instructions",
+        "answer": "C",
+        "passage": ""
+      },
+      {
+        "q": "Before a jigsaw reading, the teacher asks, ‘Do you read all sections or only your assigned section?’ This checks:",
+        "a": "Learners’ final achievement",
+        "b": "Learners’ understanding of the procedure",
+        "c": "Learners’ understanding of a new word",
+        "d": "Learners’ spelling",
+        "answer": "B",
+        "passage": ""
+      },
+      {
+        "q": "A learner says ‘She work in a bank.’ The teacher repeats ‘She work?’ with a questioning intonation and waits. This aims to:",
+        "a": "Prompt the learner to self-correct",
+        "b": "Give a final grade",
+        "c": "Check the task sequence",
+        "d": "Model a classroom rule",
+        "answer": "A",
+        "passage": ""
+      },
+      {
+        "q": "According to the Uzbekistan Teacher Professional Standard (Kasb Standarti), effective lesson delivery requires educators to:",
+        "a": "Avoid using any digital or ICT tools in the classroom.",
+        "b": "Assess students without providing qualitative feedback.",
+        "c": "Use active, interactive methods and differentiated support matching student individual needs.",
+        "d": "Rely exclusively on frontal teacher-dominated lectures throughout the lesson.",
+        "answer": "C",
+        "passage": ""
+      },
+      {
+        "q": "In accordance with Kasb Standarti requirements for inclusive and learner-centered education, how should a teacher address diverse learning abilities in a mixed-ability class?",
+        "a": "Provide differentiated tasks and scaffolding tailored to individual learning needs and paces.",
+        "b": "Lower expectations for all students to the lowest level in the class.",
+        "c": "Teach only to the highest-performing students while ignoring lower-performing learners.",
+        "d": "Give identical, unadjusted tasks to all students regardless of learning pace.",
+        "answer": "A",
+        "passage": ""
+      },
+      {
+        "q": "Complete the sentence: \"When unexpected classroom management challenges arise, experienced teachers often _______ their prior training.\"",
+        "a": "take after",
+        "b": "look down on",
+        "c": "fall back on",
+        "d": "make off with",
+        "answer": "C",
+        "passage": ""
+      },
+      {
+        "q": "According to Passage 1, differentiated instruction is fundamentally based on which principle?",
+        "a": "Recognizing that learners possess diverse levels of readiness, learning styles, and background knowledge.",
+        "b": "Enforcing a standardized instructional pace across all secondary schools nationwide.",
+        "c": "Grouping students strictly by age without considering individual academic performance.",
+        "d": "Replacing qualitative formative feedback with mandatory term-end summative examinations.",
+        "answer": "A",
+        "passage": "Passage 1: Differentiated instruction in mixed-ability language classrooms is grounded in the recognition that learners vary significantly in readiness, learning preferences, and background knowledge. Rather than enforcing a uniform pedagogical pace, teachers employ tiered tasks, flexible grouping strategies, and varied instructional materials to optimize learning outcomes for all students. Differentiating content, process, or product allows educators to provide appropriate cognitive scaffolding without reducing academic rigor. However, successful differentiation requires continuous formative assessment to monitor individual student growth and dynamically adjust support, ensuring that low-achieving students receive targeted assistance while high-achieving students are provided with enriching cognitive challenges."
+      },
+      {
+        "q": "In Passage 1, the phrase \"cognitive scaffolding\" refers to:",
+        "a": "Formal written reprimands issued to students who fail to submit homework.",
+        "b": "Temporary instructional support designed to help learners master complex concepts.",
+        "c": "Standardized textbook glossaries that students must transcribe verbatim.",
+        "d": "The physical arrangement of classroom furniture to prevent student distraction.",
+        "answer": "B",
+        "passage": "Passage 1 (as above)"
+      },
+      {
+        "q": "During a freer oral fluency activity, how should a teacher manage error correction?",
+        "a": "Completely ignore all errors permanently without ever addressing them in future lessons.",
+        "b": "Stop the entire class and assign negative grades to students who make errors.",
+        "c": "Interrupt the student instantly every time a grammatical error occurs.",
+        "d": "Monitor silently, note recurring errors, and conduct a delayed feedback session after the activity.",
+        "answer": "D",
+        "passage": ""
+      },
+      {
+        "q": "According to Uzbekistan's Teacher Professional Standard (Kasb Standarti), effective lesson planning requires educators to:",
+        "a": "Establish clear objectives, integrate interactive methods, and differentiate instruction according to learner needs.",
+        "b": "Follow rigid, unvarying textbook routines without adapting to student needs.",
+        "c": "Eliminate digital technologies and interactive tools from all lesson designs.",
+        "d": "Avoid giving qualitative feedback to students regarding their academic performance.",
+        "answer": "A",
+        "passage": ""
+      },
+      {
+        "q": "In accordance with Kasb Standarti guidelines for inclusive and supportive education, how should a teacher respond to diverse learning paces in a mixed-ability classroom?",
+        "a": "Target instruction exclusively to high achievers while neglecting struggling students.",
+        "b": "Provide differentiated support, scaffolded tasks, and varied learning paths for all students.",
+        "c": "Assign identical, unadjusted workloads to all learners regardless of individual readiness.",
+        "d": "Reduce overall curriculum expectations to the lowest academic level in the class.",
+        "answer": "B",
+        "passage": ""
+      },
+      {
+        "q": "In lesson planning, a concept checking question (CCQ) is designed to:",
+        "a": "Ask students if they understand by saying \"Do you understand?\".",
+        "b": "Verify student comprehension of target language meaning without relying on translation.",
+        "c": "Assess student speed in copying grammar rules from the board.",
+        "d": "Test whether students can pronounce a new vocabulary word with a native accent.",
+        "answer": "B",
+        "passage": ""
+      },
+      {
+        "q": "In classroom management, Teacher Talking Time (TTT) should generally be:",
+        "a": "Eliminated completely so the teacher never speaks during class.",
+        "b": "Reserved exclusively for giving continuous dictation practice.",
+        "c": "Maximized so students hear native-like teacher speech for 90% of the class.",
+        "d": "Reduced and made effective to maximize Student Talking Time (STT) and peer interaction.",
+        "answer": "D",
+        "passage": ""
+      },
+      {
+        "q": "Under Kasb Standarti requirements, lesson planning must demonstrate:",
+        "a": "Strict adherence to identical unadjusted activities for all learning levels.",
+        "b": "Direct alignment between learning objectives, interactive methods, and assessment criteria.",
+        "c": "Total reliance on lecture-based delivery without student interaction.",
+        "d": "Complete exclusion of digital tools and media resources.",
+        "answer": "B",
+        "passage": ""
+      },
+      {
+        "q": "What is the primary function of an Instruction Checking Question (ICQ) after setting up a group activity?",
+        "a": "To verify that learners have understood what physical and procedural steps to perform during the task.",
+        "b": "To check if students understand the semantic meaning of new target vocabulary items.",
+        "c": "To assess whether students can translate the instructions into their native language.",
+        "d": "To test students on their long-term grammatical recall of complex passive structures.",
+        "answer": "A",
+        "passage": ""
+      },
+      {
+        "q": "According to the TKT framework on classroom management, when should a teacher adopt the role of a \"Monitor\"?",
+        "a": "When managing a whole-class teacher-fronted dictation activity.",
+        "b": "While setting up classroom seating arrangements before students enter the room.",
+        "c": "During pair or group practice activities to observe language use and note errors without interrupting.",
+        "d": "While lecturing at the whiteboard during the presentation of new grammar paradigms.",
+        "answer": "C",
+        "passage": ""
+      },
+      {
+        "q": "Which error correction technique is classified as \"Delayed Feedback\"?",
+        "a": "Prompting a peer to supply the correct past tense form while a student is speaking.",
+        "b": "Recording common language errors during a speaking activity and reviewing them on the board after the activity ends.",
+        "c": "Interrupting a student mid-sentence during a fluency task to correct a preposition.",
+        "d": "Repeating a student's incorrect sentence with rising intonation to signal an error immediately.",
+        "answer": "B",
+        "passage": ""
+      },
+      {
+        "q": "In classroom interaction patterns, what is the main benefit of replacing Teacher-Fronted (T-S) interaction with Pair Work (S-S)?",
+        "a": "It reduces the need for lesson preparation and task staging.",
+        "b": "It dramatically increases Student Talking Time (STT) and provides opportunities for authentic practice.",
+        "c": "It allows the teacher to grade individual student handwriting more accurately.",
+        "d": "It ensures that no grammatical errors occur during the speaking practice.",
+        "answer": "B",
+        "passage": ""
+      },
+      {
+        "q": "According to Uzbekistan's Teacher Professional Standard (Kasb Standarti), what is an essential element of creating a safe and inclusive learning environment?",
+        "a": "Enforcing strict seating according to exam scores to isolate low-achieving learners.",
+        "b": "Publicly reprimanding students who make grammatical errors during speaking tasks.",
+        "c": "Forbidding the use of interactive methods to preserve traditional teacher-dominated control.",
+        "d": "Ensuring physical and psychological safety where all students feel respected and supported regardless of background or ability.",
+        "answer": "D",
+        "passage": ""
+      },
+      {
+        "q": "In lesson planning, a Concept Checking Question (CCQ) for the past perfect sentence \"When Sarah arrived, the train had left\" would be:",
+        "a": "\"Can you translate this sentence into your native language?\"",
+        "b": "\"Is 'had left' an example of the past simple tense?\"",
+        "c": "\"Which action happened first: Sarah's arrival or the train leaving?\"",
+        "d": "\"What is the subject of the sentence?\"",
+        "answer": "C",
+        "passage": ""
+      },
+      {
+        "q": "According to Passage 2, constructive teacher feedback on written work should prioritize:",
+        "a": "Providing specific, actionable comments aligned with clear criteria rather than superficial correction marks.",
+        "b": "Grading papers based on handwriting neatness rather than content and organization.",
+        "c": "Red-inking every single mechanical slip to ensure total grammatical perfection.",
+        "d": "Assigning numerical marks without written comments to save time.",
+        "answer": "A",
+        "passage": "Passage 2: In written language pedagogy, the quality of teacher feedback significantly influences student writing development. Traditional marking practices often rely on \"error hunting\"—crossing out every mechanical slip in red ink—which can demotivate learners and foster writing anxiety. Contemporary research advocates criteria-based formative feedback that balances form and content. Teachers are advised to highlight positive achievements, provide clear margin annotations, and use selective error coding (e.g., indicating error types like 'sp' for spelling or 'gr' for grammar) to prompt student self-correction. Providing clear, actionable steps for revision empowers learners to take ownership of their writing trajectory."
+      },
+      {
+        "q": "What is \"selective error coding\" in written feedback as described in Passage 2?",
+        "a": "Using codes (such as 'sp' or 'gr') in margins to prompt students to self-correct their own errors.",
+        "b": "Rewriting the entire student essay from start to finish.",
+        "c": "Ignoring all grammatical errors and evaluating only word length.",
+        "d": "Assigning a single letter grade without any written notes.",
+        "answer": "A",
+        "passage": "Passage 2 (as above)"
+      },
+      {
+        "q": "When a teacher uses \"Scaffolding\" during a complex writing task, they are providing:",
+        "a": "Temporary structural support (such as sentence starters, graphic organizers, and model texts) to help learners achieve task success.",
+        "b": "Permanent answers to all exercise questions so students do not experience difficulty.",
+        "c": "A rigid grading penalty for any student who asks for clarification.",
+        "d": "Physical building materials for classroom renovation projects.",
+        "answer": "A",
+        "passage": ""
+      },
+      {
+        "q": "In classroom management, \"Proximity Control\" refers to a teacher strategy where:",
+        "a": "Students are seated strictly according to height order.",
+        "b": "The teacher uses digital surveillance software to monitor student computer screens.",
+        "c": "The teacher moves physically closer to a disengaged student to quietly encourage focus without interrupting the lesson flow.",
+        "d": "The teacher stands strictly at the front whiteboard for the entire duration of the class.",
+        "answer": "C",
+        "passage": ""
+      },
+      {
+        "q": "Based on Passage 3, what risk is associated with interrupting learners during fluency tasks?",
+        "a": "Learners may become hesitant and risk-averse in using the language.",
+        "b": "It prevents teachers from recording diagnostic assessment data.",
+        "c": "Students acquire native-like pronunciation too quickly.",
+        "d": "It increases Student Talking Time beyond recommended limits.",
+        "answer": "A",
+        "passage": "Passage 3 (as above)"
+      },
+      {
+        "q": "According to the TKT framework on lesson planning, a \"Syllabus\" is best defined as:",
+        "a": "An outline document specifying the topics, language structures, skills, and sequencing of a course of study.",
+        "b": "A daily script of exact words the teacher will speak during class.",
+        "c": "A published collection of short stories used for bedtime reading.",
+        "d": "A formal legal contract signed between parents and the school principal.",
+        "answer": "A",
+        "passage": ""
+      },
+      {
+        "q": "What is the fundamental distinction between an accommodation and a modification in inclusive language education?",
+        "a": "An accommodation alters how a student accesses learning without changing the learning standards, whereas a modification alters the actual curriculum content or learning expectations.",
+        "b": "An accommodation changes the grading rubric, while a modification alters the physical classroom seating arrangement.",
+        "c": "An accommodation is designed exclusively for high-achieving students, whereas a modification is applied only to English native speakers.",
+        "d": "An accommodation eliminates all homework assignments, while a modification increases test length.",
+        "answer": "A",
+        "passage": ""
+      },
+      {
+        "q": "Universal Design for Learning (UDL) principles recommend providing multiple means of engagement, representation, and action/expression. Which classroom practice best illustrates multiple means of representation?",
+        "a": "Providing flexible seating options such as standing desks and group clusters.",
+        "b": "Offering peer-mentoring partnerships during after-school study sessions.",
+        "c": "Presenting target concepts through text, graphic visual aids, audio explanations, and realia.",
+        "d": "Allowing students to choose between writing an essay, creating a poster, or recording a podcast to demonstrate mastery.",
+        "answer": "C",
+        "passage": ""
+      },
+      {
+        "q": "What is the primary purpose of flexible grouping in inclusive language instruction?",
+        "a": "To ensure that group members always have identical native language backgrounds.",
+        "b": "To reduce overall classroom noise by keeping high-achieving students silent.",
+        "c": "To allow students to work in dynamic, fluid groups based on changing task needs, interests, or specific skill gaps rather than permanent tracking.",
+        "d": "To permanently segregate low-achieving students into fixed remedial groups for the entire academic year.",
+        "answer": "C",
+        "passage": ""
+      },
+      {
+        "q": "In inclusive education, a student with dysgraphia who struggles with motor handwriting skills is permitted to use speech-to-text software during writing tasks. This intervention is classified as a:",
+        "a": "Direct instruction method for teaching phonemic awareness.",
+        "b": "Curriculum modification that lowers academic standards.",
+        "c": "Assistive technology accommodation that supports task execution without altering standards.",
+        "d": "Formative diagnostic test to evaluate spelling accuracy.",
+        "answer": "C",
+        "passage": ""
+      },
+      {
+        "q": "When implementing differentiated instruction under Uzbekistan's Kasb Standarti, teachers must ensure that differentiation:",
+        "a": "Targets only students at the top 10th percentile of national examination scores.",
+        "b": "Reduces overall curriculum expectations for the whole class to prevent student stress.",
+        "c": "Eliminates all standardized summative assessments in secondary schools.",
+        "d": "Maintains high cognitive expectations for all learners while providing appropriate support pathways.",
+        "answer": "D",
+        "passage": ""
+      },
+      {
+        "q": "In an inclusive EFL classroom, how should a teacher structure peer collaboration between high-proficiency and lower-proficiency students?",
+        "a": "Structure roles clearly (e.g., interviewer and recorder) so that both students contribute meaningfully to a shared task goal.",
+        "b": "Require the lower-proficiency student to remain silent while observing their partner.",
+        "c": "Grade both partners based solely on the high-proficiency student's prior test performance.",
+        "d": "Instruct the high-proficiency student to complete the entire worksheet on behalf of both partners.",
+        "answer": "A",
+        "passage": ""
+      },
+      {
+        "q": "Which of the following is an example of an instructional accommodation for a student with Auditory Processing Disorder during listening activities?",
+        "a": "Playing the audio recording at double speed to finish the activity faster.",
+        "b": "Providing written transcripts, visual cues, and pre-taught key vocabulary alongside audio inputs.",
+        "c": "Excusing the student from attending English class permanently.",
+        "d": "Replacing listening tasks with physical education exercises.",
+        "answer": "B",
+        "passage": ""
+      },
+      {
+        "q": "Instructional scaffolding is designed to be temporary. The process of gradually removing teacher support as learners gain competence is known as:",
+        "a": "Code-switching",
+        "b": "Fossilization",
+        "c": "Fading",
+        "d": "Assimilation",
+        "answer": "C",
+        "passage": ""
+      },
+      {
+        "q": "Which of the following pedagogical tools functions as a macro-scaffold during the pre-writing stage of a persuasive essay?",
+        "a": "A red pen used by the teacher for error correction.",
+        "b": "A multiple-choice vocabulary quiz given after essay submission.",
+        "c": "A graphic organizer structured around main arguments, supporting evidence, and counter-claims.",
+        "d": "A bilingual dictionary search for single word definitions.",
+        "answer": "C",
+        "passage": ""
+      },
+      {
+        "q": "How does a teacher effectively scaffold a complex authentic listening text for intermediate L2 learners?",
+        "a": "Playing the full audio file three times without any preparation or guiding questions.",
+        "b": "Translating the entire listening transcript word-for-word into L1 before playing the recording.",
+        "c": "Asking students to transcribe every single phoneme in real time without pausing.",
+        "d": "Pre-teaching key topic vocabulary, setting a clear gist task before listening, and breaking the audio into manageable segments.",
+        "answer": "D",
+        "passage": ""
+      },
+      {
+        "q": "In Bruner's scaffolding theory, \"modeling\" occurs when the educator:",
+        "a": "Evaluates students using norm-referenced standardized grading curves.",
+        "b": "Assigns independent research topics without clear guidelines.",
+        "c": "Corrects student spelling mistakes silently after class.",
+        "d": "Demonstrates the desired target performance or strategy explicitly while thinking aloud.",
+        "answer": "D",
+        "passage": ""
+      },
+      {
+        "q": "Which classroom activity combines social scaffolding with language production?",
+        "a": "Completing a 50-item multiple-choice exam independently under timed conditions.",
+        "b": "Individual silent reading of an unsimplified academic text.",
+        "c": "Copying grammar rules verbatim from the chalkboard into workbooks.",
+        "d": "Think-Pair-Share, where students first reflect individually, then discuss with a partner before sharing with the class.",
+        "answer": "D",
+        "passage": ""
+      },
+      {
+        "q": "When scaffolding reading comprehension for struggling readers, providing a \"picture walk\" before reading helps to:",
+        "a": "Test student handwriting speed.",
+        "b": "Replace the necessity of decoding written words.",
+        "c": "Grade students on visual art production.",
+        "d": "Activate relevant background schema and build conceptual expectations about the narrative.",
+        "answer": "D",
+        "passage": ""
+      },
+      {
+        "q": "What role do \"model texts\" (annotated exemplar essays) play in genre-based writing scaffolding?",
+        "a": "They serve as text passages that students must copy by hand to improve penmanship.",
+        "b": "They replace the student's need to draft an original text.",
+        "c": "They function as standardized exam scripts used exclusively for teacher grading.",
+        "d": "They provide concrete structural and linguistic benchmarks so learners can analyze register, organization, and discourse features before writing.",
+        "answer": "D",
+        "passage": ""
+      },
+      {
+        "q": "Which of the following represents an effective teacher prompt that scaffolds metacognitive reflection during a task?",
+        "a": "\"Copy the third paragraph from page 45 into your notebook.\"",
+        "b": "\"What strategies did you use when you encountered an unfamiliar word, and how well did they work?\"",
+        "c": "\"What letter grade do you expect to receive on this test?\"",
+        "d": "\"Why did you select option B on question number four?\"",
+        "answer": "B",
+        "passage": ""
+      },
+      {
+        "q": "According to Rebecca Oxford's classification, strategies such as planning learning, setting goals, self-monitoring, and evaluating one's own progress belong to which category?",
+        "a": "Compensatory strategies",
+        "b": "Affective strategies",
+        "c": "Memory strategies",
+        "d": "Metacognitive strategies",
+        "answer": "D",
+        "passage": ""
+      },
+      {
+        "q": "In feedback methodology, what is the recommended hierarchy for initiating oral error correction?",
+        "a": "Teacher correction -> Peer correction -> Self-correction",
+        "b": "Self-correction -> Peer correction -> Teacher correction",
+        "c": "Peer correction -> Teacher correction -> Self-correction",
+        "d": "Immediate teacher interruption -> Written punishment -> Grade deduction",
+        "answer": "B",
+        "passage": ""
+      },
+      {
+        "q": "When a student says \"He go to school yesterday,\" and the teacher responds \"What tense do we use for yesterday?\", which correction strategy is the teacher employing?",
+        "a": "Direct reformulative correction",
+        "b": "Metalinguistic feedback (prompting)",
+        "c": "Explicit repetition",
+        "d": "Recast",
+        "answer": "B",
+        "passage": ""
+      },
+      {
+        "q": "In oral interaction, a \"recast\" is defined as a teacher feedback technique where the teacher:",
+        "a": "Penalizes the student by deducting points from their participation mark.",
+        "b": "Reformulates the student's incorrect utterance correctly without explicitly calling out the mistake or stopping conversation flow.",
+        "c": "Writes the incorrect sentence on the board and asks the class to vote on the error.",
+        "d": "Demands that the student repeat the rule definition three times.",
+        "answer": "B",
+        "passage": ""
+      },
+      {
+        "q": "According to Passage 3, what is the main advantage of using indirect prompts and metalinguistic feedback over immediate direct correction?",
+        "a": "It eliminates the need for lesson planning in secondary schools.",
+        "b": "It encourages cognitive processing and self-correction, leading to deeper retention and learner autonomy.",
+        "c": "It allows the teacher to complete administrative paperwork during class.",
+        "d": "It guarantees that students will never make linguistic mistakes again.",
+        "answer": "B",
+        "passage": "Passage 3: Oral error correction requires delicate pedagogical decision-making regarding when, how, and which errors to address. Methodological research distinguishes between immediate explicit correction and implicit scaffolding techniques such as recasts, prompts, and metalinguistic feedback. While direct explicit correction provides immediate models, it can disrupt communication flow and heighten learner anxiety. Indirect prompts—such as clarification requests or metalinguistic cues—encourage learners to notice the gap between their output and target forms, prompting self-correction. Furthermore, effective teachers differentiate their feedback based on task goals: prioritizing immediate accuracy during controlled practice while reserving delayed selective feedback for fluency activities."
+      },
+      {
+        "q": "Based on Passage 3, how should teachers manage error correction during oral fluency tasks?",
+        "a": "Interrupt the student instantly for every minor grammatical slip.",
+        "b": "Monitor unobtrusively and provide delayed selective feedback after the activity.",
+        "c": "Ignore all errors permanently without ever addressing them.",
+        "d": "Publicly reprimand students who make errors during group discussions.",
+        "answer": "B",
+        "passage": "Passage 3 (as above)"
+      },
+      {
+        "q": "According to Passage 3, why might immediate explicit correction be problematic during communicative interaction?",
+        "a": "It forces students to write essays instead of speaking.",
+        "b": "It can disrupt communicative flow and heighten student anxiety.",
+        "c": "It prevents teachers from recording diagnostic data.",
+        "d": "It takes too little time for teachers to execute.",
+        "answer": "B",
+        "passage": "Passage 3 (as above)"
+      },
+      {
+        "q": "When conducting a \"Delayed Error Correction\" session on the board after a speaking activity, how should the teacher present the errors to maintain a safe learning environment?",
+        "a": "Deduct marks publicly from student report cards.",
+        "b": "Present anonymous sentences collected during monitoring and guide the class to analyze and correct them collaboratively.",
+        "c": "Write student names next to their mistakes on the board to hold them accountable.",
+        "d": "Require the students who made errors to stand up and explain themselves.",
+        "answer": "B",
+        "passage": ""
+      },
+      {
+        "q": "What is the primary purpose of using a \"Peer Feedback Rubric\" in secondary writing instruction?",
+        "a": "To test students' handwriting speed under timed conditions.",
+        "b": "To allow teachers to stop grading writing assignments altogether.",
+        "c": "To guide students to evaluate peer drafts against clear, objective criteria while building their own metalinguistic awareness.",
+        "d": "To encourage students to give low marks to their classmates.",
+        "answer": "C",
+        "passage": ""
       }
     ]
   },
@@ -553,6 +1003,456 @@
         "c": "Group secretary",
         "d": "Language model and drill leader",
         "answer": "D",
+        "passage": ""
+      },
+      {
+        "q": "For a short information-gap activity, what is the most suitable interaction pattern?",
+        "a": "Individual copying from the board",
+        "b": "The whole class repeats one answer",
+        "c": "Pairs each holding different information",
+        "d": "The teacher explains while learners listen",
+        "answer": "C",
+        "passage": ""
+      },
+      {
+        "q": "While pairs discuss a controversial statement, the teacher notes useful language and recurring errors for later feedback. The teacher is:",
+        "a": "Translating",
+        "b": "Monitoring",
+        "c": "Drilling",
+        "d": "Nominating",
+        "answer": "B",
+        "passage": ""
+      },
+      {
+        "q": "Which feedback is most actionable after a speaking task?",
+        "a": "‘Your examples were clear; check the past forms in your second answer.’",
+        "b": "‘You need to improve.’",
+        "c": "‘Your score is 6.’",
+        "d": "‘Some people spoke well.’",
+        "answer": "A",
+        "passage": ""
+      },
+      {
+        "q": "A teacher thanks a group for inviting every member to contribute and asks them to continue the same routine. This is:",
+        "a": "A concept check",
+        "b": "A pronunciation drill",
+        "c": "An instruction check",
+        "d": "Specific praise reinforcing positive classroom behaviour",
+        "answer": "D",
+        "passage": ""
+      },
+      {
+        "q": "Under Kasb Standarti, what is the teacher's ethical responsibility when working with learners with special educational needs in an inclusive classroom?",
+        "a": "Adapt instructional strategies, provide necessary accommodations, and foster an supportive, inclusive environment.",
+        "b": "Lower ethical standards and eliminate attendance requirements.",
+        "c": "Require special needs students to complete tasks without any accommodations.",
+        "d": "Transfer special needs students to isolated hallways during class instruction.",
+        "answer": "A",
+        "passage": ""
+      },
+      {
+        "q": "What is an appropriate instructional accommodation for a low-vision student during an English exam?",
+        "a": "Giving the student a lower grade automatically.",
+        "b": "Excusing the student from attending school permanently.",
+        "c": "Requiring the student to take an oral math test instead.",
+        "d": "Providing a large-print test booklet or electronic screen magnifier.",
+        "answer": "D",
+        "passage": ""
+      },
+      {
+        "q": "Which assessment type is administered prior to course instruction to identify learners' specific strengths and knowledge gaps in order to inform lesson planning?",
+        "a": "Summative achievement test",
+        "b": "Proficiency certification exam",
+        "c": "Norm-referenced rank test",
+        "d": "Diagnostic assessment",
+        "answer": "D",
+        "passage": ""
+      },
+      {
+        "q": "Under Kasb Standarti, creating a safe and inclusive educational environment requires teachers to:",
+        "a": "Separate students into isolated seating clusters according to exam marks.",
+        "b": "Forbid peer interaction during collaborative learning tasks.",
+        "c": "Ensure physical and psychological safety where all learners feel respected and supported without fear or discrimination.",
+        "d": "Publicly grade low-achieving students on the board to motivate them.",
+        "answer": "C",
+        "passage": ""
+      },
+      {
+        "q": "Which ELT methodology relies heavily on habit formation through stimulus-response conditioning, repetitive pattern drills, and immediate error correction?",
+        "a": "Content and Language Integrated Learning",
+        "b": "The Audio-Lingual Method",
+        "c": "Task-Based Language Teaching",
+        "d": "Silent Way",
+        "answer": "B",
+        "passage": ""
+      },
+      {
+        "q": "When a teacher uses an Instruction Checking Question (ICQ), such as \"Will you work individually or with a partner?\", what is the objective?",
+        "a": "To verify that students understand the procedural steps they must follow to execute a classroom task.",
+        "b": "To check whether students understand the grammatical definition of an adverb.",
+        "c": "To evaluate student vocabulary comprehension from the reading passage.",
+        "d": "To assign final term grades for classroom participation.",
+        "answer": "A",
+        "passage": ""
+      },
+      {
+        "q": "In lesson staging, a Concept Checking Question (CCQ) is used to check student understanding of target language meaning. Which of the following is an effective CCQ for the modal sentence \"You don't have to wear a tie\"?",
+        "a": "\"Is it necessary to wear a tie, or is it optional?\"",
+        "b": "\"Can you translate 'don't have to' into your native language?\"",
+        "c": "\"Do you understand what 'wear a tie' means?\"",
+        "d": "\"What part of speech is 'have to' in this sentence?\"",
+        "answer": "A",
+        "passage": ""
+      },
+      {
+        "q": "In CELTA lesson planning, what is the main function of a \"Stage Aim\"?",
+        "a": "To list all the page numbers of the textbook units to be covered during the month.",
+        "b": "To specify the exact pedagogical purpose of a particular activity within the overall lesson sequence.",
+        "c": "To record student attendance and behavioral incidents for administrative review.",
+        "d": "To outline the teacher's personal career growth goals for the academic year.",
+        "answer": "B",
+        "passage": ""
+      },
+      {
+        "q": "In an integrated writing lesson, which activity represents an effective \"Pre-writing\" scaffolding stage?",
+        "a": "Conducting a timed spelling test on irregular plural nouns.",
+        "b": "Brainstorming ideas, constructing mind maps, and analyzing model text structure.",
+        "c": "Grading the final essay drafts according to a national rubric.",
+        "d": "Publishing student essays on the school bulletin board.",
+        "answer": "B",
+        "passage": ""
+      },
+      {
+        "q": "In classroom management, when a teacher acts as a \"Facilitator\" during group work, what are they doing?",
+        "a": "Dictating full passages for students to copy word-for-word.",
+        "b": "Lecturing from the whiteboard and controlling every student utterance.",
+        "c": "Setting up clear task parameters, monitoring unobtrusively, and offering guidance only when needed.",
+        "d": "Grading individual student handwriting in silence at the teacher desk.",
+        "answer": "C",
+        "passage": ""
+      },
+      {
+        "q": "Which seating arrangement is most conducive to whole-class discussions while allowing easy transition into pair work?",
+        "a": "Rigid rows where all desks face forward and students cannot see one another's faces.",
+        "b": "Individual isolation booths separated by wooden dividers.",
+        "c": "A Horseshoe (U-shape) arrangement where students face each other and the central whiteboard.",
+        "d": "Placing student desks in corners facing the wall.",
+        "answer": "C",
+        "passage": ""
+      },
+      {
+        "q": "According to Passage 2, how does a teacher's \"proximity control\" influence classroom management?",
+        "a": "Standing strictly behind the teacher desk ensures total control over student behavior.",
+        "b": "Sitting in the back corner of the room prevents students from asking questions.",
+        "c": "Moving constantly around the room at high speed induces competitive anxiety among learners.",
+        "d": "Moving non-confrontationally near a disengaged student redirects focus without disrupting the flow of instruction.",
+        "answer": "D",
+        "passage": "Passage 2: Classroom management encompasses the physical, relational, and procedural strategies teachers use to create a productive learning environment. Proximity control is a subtle non-verbal management technique wherein the teacher moves physically closer to a student who is exhibiting off-task behavior. Rather than issuing a public vocal reprimand—which can cause embarrassment and disrupt the momentum of the lesson—the teacher's physical presence acts as a quiet prompt for self-regulation. Effective classroom managers combine proximity control with positive reinforcement, clear routines, and established behavioral expectations to maintain a respectful, learner-centered atmosphere."
+      },
+      {
+        "q": "What teacher role is being performed when an instructor moves around the room during a writing task to provide instant individual vocabulary assistance upon student request?",
+        "a": "Invigilator",
+        "b": "Resource",
+        "c": "Controller",
+        "d": "Assessor",
+        "answer": "B",
+        "passage": ""
+      },
+      {
+        "q": "In oral feedback, a teacher uses a \"Recast\" when they:",
+        "a": "Explain the historical etymology of the mispronounced word.",
+        "b": "Rephrase a student's incorrect utterance into a correct target form without stopping the conversational flow.",
+        "c": "Stop the entire class and deduct participation points from the speaker.",
+        "d": "Demand that the student write the grammar rule on the whiteboard ten times.",
+        "answer": "B",
+        "passage": ""
+      },
+      {
+        "q": "According to Passage 3, how does metalinguistic feedback prompt learner self-correction?",
+        "a": "By providing the exact target word immediately in L1.",
+        "b": "By offering linguistic cues, questions, or comments (e.g., 'What tense do we use for past events?') that lead learners to spot and correct their own errors.",
+        "c": "By ignoring the error completely to avoid student embarrassment.",
+        "d": "By assigning negative numerical marks on writing assignments.",
+        "answer": "B",
+        "passage": "Passage 3: Error correction techniques vary in their degree of teacher explicit intervention. Direct correction involves providing the correct language form immediately to the learner. While direct correction is efficient during controlled accuracy practice, it offers minimal cognitive engagement. In contrast, metalinguistic feedback provides cues, questions, or metalinguistic terminology—such as asking \"Is that countable or uncountable?\"—which prompts learners to retrieve their own declarative knowledge and self-correct. Research indicates that metalinguistic feedback promotes deeper cognitive processing and reinforces interlanguage restructuring more effectively than passive reception of direct corrections."
+      },
+      {
+        "q": "Based on Passage 3, what is a primary theoretical benefit of using metalinguistic feedback over direct explicit correction?",
+        "a": "It guarantees 100% native-like pronunciation within one week.",
+        "b": "It promotes deeper cognitive processing and reinforces interlanguage restructuring.",
+        "c": "It eliminates the need for formative assessment rubrics.",
+        "d": "It allows the teacher to finish class early.",
+        "answer": "B",
+        "passage": "Passage 3 (as above)"
+      },
+      {
+        "q": "During a freer oral fluency activity, when is the most appropriate time for the teacher to conduct error correction?",
+        "a": "Never correct any errors under any circumstances, even after the lesson ends.",
+        "b": "Stop the whole class instantly and ask peers to laugh at the mistake.",
+        "c": "Immediately interrupt the student mid-sentence the moment a slip occurs.",
+        "d": "Note recurring structural errors quietly during monitoring and address them during a delayed feedback session after the activity.",
+        "answer": "D",
+        "passage": ""
+      },
+      {
+        "q": "In an inclusive EFL classroom, what is the difference between an instructional \"accommodation\" and a \"modification\"?",
+        "a": "Accommodations alter how a student learns or accesses material without lowering standards, whereas modifications alter the core content or expectations of the curriculum.",
+        "b": "Accommodations change the curriculum standards, while modifications change classroom seating.",
+        "c": "Accommodations are used only for gifted students, while modifications apply to all students.",
+        "d": "Accommodations lower test scores, while modifications double exam time.",
+        "answer": "A",
+        "passage": ""
+      },
+      {
+        "q": "Which strategy illustrates Universal Design for Learning (UDL) principles regarding multiple means of representation?",
+        "a": "Presenting a reading topic using text, audio recordings, graphic diagrams, and visual video clips.",
+        "b": "Requiring all students to listen silently to a 45-minute teacher lecture without visual aids.",
+        "c": "Grading all students based exclusively on a single written multiple-choice test.",
+        "d": "Forbidding the use of digital media in secondary English classrooms.",
+        "answer": "A",
+        "passage": ""
+      },
+      {
+        "q": "When scaffolding a complex listening task for lower-proficiency learners, which technique is most effective?",
+        "a": "Pre-teach key vocabulary, break the text into short segments, and provide graphic organizers or sentence starters.",
+        "b": "Require students to transcribe every word phonetically on their first attempt.",
+        "c": "Replace listening practice with individual silent dictionary copying.",
+        "d": "Play the audio track once at double speed without any preparation.",
+        "answer": "A",
+        "passage": ""
+      },
+      {
+        "q": "In CELTA lesson planning, what is the primary objective of a Concept Checking Question (CCQ)?",
+        "a": "To grade student oral fluency under exam conditions.",
+        "b": "To verify learner understanding of target language meaning without relying on direct translation.",
+        "c": "To test whether students can translate the target structure into L1.",
+        "d": "To check if students have memorized the spelling of the word.",
+        "answer": "B",
+        "passage": ""
+      },
+      {
+        "q": "According to the TKT framework, what is the primary teacher role during a communicative fluency practice activity?",
+        "a": "Language dictator",
+        "b": "Monitor and unobtrusive feedback collector",
+        "c": "Dominant controller and frontal lecturer",
+        "d": "Strict exam invigilator",
+        "answer": "B",
+        "passage": ""
+      },
+      {
+        "q": "In second language writing feedback, \"selective error coding\" involves:",
+        "a": "Red-inking every single error across the entire draft.",
+        "b": "Assigning a single impressionistic letter grade without comments.",
+        "c": "Rewriting the entire student essay on the whiteboard.",
+        "d": "Using marginal codes (e.g., 'WO' for word order, 'T' for tense) to prompt student self-correction during revision.",
+        "answer": "D",
+        "passage": ""
+      },
+      {
+        "q": "Universal Design for Learning (UDL) principles emphasize providing multiple means of representation, which means:",
+        "a": "Presenting instructional content through text, audio visual aids, graphic models, and hands-on materials.",
+        "b": "Isolating low-achieving students in separate classrooms.",
+        "c": "Eliminating digital media from language instruction.",
+        "d": "Grading all students strictly on written essay tests.",
+        "answer": "A",
+        "passage": ""
+      },
+      {
+        "q": "According to Kasb Standarti, establishing a safe and inclusive educational environment requires teachers to:",
+        "a": "Maintain physical and psychological safety where all learners feel respected and supported without discrimination.",
+        "b": "Separate students into isolated groups based on family background.",
+        "c": "Publicly list low exam scores on the classroom door.",
+        "d": "Force disengaged students to stand in the hallway for the entire lesson.",
+        "answer": "A",
+        "passage": ""
+      },
+      {
+        "q": "What is the primary role of scaffolding in a CLIL classroom when students encounter complex academic content in an L2?",
+        "a": "Providing temporary visual, graphic, and linguistic support tools to help students comprehend content and express complex ideas.",
+        "b": "Translating the entire lesson into the students' native language so they do not have to process L2.",
+        "c": "Reducing academic content expectations to a primary school level.",
+        "d": "Giving students extra homework assignments when they fail a test.",
+        "answer": "A",
+        "passage": ""
+      },
+      {
+        "q": "In CLT, classroom interaction patterns should emphasize:",
+        "a": "90% Teacher Talking Time (TTT) and frontal lecturing.",
+        "b": "Silent individual work with zero peer communication.",
+        "c": "Teacher-led choral recitation of textbook pages.",
+        "d": "Student-student interaction (pair work, group work, mingling) to maximize meaningful communication.",
+        "answer": "D",
+        "passage": ""
+      },
+      {
+        "q": "Which of the following is an example of a Concept Checking Question (CCQ) used during guided discovery of \"He must have missed the train\"?",
+        "a": "\"Can you translate 'must have missed' into Uzbek?\"",
+        "b": "\"What part of speech is 'missed'?\"",
+        "c": "\"How many letters are in the word 'missed'?\"",
+        "d": "\"Are we 100% certain he missed the train, or are we almost certain based on evidence?\"",
+        "answer": "D",
+        "passage": ""
+      },
+      {
+        "q": "In a CLIL science lesson on water cycles, the teacher provides sentence starters like \"First, water evaporates because...\" to scaffold:",
+        "a": "Subject-matter academic language and causal discourse structure.",
+        "b": "Rote memorization of Latin vocabulary roots.",
+        "c": "Physical athletic performance during sports.",
+        "d": "Translation speed of poetry.",
+        "answer": "A",
+        "passage": ""
+      },
+      {
+        "q": "Under Uzbekistan's Teacher Professional Standard (Kasb Standarti), what is the primary objective of instructional lesson planning?",
+        "a": "To prepare students exclusively for physical education sports competitions.",
+        "b": "To design learner-centered instruction aligned with curriculum standards and student developmental needs.",
+        "c": "To copy legacy lesson plans from historical textbooks without adaptation.",
+        "d": "To ensure that 100% of class time is spent on silent teacher writing on the chalkboard.",
+        "answer": "B",
+        "passage": ""
+      },
+      {
+        "q": "What is the primary purpose of fostering metacognitive strategies (such as planning, self-monitoring, and self-evaluation) in L2 learners?",
+        "a": "To reduce the physical size of language textbooks.",
+        "b": "To enable students to memorize bilingual dictionary entries in alphabetical order.",
+        "c": "To empower learners to manage, evaluate, and adapt their own learning processes autonomously.",
+        "d": "To allow teachers to stop preparing lesson plans for secondary school classes.",
+        "answer": "C",
+        "passage": ""
+      },
+      {
+        "q": "In an inclusive secondary classroom, how does an instructional accommodation differ from a curriculum modification?",
+        "a": "Accommodations are used only for primary students, whereas modifications apply to university level.",
+        "b": "Accommodations lower academic grading criteria, whereas modifications double physical exam time.",
+        "c": "Accommodations adapt how learning is accessed without changing core standards, whereas modifications adjust the complexity or level of learning expectations.",
+        "d": "Accommodations alter core learning standards, whereas modifications change classroom seating.",
+        "answer": "C",
+        "passage": ""
+      },
+      {
+        "q": "Based on Passage 1, how does Kasb Standarti define inclusive practice in secondary classrooms?",
+        "a": "By eliminating all academic standards for students from rural backgrounds.",
+        "b": "By requiring all students to complete identical unadjusted assignments in silence.",
+        "c": "By isolating low-achieving students in separate study halls during English lessons.",
+        "d": "By adapting learning tasks for diverse student abilities while preserving physical and emotional safety.",
+        "answer": "D",
+        "passage": "Passage 1 (as above)"
+      },
+      {
+        "q": "As used in Passage 1, the phrase \"actionable feedback\" refers to:",
+        "a": "Specific, constructive guidance that students can apply directly to improve their learning.",
+        "b": "Numerical percentages printed on state diplomas without comments.",
+        "c": "Public vocal reprimands delivered in front of school inspectors.",
+        "d": "Confidential administrative files shared with private tutoring companies.",
+        "answer": "A",
+        "passage": "Passage 1 (as above)"
+      },
+      {
+        "q": "In inclusive ELT pedagogy, what does Universal Design for Learning (UDL) advocate regarding instructional presentation?",
+        "a": "Delivering 100% of course content through silent textbook reading.",
+        "b": "Providing multiple means of representation (visual, auditory, graphic, hands-on) to accommodate diverse learning styles.",
+        "c": "Using only native-language audio recordings in English classes.",
+        "d": "Eliminating all digital media and visual aids from secondary schools.",
+        "answer": "B",
+        "passage": ""
+      },
+      {
+        "q": "What is the main objective of using \"Peer Assessment\" in secondary English writing instruction?",
+        "a": "To allow the teacher to stop grading essays altogether.",
+        "b": "To encourage students to assign low marks to their classmates out of competition.",
+        "c": "To test students' handwriting speed under exam conditions.",
+        "d": "To develop students' critical evaluation skills, audience awareness, and metacognitive control over their writing.",
+        "answer": "D",
+        "passage": ""
+      },
+      {
+        "q": "In inclusive education, a student with ADHD benefits most from which classroom management strategy?",
+        "a": "Publicly reprimanding the student whenever they shift in their seat.",
+        "b": "Assigning the student double homework assignments as a disciplinary measure.",
+        "c": "Requiring the student to sit still and silent for 90 consecutive minutes.",
+        "d": "Providing clear routines, short chunked tasks, visual timers, and movement breaks.",
+        "answer": "D",
+        "passage": ""
+      },
+      {
+        "q": "In an inclusive classroom, how can a teacher support a hearing-impaired student during a listening skills lesson?",
+        "a": "Providing written transcripts, visual captions, clear lip-positioning, and assistive listening technology.",
+        "b": "Excusing the student from attending English class permanently.",
+        "c": "Playing the audio recording at double volume without visual support.",
+        "d": "Requiring the student to take an oral speech test instead.",
+        "answer": "A",
+        "passage": ""
+      },
+      {
+        "q": "According to Passage 3, what foundational principle drives inclusive education?",
+        "a": "Every learner has an equal right to high-quality instruction within a unified educational environment.",
+        "b": "High-achieving students should be taught in separate private institutions.",
+        "c": "All students must complete identical unadjusted assignments at the exact same pace.",
+        "d": "Foreign language learning should be restricted to urban secondary schools.",
+        "answer": "A",
+        "passage": "Passage 3: Inclusive education is founded on the principle that every learner, regardless of physical, cognitive, or socioeconomic differences, has an equal right to high-quality instruction within a unified educational environment. In foreign language teaching, inclusion requires moving beyond a \"one-size-fits-all\" curriculum toward differentiated instruction. Differentiated instruction involves modifying content, process, products, or learning environments based on individual readiness, interests, and learning profiles. For instance, rather than assigning an identical written task to all students, a teacher might offer tiered assignments with varied scaffolding levels. Furthermore, inclusive assessment utilizes flexible evaluation formats—such as oral presentations, visual portfolios, or digital projects—ensuring that students can demonstrate their true linguistic competence without being hindered by non-construct barriers."
+      },
+      {
+        "q": "Based on Passage 3, how does differentiated instruction address learner diversity?",
+        "a": "By modifying content, process, products, or learning environments based on readiness, interests, and profiles.",
+        "b": "By lowering overall educational standards for all students across the board.",
+        "c": "By requiring teachers to lecture exclusively in the native language.",
+        "d": "By eliminating foreign language subjects from the school curriculum.",
+        "answer": "A",
+        "passage": "Passage 3 (as above)"
+      },
+      {
+        "q": "According to Passage 3, what is an example of a tiered assignment in an inclusive classroom?",
+        "a": "Offering tasks with varied scaffolding levels tailored to student readiness.",
+        "b": "Requiring low-proficiency students to copy reading texts silently.",
+        "c": "Forcing all students to memorize 50 irregular verbs in 10 minutes.",
+        "d": "Assigning identical workbook pages without teacher feedback.",
+        "answer": "A",
+        "passage": "Passage 3 (as above)"
+      },
+      {
+        "q": "In inclusive language teaching, what is an effective scaffolding strategy for supporting a dyslexic student during reading activities?",
+        "a": "Giving the student a lower mark automatically without evaluation.",
+        "b": "Using clear sans-serif fonts, increased line spacing, visual graphic organizers, and audio-assisted reading materials.",
+        "c": "Forbidding the student from using audio recordings or visual aids.",
+        "d": "Requiring the student to read complex texts aloud in front of the whole class under timing pressure.",
+        "answer": "B",
+        "passage": ""
+      },
+      {
+        "q": "Under Kasb Standarti, what is the teacher's role in cultivating patriotism and civic responsibility in secondary students?",
+        "a": "Rejecting international foreign language learning entirely.",
+        "b": "Forbidding students from discussing national traditions in class.",
+        "c": "Integrating national values, cultural heritage, and civic awareness into English language learning topics.",
+        "d": "Encouraging students to ignore local cultural heritage.",
+        "answer": "C",
+        "passage": ""
+      },
+      {
+        "q": "As used in Passage 1, the word \"scaffold\" refers to:",
+        "a": "An examination scoring key used by school inspectors.",
+        "b": "Instructional support structures that assist learners in reaching higher levels of competence.",
+        "c": "A list of 500 isolated vocabulary headwords.",
+        "d": "A physical wooden structure used in building maintenance.",
+        "answer": "B",
+        "passage": "Passage 1 (as above)"
+      },
+      {
+        "q": "Which of the following is an effective Concept Checking Question (CCQ) for the modal structure \"You shouldn't have bought that expensive coat\"?",
+        "a": "\"Can you translate 'shouldn't have bought' into your native language?\"",
+        "b": "\"Do you understand what 'expensive' means?\"",
+        "c": "\"What part of speech is 'shouldn't'?\"",
+        "d": "\"Did you buy the coat? (Yes) Was buying it a good idea? (No)\"",
+        "answer": "D",
+        "passage": ""
+      },
+      {
+        "q": "Which teaching practice reflects Universal Design for Learning (UDL) principles regarding multiple means of engagement?",
+        "a": "Offering choices in learning tasks, connecting content to student interests, and fostering collaborative learning.",
+        "b": "Grading all students based on a single written multiple-choice test.",
+        "c": "Forbidding the use of group work in secondary English classes.",
+        "d": "Requiring all students to complete identical unadjusted silent reading tasks.",
+        "answer": "A",
         "passage": ""
       }
     ]

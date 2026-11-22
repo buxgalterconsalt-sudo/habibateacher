@@ -758,23 +758,23 @@ function seedPreparedTests() {
       let lesson = db.prepare("SELECT * FROM lessons WHERE course_id = ? AND title = ? ORDER BY id LIMIT 1").get(course.id, lessonTitle);
       if (!lesson) {
         const position = Number(set.number) + (set.category === "attestation" ? 7 : 0);
-        const duration = set.category === "tkt" ? 40 : 90;
+        const duration = set.category === "tkt" ? 80 : 90;
         const info = db.prepare(
           "INSERT INTO lessons (course_id, title, type, content, duration_min, position, price, is_pro, max_score, question_count, created_at) VALUES (?, ?, 'test', '', ?, ?, 0, 0, ?, ?, ?)"
         ).run(course.id, lessonTitle, duration, position, set.questions.length, set.questions.length, nowISO());
         lesson = { id: Number(info.lastInsertRowid), question_count: 0 };
       }
       const currentCount = Number(db.prepare("SELECT COUNT(*) AS n FROM questions WHERE lesson_id = ?").get(lesson.id)?.n || 0);
-      if (currentCount > 0) continue;
+      if (currentCount >= set.questions.length) continue;
       db.exec("BEGIN IMMEDIATE");
       try {
-        for (const question of set.questions) {
+        for (const question of set.questions.slice(currentCount)) {
           const correct = typeof question.answer === "string" ? "ABCD".indexOf(question.answer.toUpperCase()) + 1 : Number(question.correct);
           insertQuestion.run(lesson.id, question.q || question.text, question.a || question.options?.[0], question.b || question.options?.[1], question.c || question.options?.[2], question.d || question.options?.[3], correct, question.passage || "");
         }
         const count = set.questions.length;
         db.prepare("UPDATE lessons SET type = 'test', question_count = ?, max_score = ?, duration_min = ? WHERE id = ?")
-          .run(count, count, set.category === "tkt" ? 40 : 90, lesson.id);
+          .run(count, count, set.category === "tkt" ? 80 : 90, lesson.id);
         db.exec("COMMIT");
         addedSets += 1;
       } catch (error) {
