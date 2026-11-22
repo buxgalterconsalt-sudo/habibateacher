@@ -810,11 +810,10 @@ function seedPreparedTests() {
     const sourceNumber = Number(set.number);
     const number = set.category === "mock" ? sourceNumber + 10 : sourceNumber;
     if (!Number.isInteger(number) || number < 2 || number > 20 || !Array.isArray(set.questions) || set.questions.length !== 50) continue;
-    const fallbackPassage = String(set.questions.find((question) => String(question.passage || "").trim())?.passage || "").trim();
     const questions = set.questions.map((question, index) => {
       const prepared = replacementsByTest.get(`${number}:${index + 1}`) || question;
-      return index < 15 && !String(prepared.passage || "").trim() && fallbackPassage
-        ? { ...prepared, passage: fallbackPassage }
+      return index < preparedReading.length && preparedReading[index]?.passage
+        ? { ...prepared, passage: preparedReading[index].passage }
         : prepared;
     });
     sources[0].push({
@@ -873,7 +872,7 @@ function seedPreparedTests() {
       }
       if (currentCount >= set.questions.length) {
         if (set.category === "attestation" && set.layout === "attestation-50-sections" &&
-            metaGet("attestation_first15_passages_2026_11", "") !== "1") {
+            metaGet("attestation_first15_passages_2026_11_v2", "") !== "1") {
           const existingRows = db.prepare("SELECT id, passage FROM questions WHERE lesson_id = ? ORDER BY id").all(lesson.id);
           const updatePassage = db.prepare("UPDATE questions SET passage = ? WHERE id = ?");
           for (let index = 0; index < Math.min(15, set.questions.length, existingRows.length); index += 1) {
@@ -939,7 +938,7 @@ function seedPreparedTests() {
     });
     if (migrated.length === expected.size) metaSet("attestation_unique_questions_2026_11", "1");
   }
-  if (metaGet("attestation_first15_passages_2026_11", "") !== "1") {
+  if (metaGet("attestation_first15_passages_2026_11_v2", "") !== "1") {
     const expected = new Set(sources[0].filter((set) => Number(set.number) >= 2 && Number(set.number) <= 20).map((set) => Number(set.number)));
     const migrated = [...expected].filter((number) => {
       const lesson = db.prepare("SELECT id FROM lessons WHERE title = ? ORDER BY id LIMIT 1").get(`Attestatsiya 2026 · Sinov ${number}`);
@@ -947,7 +946,7 @@ function seedPreparedTests() {
       const rows = db.prepare("SELECT passage FROM questions WHERE lesson_id = ? ORDER BY id LIMIT 15").all(lesson.id);
       return rows.length === 15 && rows.every((row) => String(row.passage || "").trim());
     });
-    if (migrated.length === expected.size) metaSet("attestation_first15_passages_2026_11", "1");
+    if (migrated.length === expected.size) metaSet("attestation_first15_passages_2026_11_v2", "1");
   }
   const expectedReadingSets = sources[0].filter((set) => set.category === "attestation" &&
     set.questions.length === 50 && ((Number(set.number) >= 1 && Number(set.number) <= 10) || set.layout === "attestation-50-sections")).length;
@@ -3926,6 +3925,7 @@ function dashboardPage(user) {
   const completed = lessons.filter((l) => done.has(l.id)).length;
   const pct = total ? Math.round((completed / total) * 100) : 0;
   const next = lessons.find((l) => !done.has(l.id));
+  const nextNeedsPlan = !!(next && next.type === "video" && !isIntroVideoLesson(next.id) && !hasLessonPermission(user.id, next.id));
   const clock = tashkentClock();
   const activityDays = db.prepare("SELECT DISTINCT substr(completed_at, 1, 10) AS day FROM progress WHERE user_id = ? AND completed_at <> '' ORDER BY day DESC LIMIT 400").all(user.id);
   const dayStamp = (value) => {
@@ -4018,14 +4018,14 @@ function dashboardPage(user) {
 
   const nextCard = next
     ? `<a class="dash-hero-card" href="${
-        next.type === "test" ? `/test/${next.id}` : `/lesson/${next.id}`
+        nextNeedsPlan ? "/plans" : next.type === "test" ? `/test/${next.id}` : `/lesson/${next.id}`
       }">
         <span class="dash-hero-ico"><svg viewBox="0 0 24 24"><path d="m9 7 8 5-8 5z"/></svg></span>
         <span class="dash-hero-copy">
           <small>${h(next.course_title)}</small>
           <b>${h(next.title)}</b>
-          <span class="muted">${TYPE_LABEL[next.type] || next.type} | ${
-        next.type === "test" ? `${Number(next.duration_min) || 30} daqiqa` : "dars"
+          <span class="muted">${nextNeedsPlan ? "Tarif talab qilinadi" : TYPE_LABEL[next.type] || next.type} | ${
+        nextNeedsPlan ? "Kirishni ochish" : next.type === "test" ? `${Number(next.duration_min) || 30} daqiqa` : "dars"
       } | ${completed}/${total} tugatilgan</span>
         <span class="dash-hero-progress"><i><b style="width:${pct}%"></b></i><small>${completed}/${total} dars tugatilgan</small></span>
         </span>
@@ -4038,12 +4038,13 @@ function dashboardPage(user) {
       <div class="dl-group-head"><h3>Darslar</h3><span>${lessons.length} ta video</span></div>
       <div class="dl-grid">${lessons.map((l, i) => {
         const isDone = done.has(l.id);
-        const href = l.type === "test" ? `/test/${l.id}` : `/lesson/${l.id}`;
+        const lockedVideo = l.type === "video" && !isIntroVideoLesson(l.id) && !hasLessonPermission(user.id, l.id);
+        const href = lockedVideo ? "/plans" : l.type === "test" ? `/test/${l.id}` : `/lesson/${l.id}`;
         const totalNotice = l.type === "test" ? "Test" : `${Number(l.duration_min) || 0} daq`;
         return `<a class="dl-card${isDone ? " done" : ""}" href="${href}" data-title="${h(
           (l.title + " " + l.course_title).toLowerCase()
         )}">
-          <span class="dl-top"><span class="dl-ico">${isDone ? "&#10003;" : i + 1}</span><span class="dl-status${isDone ? " done" : ""}">${isDone ? "Tugatildi" : l.type === "test" ? "Test" : "Ochish"}</span></span>
+          <span class="dl-top"><span class="dl-ico">${isDone ? "&#10003;" : i + 1}</span><span class="dl-status${isDone ? " done" : ""}">${isDone ? "Tugatildi" : lockedVideo ? "Tarif kerak" : l.type === "test" ? "Test" : "Ochish"}</span></span>
           <span class="dl-module">${h(l.course_title)}</span><b class="dl-title">${h(l.title)}</b>
           <span class="dl-sub">${h(l.course_title)}</span>
           <span class="dl-foot"><span class="dl-time">${totalNotice}</span><span class="dl-arrow">&rarr;</span></span>
@@ -6624,7 +6625,15 @@ const server = http.createServer(async (req, res) => {
   const lessons = db
 .prepare("SELECT * FROM lessons WHERE course_id = ? ORDER BY position, id")
 .all(course.id);
-  const visibleLessons = lessons.filter((lesson) => admin || lesson.type === "video" || (lesson.type === "test" && Number(lesson.price) === 0) || hasLessonPermission(user.id, lesson.id));
+  const visibleLessons = lessons.filter((lesson, index) => {
+    if (admin || (lesson.type === "video" && (isIntroVideoLesson(lesson.id) || hasLessonPermission(user.id, lesson.id))) ||
+        (lesson.type === "test" && Number(lesson.price) === 0) || hasLessonPermission(user.id, lesson.id)) {
+      const previous = lessons[index - 1];
+      if (!admin && lesson.type === "test" && previous?.type === "video" && !isIntroVideoLesson(previous.id) && !hasLessonPermission(user.id, previous.id)) return false;
+      return true;
+    }
+    return false;
+  });
   const progress = Object.fromEntries(
   db
 .prepare("SELECT lesson_id, score FROM progress WHERE user_id = ?")
@@ -6638,7 +6647,7 @@ const server = http.createServer(async (req, res) => {
 .map((l, i) => {
   const hasProgress = Object.prototype.hasOwnProperty.call(progress, l.id);
   const finished = hasProgress && (l.type !== "test" || Number(progress[l.id]) >= 80);
-  const firstVideoGate = l.type === "video" && !admin && !isIntroVideoLesson(l.id) ? firstVideoTasksGate(user.id, l.course_id) : { locked: false };
+  const firstVideoGate = l.type === "video" && !admin && !isIntroVideoLesson(l.id) && !hasLessonPermission(user.id, l.id) ? { locked: true } : { locked: false };
   return `<a class="lesson-row" href="/lesson/${l.id}">
   <span class="num">${i + 1}</span>
   <span class="lesson-main">
@@ -6647,7 +6656,7 @@ const server = http.createServer(async (req, res) => {
   l.type === "test" ? ". test": ""
   }</small>
   </span>
-  ${finished ? `<span class="badge done">Tugatilgan${typeof progress[l.id] === "number" ? `. ${progress[l.id]}%`: ""}</span>`: `<span class="badge">${firstVideoGate.locked ? "1-dars topshiriqlaridan so'ng" : l.type === "video" && isIntroVideoLesson(l.id) ? "Bepul ochiq" : l.type === "video" && !hasLessonPermission(user.id, l.id) ? "40% bepul ko'rish" : "Ochish"}</span>`}
+  ${finished ? `<span class="badge done">Tugatilgan${typeof progress[l.id] === "number" ? `. ${progress[l.id]}%`: ""}</span>`: `<span class="badge">${firstVideoGate.locked ? "Tarif kerak" : l.type === "video" && isIntroVideoLesson(l.id) ? "Bepul ochiq" : l.type === "video" && !hasLessonPermission(user.id, l.id) ? "Tarif kerak" : "Ochish"}</span>`}
   </a>`;
   })
 .join("")
@@ -6683,6 +6692,7 @@ const server = http.createServer(async (req, res) => {
   const previousLesson = db.prepare("SELECT id, type FROM lessons WHERE course_id = ? AND (position < ? OR (position = ? AND id < ?)) ORDER BY position DESC, id DESC LIMIT 1")
     .get(lesson.course_id, lesson.position, lesson.position, lesson.id);
   const videoFollowup = !!(previousLesson && previousLesson.type === "video");
+  if (videoFollowup && !admin && (!isIntroVideoLesson(previousLesson.id) && (!user || !hasLessonPermission(user.id, previousLesson.id)))) return redirect(res, "/plans");
   let questions = db
 .prepare("SELECT * FROM questions WHERE lesson_id = ? ORDER BY id")
 .all(lesson.id);
@@ -6832,13 +6842,10 @@ const server = http.createServer(async (req, res) => {
   res.end(JSON.stringify({ ok: false }));
   return;
   }
-  if (!admin && !isIntroVideoLesson(watchedLesson.id)) {
-    const gate = firstVideoTasksGate(user.id, watchedLesson.course_id);
-    if (gate.locked) {
-      res.writeHead(423, { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" });
-      res.end(JSON.stringify({ ok: false, locked: true, reason: "first_lesson_tasks" }));
-      return;
-    }
+  if (!admin && !isIntroVideoLesson(watchedLesson.id) && !hasLessonPermission(user.id, watchedLesson.id)) {
+    res.writeHead(423, { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" });
+    res.end(JSON.stringify({ ok: false, locked: true, reason: "plan" }));
+    return;
   }
   const seconds = Math.max(0, Math.min(24 * 3600, Number(fields.seconds) || 0));
   const duration = Math.max(0, Math.min(24 * 3600, Number(fields.duration) || 0));
@@ -6885,10 +6892,7 @@ const server = http.createServer(async (req, res) => {
   const lesson = db.prepare("SELECT * FROM lessons WHERE id = ?").get(Number(lessonMatch[1]));
   if (!lesson) return notFound(res, user, admin);
   if (!admin && lesson.type !== "test" && lesson.type !== "video" && !hasLessonPermission(user.id, lesson.id)) return redirect(res, "/plans");
-  if (!admin && lesson.type === "video" && !isIntroVideoLesson(lesson.id)) {
-    const gate = firstVideoTasksGate(user.id, lesson.course_id);
-    if (gate.locked) return redirect(res, gate.reason === "task" ? `/test/${gate.lessonId}?start=1` : `/lesson/${gate.lessonId}`);
-  }
+  if (!admin && lesson.type === "video" && !isIntroVideoLesson(lesson.id) && !hasLessonPermission(user.id, lesson.id)) return redirect(res, "/plans");
   const videoPreviewOnly = lesson.type === "video" && !admin && !hasLessonPermission(user.id, lesson.id) && !isIntroVideoLesson(lesson.id);
   if (!admin && lesson.type === "test" && Number(lesson.price) > 0 && !testOwned(user.id, lesson.id)) return redirect(res, `/test/${lesson.id}`);
   if (!admin) {
@@ -7424,7 +7428,7 @@ const server = http.createServer(async (req, res) => {
             }
             if (playerState !== 1) return;
             maxWatched = Math.max(maxWatched, current); paint(); sync(false);
-          }, 150);
+          }, 1000);
         }
         if (btn) { btn.disabled = true; btn.textContent = 'Video tugagach faollashadi'; btn.addEventListener('click', finish); }
       })();
@@ -7450,13 +7454,10 @@ const server = http.createServer(async (req, res) => {
   }
   const lesson = db.prepare("SELECT * FROM lessons WHERE id = ?").get(mediaLessonId);
   if (!lesson || lesson.type !== "video" || !lesson.file_id) return notFound(res, user, admin);
-  if (!admin && !isIntroVideoLesson(lesson.id)) {
-    const gate = firstVideoTasksGate(user.id, lesson.course_id);
-    if (gate.locked) {
-      res.writeHead(403, { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" });
-      res.end("Avval birinchi video dars va uning topshiriqlarini bajaring.");
-      return;
-    }
+  if (!admin && !isIntroVideoLesson(lesson.id) && !hasLessonPermission(user.id, lesson.id)) {
+    res.writeHead(403, { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" });
+    res.end("Bu videoni ko'rish uchun faol tarif kerak.");
+    return;
   }
   const previewOnly = !admin && !hasLessonPermission(user.id, lesson.id) && !isIntroVideoLesson(lesson.id);
   if (previewOnly) {
