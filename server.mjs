@@ -715,12 +715,6 @@ function ensureDemoContent() {
   price
   });
 
-  const mockLikes = [4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0];
-  const mockViews = [71, 19, 9, 5, 10, 12, 3, 12, 6, 4, 7, 7, 3, 8, 13, 2, 4, 4, 7, 1];
-  const mocks = Array.from({ length: 20 }, (_, i) =>
-  t(`2026 FALL MOCK ${i + 1}`, 105, 50, 100, mockLikes[i], mockViews[i], 20000)
-  );
-
   const readings = [t("Advanced Passage 1", 60, 9, 0, 0, 50, 2000)];
 
   const tkt1 = [t("TKT 1-modul mock testi 1", 80, 80, 80, 2, 16)];
@@ -733,13 +727,6 @@ function ensureDemoContent() {
   description: "O'qituvchilar uchun bepul toifa testlari.",
   category: "attestation"
   });
-  const mocksId = ensureCourse({
-  title: "2026 KUZ PLATFORMA MOCKLARI",
-  description: "2026 kuz mavsumi platforma mock testlari.",
-  category: "attestation"
-  });
-  mocks.forEach((spec, i) => putTest(mocksId, spec, i + 1));
-
   const readingsId = ensureCourse({
   title: "Attestatsiya Readinglari",
   description: "Attestatsiya uchun advanced reading passage testlari.",
@@ -786,7 +773,7 @@ for (const [title, description] of [
 function seedPreparedTests() {
   const attestationSets = JSON.parse(fs.readFileSync(path.join(__dirname, "seed-data", "attestation-mocks.json"), "utf8"));
   const sources = [
-    attestationSets.filter((set) => set.category === "mock"),
+    [],
     JSON.parse(fs.readFileSync(path.join(__dirname, "seed-data", "tkt-modules-1-2.json"), "utf8")),
     JSON.parse(fs.readFileSync(path.join(__dirname, "seed-data", "tkt-module-3.json"), "utf8")),
   ];
@@ -972,6 +959,61 @@ function replaceToifaTestBank() {
 }
 
 replaceToifaTestBank();
+
+function removeAttestationMockTests() {
+  const migrationKey = "attestation_mock_tests_removed_2026_11";
+  if (metaGet(migrationKey, "") === "1") return;
+  const course = db.prepare("SELECT id FROM courses WHERE title = '2026 KUZ PLATFORMA MOCKLARI' ORDER BY id LIMIT 1").get();
+  if (!course) {
+    metaSet(migrationKey, "1");
+    return;
+  }
+  const lessonIds = db.prepare("SELECT id FROM lessons WHERE course_id = ? AND type = 'test'").all(course.id).map((row) => Number(row.id));
+  db.exec("BEGIN IMMEDIATE");
+  try {
+    if (lessonIds.length) {
+      const marks = lessonIds.map(() => "?").join(",");
+      const questionIds = db.prepare(`SELECT id FROM questions WHERE lesson_id IN (${marks})`).all(...lessonIds).map((row) => Number(row.id));
+      const duelIds = db.prepare(`SELECT id FROM duels WHERE lesson_id IN (${marks})`).all(...lessonIds).map((row) => Number(row.id));
+      const tournamentIds = db.prepare(`SELECT id FROM tournaments WHERE test_id IN (${marks})`).all(...lessonIds).map((row) => Number(row.id));
+      if (duelIds.length) {
+        const duelMarks = duelIds.map(() => "?").join(",");
+        db.prepare(`DELETE FROM duel_questions WHERE duel_id IN (${duelMarks})`).run(...duelIds);
+        db.prepare(`DELETE FROM duel_starts WHERE duel_id IN (${duelMarks})`).run(...duelIds);
+        db.prepare(`DELETE FROM duel_plays WHERE duel_id IN (${duelMarks})`).run(...duelIds);
+        db.prepare(`DELETE FROM duels WHERE id IN (${duelMarks})`).run(...duelIds);
+      }
+      if (tournamentIds.length) {
+        const tournamentMarks = tournamentIds.map(() => "?").join(",");
+        const matchIds = db.prepare(`SELECT id FROM tournament_matches WHERE tournament_id IN (${tournamentMarks})`).all(...tournamentIds).map((row) => Number(row.id));
+        if (matchIds.length) {
+          const matchMarks = matchIds.map(() => "?").join(",");
+          db.prepare(`DELETE FROM tournament_starts WHERE match_id IN (${matchMarks})`).run(...matchIds);
+        }
+        db.prepare(`DELETE FROM tournament_matches WHERE tournament_id IN (${tournamentMarks})`).run(...tournamentIds);
+        db.prepare(`DELETE FROM tournament_entries WHERE tournament_id IN (${tournamentMarks})`).run(...tournamentIds);
+        db.prepare(`DELETE FROM tournament_questions WHERE tournament_id IN (${tournamentMarks})`).run(...tournamentIds);
+        db.prepare(`DELETE FROM tournaments WHERE id IN (${tournamentMarks})`).run(...tournamentIds);
+      }
+      if (questionIds.length) {
+        const questionMarks = questionIds.map(() => "?").join(",");
+        db.prepare(`DELETE FROM duel_questions WHERE question_id IN (${questionMarks})`).run(...questionIds);
+        db.prepare(`DELETE FROM tournament_questions WHERE question_id IN (${questionMarks})`).run(...questionIds);
+      }
+      for (const table of ["test_attempts", "progress", "purchases", "likes", "video_watch", "lesson_viewers", "test_sections", "materials", "questions", "lessons"]) {
+        db.prepare(`DELETE FROM ${table} WHERE lesson_id IN (${marks})`).run(...lessonIds);
+      }
+    }
+    metaSet(migrationKey, "1");
+    db.exec("COMMIT");
+    console.log(`[migration] removed ${lessonIds.length} legacy mock tests`);
+  } catch (error) {
+    db.exec("ROLLBACK");
+    throw error;
+  }
+}
+
+removeAttestationMockTests();
 
 /* Test guruhi kurslarini umumiy kurslar ro'yxatidan yashirish */
 db.prepare(
