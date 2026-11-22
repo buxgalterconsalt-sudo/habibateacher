@@ -135,7 +135,41 @@ function isIntroVideoLesson(lessonId) {
   const priorVideos = db.prepare(`SELECT COUNT(*) AS n FROM lessons
     WHERE course_id = ? AND type = 'video' AND (position < ? OR (position = ? AND id < ?))`)
     .get(lesson.course_id, lesson.position, lesson.position, lesson.id);
-  return Number(priorVideos && priorVideos.n) < 2;
+  return Number(priorVideos && priorVideos.n) < 1;
+}
+
+function hasOtherActiveDevice(userId, req) {
+  const now = Date.now();
+  const cutoff = new Date(now - 3 * 24 * 60 * 60 * 1000).toISOString();
+  db.prepare("DELETE FROM device_sessions WHERE created_at <= ?").run(cutoff);
+  const currentToken = parseCookies(req).ht_device || "";
+  const current = currentToken
+    ? db.prepare("SELECT user_id FROM device_sessions WHERE token = ?").get(currentToken)
+    : null;
+  if (current && Number(current.user_id) === Number(userId)) {
+    db.prepare("DELETE FROM device_sessions WHERE user_id = ? AND token != ?").run(userId, currentToken);
+    db.prepare("UPDATE device_sessions SET last_seen = ? WHERE token = ?").run(nowISO(), currentToken);
+    return false;
+  }
+  return !!db.prepare("SELECT 1 FROM device_sessions WHERE user_id = ? LIMIT 1").get(userId);
+}
+
+function firstVideoTasksGate(userId, courseId) {
+  const videos = db.prepare("SELECT id, position FROM lessons WHERE course_id = ? AND type = 'video' ORDER BY position, id LIMIT 2").all(courseId);
+  if (videos.length < 2) return { locked: false };
+  const firstVideo = videos[0];
+  const firstDone = !!db.prepare("SELECT 1 FROM progress WHERE user_id = ? AND lesson_id = ? AND score IS NULL")
+    .get(userId, firstVideo.id);
+  if (!firstDone) return { locked: true, lessonId: firstVideo.id, reason: "video" };
+  const firstVideoTask = db.prepare(`SELECT id FROM lessons
+    WHERE course_id = ? AND type = 'test' AND (position > ? OR (position = ? AND id > ?))
+    ORDER BY position, id LIMIT 1`)
+    .get(courseId, firstVideo.position, firstVideo.position, firstVideo.id);
+  if (firstVideoTask) {
+    const result = db.prepare("SELECT score FROM progress WHERE user_id = ? AND lesson_id = ?").get(userId, firstVideoTask.id);
+    if (!result || Number(result.score) < 80) return { locked: true, lessonId: firstVideoTask.id, reason: "task" };
+  }
+  return { locked: false };
 }
 
 const DEFAULT_CONTRACT_TEXT = `1. Umumiy qoidalar
@@ -1297,6 +1331,12 @@ function createUserSession(res, userId, req) {
 }
 
 function createDeviceSession(res, userId, req) {
+  const existingToken = parseCookies(req).ht_device || "";
+  const existing = existingToken ? db.prepare("SELECT user_id FROM device_sessions WHERE token = ?").get(existingToken) : null;
+  if (existing && Number(existing.user_id) === Number(userId)) {
+    db.prepare("UPDATE device_sessions SET last_seen = ? WHERE token = ?").run(nowISO(), existingToken);
+    return;
+  }
   const token = randomBytes(32).toString("hex");
   db.prepare("INSERT INTO device_sessions (token, user_id, created_at, last_seen) VALUES (?, ?, ?, ?)").run(
     token,
@@ -4651,8 +4691,23 @@ const server = http.createServer(async (req, res) => {
     res.end(xml);
     return;
   }
-  const user = currentUser(req);
+  let user = currentUser(req);
   const admin = isAdmin(req);
+  if (user) {
+    const deviceToken = parseCookies(req).ht_device || "";
+    const deviceRow = deviceToken
+      ? db.prepare("SELECT user_id FROM device_sessions WHERE token = ?").get(deviceToken)
+      : null;
+    if (!deviceRow || Number(deviceRow.user_id) !== Number(user.id)) {
+      const sessionToken = parseCookies(req).ht_session;
+      if (sessionToken) db.prepare("DELETE FROM sessions WHERE token = ?").run(sessionToken);
+      clearCookie(res, "ht_session");
+      user = null;
+    } else {
+      db.prepare("DELETE FROM device_sessions WHERE user_id = ? AND token != ?").run(user.id, deviceToken);
+      db.prepare("UPDATE device_sessions SET last_seen = ? WHERE token = ?").run(nowISO(), deviceToken);
+    }
+  }
   const author = Boolean(user && Number(user.is_author));
   const contentManager = admin || author;
   res.lang = detectLang(req);
@@ -5363,6 +5418,7 @@ const server = http.createServer(async (req, res) => {
   const userRow = findUserByPhone(phone, "id, is_blocked");
   if (!userRow) return redirect(res, "/login?err=notfound");
   if (Number(userRow.is_blocked)) return redirect(res, "/login?err=blocked");
+  if (hasOtherActiveDevice(userRow.id, req)) return redirect(res, `${back}&err=device`);
   clearFailures(clientIp(req));
   createUserSession(res, userRow.id, req);
   createDeviceSession(res, userRow.id, req);
@@ -5433,6 +5489,7 @@ const server = http.createServer(async (req, res) => {
   ${err === "phone" ? alertBox("+998 dan keyin telefon raqamining 9 ta raqamini kiriting.", "error") : ""}
   ${err === "notfound" ? alertBox("Bu raqam ro'yxatdan o'tmagan.", "error") : ""}
   ${err === "blocked" ? alertBox("Akkauntga kirish vaqtincha cheklangan. Administrator bilan bog'laning.", "error") : ""}
+  ${err === "device" ? alertBox("Bu akkaunt boshqa qurilmada faol. Bir akkauntdan faqat bitta qurilmada foydalanish mumkin. Avval faol qurilmadan chiqing.", "error") : ""}
   ${err === "notelegram" ? alertBox("Bu akkauntga Telegram bog'lanmagan. Parol bilan kiring.", "error") : ""}
   ${err === "startbot" ? alertBox("Avval Telegram botga /start yozing. Shundan keyin kirish kodi shu botga keladi.", "error") : ""}
   ${err === "sendcode" ? alertBox("Telegram bot kirish kodini yubora olmadi. Telegram akkauntingizda botni ochib /start bosing yoki parol bilan kiring.", "error") : ""}
@@ -5531,6 +5588,7 @@ const server = http.createServer(async (req, res) => {
   ${err === "wrong" ? alertBox("Kod noto'g'ri. Qayta urinib ko'ring.", "error") : ""}
   ${err === "expired" ? alertBox("Kod muddati tugagan. Qayta yuboring.", "error") : ""}
   ${err === "blocked" ? alertBox("Juda ko'p urinish. Yangi kod oling.", "error") : ""}
+  ${err === "device" ? alertBox("Bu akkaunt boshqa qurilmada faol. Bir akkauntdan faqat bitta qurilmada foydalanish mumkin. Avval faol qurilmadan chiqing.", "error") : ""}
   <form method="post" action="/login/verify" class="login-form">
   <input type="hidden" name="phone" value="${h(phoneRaw)}">
   ${nextHidden}
@@ -5601,6 +5659,10 @@ const server = http.createServer(async (req, res) => {
   );
   send(res, 401, layout({ title: "Kirish", body }));
   return;
+  }
+
+  if (hasOtherActiveDevice(row.id, req)) {
+    return redirect(res, `/login?pw=1&err=device&phone=${encodeURIComponent(formatLocalPhone(fields.phone))}${next ? `&next=${encodeURIComponent(next)}` : ""}`);
   }
 
   db.prepare("UPDATE users SET password_failures = 0 WHERE id = ?").run(row.id);
@@ -6370,6 +6432,7 @@ const server = http.createServer(async (req, res) => {
 .map((l, i) => {
   const hasProgress = Object.prototype.hasOwnProperty.call(progress, l.id);
   const finished = hasProgress && (l.type !== "test" || Number(progress[l.id]) >= 80);
+  const firstVideoGate = l.type === "video" && !admin && !isIntroVideoLesson(l.id) ? firstVideoTasksGate(user.id, l.course_id) : { locked: false };
   return `<a class="lesson-row" href="/lesson/${l.id}">
   <span class="num">${i + 1}</span>
   <span class="lesson-main">
@@ -6378,7 +6441,7 @@ const server = http.createServer(async (req, res) => {
   l.type === "test" ? ". test": ""
   }</small>
   </span>
-  ${finished ? `<span class="badge done">Tugatilgan${typeof progress[l.id] === "number" ? `. ${progress[l.id]}%`: ""}</span>`: `<span class="badge">${l.type === "video" && isIntroVideoLesson(l.id) ? "Bepul ochiq" : l.type === "video" && !hasLessonPermission(user.id, l.id) ? "40% bepul ko'rish" : "Ochish"}</span>`}
+  ${finished ? `<span class="badge done">Tugatilgan${typeof progress[l.id] === "number" ? `. ${progress[l.id]}%`: ""}</span>`: `<span class="badge">${firstVideoGate.locked ? "1-dars topshiriqlaridan so'ng" : l.type === "video" && isIntroVideoLesson(l.id) ? "Bepul ochiq" : l.type === "video" && !hasLessonPermission(user.id, l.id) ? "40% bepul ko'rish" : "Ochish"}</span>`}
   </a>`;
   })
 .join("")
@@ -6563,6 +6626,14 @@ const server = http.createServer(async (req, res) => {
   res.end(JSON.stringify({ ok: false }));
   return;
   }
+  if (!admin && !isIntroVideoLesson(watchedLesson.id)) {
+    const gate = firstVideoTasksGate(user.id, watchedLesson.course_id);
+    if (gate.locked) {
+      res.writeHead(423, { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" });
+      res.end(JSON.stringify({ ok: false, locked: true, reason: "first_lesson_tasks" }));
+      return;
+    }
+  }
   const seconds = Math.max(0, Math.min(24 * 3600, Number(fields.seconds) || 0));
   const duration = Math.max(0, Math.min(24 * 3600, Number(fields.duration) || 0));
   const now = Date.now();
@@ -6608,6 +6679,10 @@ const server = http.createServer(async (req, res) => {
   const lesson = db.prepare("SELECT * FROM lessons WHERE id = ?").get(Number(lessonMatch[1]));
   if (!lesson) return notFound(res, user, admin);
   if (!admin && lesson.type !== "test" && lesson.type !== "video" && !hasLessonPermission(user.id, lesson.id)) return redirect(res, "/plans");
+  if (!admin && lesson.type === "video" && !isIntroVideoLesson(lesson.id)) {
+    const gate = firstVideoTasksGate(user.id, lesson.course_id);
+    if (gate.locked) return redirect(res, gate.reason === "task" ? `/test/${gate.lessonId}?start=1` : `/lesson/${gate.lessonId}`);
+  }
   const videoPreviewOnly = lesson.type === "video" && !admin && !hasLessonPermission(user.id, lesson.id) && !isIntroVideoLesson(lesson.id);
   if (!admin && lesson.type === "test" && Number(lesson.price) > 0 && !testOwned(user.id, lesson.id)) return redirect(res, `/test/${lesson.id}`);
   if (!admin) {
@@ -7162,6 +7237,14 @@ const server = http.createServer(async (req, res) => {
   }
   const lesson = db.prepare("SELECT * FROM lessons WHERE id = ?").get(mediaLessonId);
   if (!lesson || lesson.type !== "video" || !lesson.file_id) return notFound(res, user, admin);
+  if (!admin && !isIntroVideoLesson(lesson.id)) {
+    const gate = firstVideoTasksGate(user.id, lesson.course_id);
+    if (gate.locked) {
+      res.writeHead(403, { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" });
+      res.end("Avval birinchi video dars va uning topshiriqlarini bajaring.");
+      return;
+    }
+  }
   const previewOnly = !admin && !hasLessonPermission(user.id, lesson.id) && !isIntroVideoLesson(lesson.id);
   if (previewOnly) {
     const watched = db.prepare("SELECT max_seconds, duration FROM video_watch WHERE user_id = ? AND lesson_id = ?").get(user.id, lesson.id);
