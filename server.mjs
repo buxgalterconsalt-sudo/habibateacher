@@ -363,6 +363,15 @@ db.exec(
   "CREATE UNIQUE INDEX IF NOT EXISTS idx_users_telegram_username ON users(telegram_username COLLATE NOCASE) WHERE telegram_username IS NOT NULL AND telegram_username <> ''"
 );
 const userCols3 = db.prepare("PRAGMA table_info(users)").all();
+if (!userCols3.some((c) => c.name === "surname")) {
+  db.exec("ALTER TABLE users ADD COLUMN surname TEXT NOT NULL DEFAULT ''");
+}
+if (!userCols3.some((c) => c.name === "father_name")) {
+  db.exec("ALTER TABLE users ADD COLUMN father_name TEXT NOT NULL DEFAULT ''");
+}
+if (!userCols3.some((c) => c.name === "birth_date")) {
+  db.exec("ALTER TABLE users ADD COLUMN birth_date TEXT NOT NULL DEFAULT ''");
+}
 if (!userCols3.some((c) => c.name === "last_login_at")) {
   db.exec("ALTER TABLE users ADD COLUMN last_login_at TEXT NOT NULL DEFAULT ''");
 }
@@ -730,6 +739,55 @@ function ensureDemoContent() {
 
 ensureDemoContent();
 
+function seedPreparedTests() {
+  const sources = [
+    JSON.parse(fs.readFileSync(path.join(__dirname, "seed-data", "attestation-mocks.json"), "utf8")),
+    JSON.parse(fs.readFileSync(path.join(__dirname, "seed-data", "tkt-module-3.json"), "utf8")),
+  ];
+  const insertQuestion = db.prepare(
+    "INSERT INTO questions (lesson_id, text, o1, o2, o3, o4, correct, passage) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+  );
+  let addedSets = 0;
+  for (const sets of sources) {
+    for (const set of sets) {
+      const course = db.prepare("SELECT id FROM courses WHERE title = ? ORDER BY id LIMIT 1").get(set.course || (set.category === "mock" ? "2026 KUZ PLATFORMA MOCKLARI" : "Toifa testlari"));
+      if (!course) continue;
+      let lessonTitle = set.lesson;
+      if (!lessonTitle && set.category === "attestation") lessonTitle = `Attestatsiya ${String(set.number).padStart(2, "0")} — Ingliz tili test`;
+      if (!lessonTitle && set.category === "mock") lessonTitle = `2026 FALL MOCK ${set.number}`;
+      let lesson = db.prepare("SELECT * FROM lessons WHERE course_id = ? AND title = ? ORDER BY id LIMIT 1").get(course.id, lessonTitle);
+      if (!lesson) {
+        const position = Number(set.number) + (set.category === "attestation" ? 7 : 0);
+        const duration = set.category === "tkt" ? 40 : 90;
+        const info = db.prepare(
+          "INSERT INTO lessons (course_id, title, type, content, duration_min, position, price, is_pro, max_score, question_count, created_at) VALUES (?, ?, 'test', '', ?, ?, 0, 0, ?, ?, ?)"
+        ).run(course.id, lessonTitle, duration, position, set.questions.length, set.questions.length, nowISO());
+        lesson = { id: Number(info.lastInsertRowid), question_count: 0 };
+      }
+      const currentCount = Number(db.prepare("SELECT COUNT(*) AS n FROM questions WHERE lesson_id = ?").get(lesson.id)?.n || 0);
+      if (currentCount > 0) continue;
+      db.exec("BEGIN IMMEDIATE");
+      try {
+        for (const question of set.questions) {
+          const correct = typeof question.answer === "string" ? "ABCD".indexOf(question.answer.toUpperCase()) + 1 : Number(question.correct);
+          insertQuestion.run(lesson.id, question.q || question.text, question.a || question.options?.[0], question.b || question.options?.[1], question.c || question.options?.[2], question.d || question.options?.[3], correct, question.passage || "");
+        }
+        const count = set.questions.length;
+        db.prepare("UPDATE lessons SET type = 'test', question_count = ?, max_score = ?, duration_min = ? WHERE id = ?")
+          .run(count, count, set.category === "tkt" ? 40 : 90, lesson.id);
+        db.exec("COMMIT");
+        addedSets += 1;
+      } catch (error) {
+        db.exec("ROLLBACK");
+        throw error;
+      }
+    }
+  }
+  if (addedSets) console.log(`[seed] ${addedSets} new test sets added from prepared question banks`);
+}
+
+seedPreparedTests();
+
 /* Test guruhi kurslarini umumiy kurslar ro'yxatidan yashirish */
 db.prepare(
   `UPDATE courses SET is_test_group = 1
@@ -1035,6 +1093,18 @@ function validPhoneInput(value) {
   if (digits.startsWith("998")) digits = digits.slice(3);
   else if (digits.length === 10 && digits.startsWith("8")) digits = digits.slice(1);
   return /^\d{9}$/.test(digits);
+}
+
+function normalizeBirthDate(value) {
+  const match = String(value || "").trim().match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+  if (!match) return "";
+  const [, dayText, monthText, yearText] = match;
+  const day = Number(dayText), month = Number(monthText), year = Number(yearText);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  if (date.getUTCFullYear() !== year || date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day) return "";
+  const today = tashkentClock().day;
+  if (`${yearText}-${monthText}-${dayText}` > today) return "";
+  return `${yearText}-${monthText}-${dayText}`;
 }
 
 function normalizeTelegramUsername(value) {
@@ -4902,14 +4972,17 @@ const server = http.createServer(async (req, res) => {
   const duelInvite = /^\/duel\/[A-Z0-9]{6}$/i.test(next);
   const body = authCard(
   "Ro'yxatdan o'tish",
-  duelInvite ? "Duelga qo'shilish uchun ism va telefon raqamingizni kiriting." : "Ism, telefon va parolni kiriting.",
+  duelInvite ? "Duelga qo'shilish uchun ma'lumotlaringizni kiriting." : "Ma'lumotlaringizni kiriting va yangi parol yarating.",
   `<form method="post" action="/register" class="form">
   ${next ? `<input type="hidden" name="next" value="${h(next)}">`: ""}
   <input type="hidden" name="tg_init_data" value="">
-  <div class="field"><label>Ismingiz</label><input name="name" required maxlength="60" placeholder="Habiba"></div>
-  ${duelInvite ? "" : `<div class="field"><label>Telegram username yoki ID</label><input name="telegram_id" required placeholder="@username yoki 1097025987"><small class="muted">Username yoki raqamli ID.</small></div>`}
-  <div class="field"><label>Telefon</label><input name="phone" data-phone required inputmode="tel" placeholder="+998 93 568 00 91"></div>
-  <div class="field"><label>Parol (4 ta raqam)</label><input name="password" type="password" required minlength="4" maxlength="4" pattern="[0-9]{4}" inputmode="numeric" placeholder="Masalan: 1234"></div>
+  <div class="field"><label>Ismingiz</label><input name="name" required maxlength="40" autocomplete="given-name" placeholder="Habiba"></div>
+  <div class="field"><label>Familiyangiz</label><input name="surname" required maxlength="60" autocomplete="family-name" placeholder="Karimova"></div>
+  <div class="field"><label>Otangizning ismi (otchestvo)</label><input name="father_name" required maxlength="60" placeholder="Abdulla qizi / Abdulla o'g'li"></div>
+  <div class="field"><label>Tug'ilgan kun.oy.yil</label><input name="birth_date" required inputmode="numeric" pattern="[0-9]{2}\\.[0-9]{2}\\.[0-9]{4}" placeholder="kun.oy.yil, masalan 05.09.1995"></div>
+  <div class="field"><label>Telefon raqamingiz</label><input name="phone" data-phone required inputmode="tel" autocomplete="tel" placeholder="+998 93 568 00 91"></div>
+  <div class="field"><label>Yangi parol (4 ta raqam)</label><input name="password" type="password" required minlength="4" maxlength="4" pattern="[0-9]{4}" inputmode="numeric" autocomplete="new-password" placeholder="Masalan: 1234"></div>
+  <div class="field"><label>Parolni qayta tasdiqlang</label><input name="password_confirm" type="password" required minlength="4" maxlength="4" pattern="[0-9]{4}" inputmode="numeric" autocomplete="new-password" placeholder="Parolni yana kiriting"></div>
   <button class="btn btn-primary" type="submit">Ro'yxatdan o'tish</button>
   </form>`,
   `<p class="alt">Akkountingiz bormi? <a href="/login${next ? `?next=${encodeURIComponent(next)}`: ""}">Kirish</a></p>`,
@@ -4920,10 +4993,16 @@ const server = http.createServer(async (req, res) => {
   }
 
   const next = safeNext(fields.next || url.searchParams.get("next"));
-  const name = String(fields.name || "").trim();
+  const firstName = String(fields.name || "").trim();
+  const surname = String(fields.surname || "").trim();
+  const fatherName = String(fields.father_name || "").trim();
+  const fullName = [firstName, surname, fatherName].filter(Boolean).join(" ");
+  const birthDateInput = String(fields.birth_date || "").trim();
+  const birthDate = normalizeBirthDate(birthDateInput);
   const phone = normalizePhone(fields.phone);
   const duelInvite = /^\/duel\/[A-Z0-9]{6}$/i.test(next);
   const password = String(fields.password || "");
+  const passwordConfirm = String(fields.password_confirm || "");
   const tgUser = telegramUserFromInitData(fields.tg_init_data);
   const rawTelegram = String((tgUser && tgUser.id) || fields.telegram_id || "").trim();
   const numericTelegramId = /^\d{5,15}$/.test(rawTelegram) ? rawTelegram : "";
@@ -4938,11 +5017,13 @@ const server = http.createServer(async (req, res) => {
   const telegramId = numericTelegramId || (mappedTelegram ? String(mappedTelegram.chat_id) : "");
 
   let error = "";
-  if (!/^[\p{L}\s'-]{2,}$/u.test(name)) error = "Ism faqat harflardan iborat bo'lishi kerak.";
+  if (!/^[\p{L}\s'-]{2,}$/u.test(firstName)) error = "Ismni to'g'ri kiriting.";
+  else if (!/^[\p{L}\s'-]{2,}$/u.test(surname)) error = "Familiyani to'g'ri kiriting.";
+  else if (!/^[\p{L}\s'-]{2,}$/u.test(fatherName)) error = "Otangizning ismini to'g'ri kiriting.";
+  else if (!birthDate) error = "Tug'ilgan sanani kun.oy.yil ko'rinishida to'g'ri kiriting.";
   else if (!validPhoneInput(fields.phone) || !validPhone(phone)) error = "Telefon raqami faqat 9 ta raqamdan iborat bo'lishi kerak.";
   else if (!/^\d{4}$/.test(password)) error = "Parol aynan 4 ta raqamdan iborat bo'lishi kerak.";
-  else if (!duelInvite && !telegramId && !validTelegramUsername(telegramUsername))
-  error = "Telegram username (@username) yoki raqamli ID kiriting.";
+  else if (password !== passwordConfirm) error = "Parollar bir xil emas. Qayta tekshiring.";
   else if (telegramId && db.prepare("SELECT 1 FROM users WHERE telegram_id = ?").get(telegramId))
   error = "Bu Telegram ID allaqachon ro'yxatdan o'tgan. Bir ID   bitta akkaunt.";
   else if (telegramUsername && db.prepare("SELECT 1 FROM users WHERE telegram_username = ? COLLATE NOCASE").get(telegramUsername))
@@ -4953,15 +5034,18 @@ const server = http.createServer(async (req, res) => {
   if (error) {
   const body = authCard(
   "Ro'yxatdan o'tish",
-  duelInvite ? "Duelga qo'shilish uchun ism va telefon raqamingizni kiriting." : "Ism, Telegram username/ID, telefon va parolni kiriting.",
+  duelInvite ? "Duelga qo'shilish uchun ma'lumotlaringizni kiriting." : "Ma'lumotlaringizni tekshirib, ro'yxatdan o'ting.",
   `${alertBox(error)}
   <form method="post" action="/register" class="form">
   ${next ? `<input type="hidden" name="next" value="${h(next)}">`: ""}
   <input type="hidden" name="tg_init_data" value="">
-  <div class="field"><label>Ismingiz</label><input name="name" value="${h(name)}" required></div>
-  ${duelInvite ? "" : `<div class="field"><label>Telegram username yoki ID</label><input name="telegram_id" value="${h(telegramUsername ? "@" + telegramUsername : telegramId)}" required placeholder="@username yoki 1097025987"></div>`}
-  <div class="field"><label>Telefon</label><input name="phone" data-phone value="${h(fields.phone || "")}" required inputmode="numeric" maxlength="17" autocomplete="tel-national" placeholder="+998 90 123 45 67"></div>
-  <div class="field"><label>Parol (4 ta raqam)</label><input name="password" type="password" value="${h(password)}" required minlength="4" maxlength="4" pattern="[0-9]{4}" inputmode="numeric" placeholder="Masalan: 1234" autocomplete="new-password"></div>
+  <div class="field"><label>Ismingiz</label><input name="name" value="${h(firstName)}" required maxlength="40" autocomplete="given-name"></div>
+  <div class="field"><label>Familiyangiz</label><input name="surname" value="${h(surname)}" required maxlength="60" autocomplete="family-name"></div>
+  <div class="field"><label>Otangizning ismi (otchestvo)</label><input name="father_name" value="${h(fatherName)}" required maxlength="60"></div>
+  <div class="field"><label>Tug'ilgan kun.oy.yil</label><input name="birth_date" value="${h(birthDateInput)}" required inputmode="numeric" pattern="[0-9]{2}\\.[0-9]{2}\\.[0-9]{4}" placeholder="kun.oy.yil, masalan 05.09.1995"></div>
+  <div class="field"><label>Telefon raqamingiz</label><input name="phone" data-phone value="${h(fields.phone || "")}" required inputmode="tel" maxlength="17" autocomplete="tel" placeholder="+998 90 123 45 67"></div>
+  <div class="field"><label>Yangi parol (4 ta raqam)</label><input name="password" type="password" required minlength="4" maxlength="4" pattern="[0-9]{4}" inputmode="numeric" autocomplete="new-password"></div>
+  <div class="field"><label>Parolni qayta tasdiqlang</label><input name="password_confirm" type="password" required minlength="4" maxlength="4" pattern="[0-9]{4}" inputmode="numeric" autocomplete="new-password"></div>
   <button class="btn btn-primary" type="submit">Ro'yxatdan o'tish</button>
   </form>`,
   `<p class="alt">Akkountingiz bormi? <a href="/login${next ? `?next=${encodeURIComponent(next)}`: ""}">Kirish</a></p>`,
@@ -4973,17 +5057,17 @@ const server = http.createServer(async (req, res) => {
 
   const info = db
 .prepare(
-  "INSERT INTO users (name, phone, pass, telegram_id, telegram_username, created_at) VALUES (?, ?, ?, ?, ?, ?)"
+  "INSERT INTO users (name, surname, father_name, birth_date, phone, pass, telegram_id, telegram_username, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
 )
-.run(name, phone, hashPassword(password), telegramId, telegramUsername, nowISO());
+.run(fullName, surname, fatherName, birthDate, phone, hashPassword(password), telegramId || null, telegramUsername || null, nowISO());
   createUserSession(res, Number(info.lastInsertRowid), req);
   createDeviceSession(res, Number(info.lastInsertRowid), req);
   notifyTelegram(
-    `<b>Yangi ro'yxatdan o'tish</b>\nIsm: ${h(name)}\nTelefon: ${h(phone)}\nTelegram: ${h(
-      telegramUsername ? "@" + telegramUsername : telegramId
+    `<b>Yangi ro'yxatdan o'tish</b>\nIsm: ${h(fullName)}\nTelefon: ${h(phone)}\nTelegram: ${h(
+      telegramUsername ? "@" + telegramUsername : telegramId || "ulanmagan"
     )}\nVaqt: ${new Date().toLocaleString("uz-UZ")}`
   ).catch(() => {});
-  redirect(res, next || "/dashboard");
+  redirect(res, next || "/dashboard?registered=1");
   return;
   }
 
@@ -5668,7 +5752,10 @@ const server = http.createServer(async (req, res) => {
   /* --------------------------------------------------------------- duel */
   if (p === "/dashboard" && method === "GET") {
   if (!user) return redirect(res, "/login?next=/dashboard");
-  send(res, 200, layout({ title: "Kabinet", body: dashboardPage(user), user }));
+  const registeredNotice = url.searchParams.get("registered") === "1"
+    ? alertBox("Siz muvaffaqiyatli ro'yxatdan o'tdingiz.", "success")
+    : "";
+  send(res, 200, layout({ title: "Kabinet", body: `${registeredNotice}${dashboardPage(user)}`, user }));
   return;
   }
 

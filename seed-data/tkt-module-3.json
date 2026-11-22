@@ -1,0 +1,560 @@
+[
+  {
+    "category": "tkt",
+    "number": 1,
+    "title": "TKT Module 3 — Mock test 1",
+    "course": "TKT MODULE 3",
+    "lesson": "TKT 3-modul mock testi 1",
+    "questions": [
+      {
+        "q": "A teacher says, ‘Look at the picture. What do you think the people are going to do?’ Which function is this?",
+        "a": "Eliciting predictions",
+        "b": "Checking instructions",
+        "c": "Giving a grammar rule",
+        "d": "Nominating a learner",
+        "answer": "A",
+        "passage": ""
+      },
+      {
+        "q": "‘Work with the person next to you. Compare your answers, then choose one answer together.’ What is the teacher mainly doing?",
+        "a": "Checking the learners’ past knowledge",
+        "b": "Correcting a pronunciation error",
+        "c": "Giving individual feedback",
+        "d": "Organising pairwork and sequencing instructions",
+        "answer": "D",
+        "passage": ""
+      },
+      {
+        "q": "After explaining a task, the teacher asks, ‘Are you writing alone or with a partner?’ This is an example of:",
+        "a": "Eliciting a new word",
+        "b": "Delayed correction",
+        "c": "Checking instructions (ICQs)",
+        "d": "Checking meaning (CCQs)",
+        "answer": "C",
+        "passage": ""
+      },
+      {
+        "q": "A teacher asks, ‘If I say I’m exhausted, do I have a lot of energy?’ Which function does this question serve?",
+        "a": "Nominating a learner",
+        "b": "Checking understanding of meaning",
+        "c": "Checking task procedure",
+        "d": "Prompting a learner to speak",
+        "answer": "B",
+        "passage": ""
+      },
+      {
+        "q": "The teacher says a sentence and asks the class to repeat it together, then individually. This is:",
+        "a": "Drilling",
+        "b": "Monitoring",
+        "c": "Eliciting",
+        "d": "Reformulating",
+        "answer": "A",
+        "passage": ""
+      },
+      {
+        "q": "A learner says, ‘I went to the library yesterday.’ The teacher replies, ‘You went yesterday? Great. What did you borrow?’ The teacher is:",
+        "a": "Explicitly correcting an error",
+        "b": "Checking the task instructions",
+        "c": "Translating the sentence",
+        "d": "Responding naturally and extending learner talk",
+        "answer": "D",
+        "passage": ""
+      },
+      {
+        "q": "‘Could you say that again, please? I didn’t catch the last word.’ What is the learner doing?",
+        "a": "Making a prediction",
+        "b": "Checking the teacher’s instructions",
+        "c": "Requesting clarification or repetition",
+        "d": "Disagreeing politely",
+        "answer": "C",
+        "passage": ""
+      },
+      {
+        "q": "A learner says, ‘I think the character feels worried because…’ What is the main function of this learner language?",
+        "a": "Giving an instruction",
+        "b": "Expressing an opinion and supporting it",
+        "c": "Asking for permission",
+        "d": "Correcting a classmate’s pronunciation",
+        "answer": "B",
+        "passage": ""
+      },
+      {
+        "q": "Which teacher instruction is clearest for a lower-level class?",
+        "a": "Read the text. Then answer questions 1–3.",
+        "b": "Having completed the reading, proceed to the subsequent comprehension items.",
+        "c": "Undertake the first stage before responding to the prompts.",
+        "d": "Engage with the material and fulfil the task requirements.",
+        "answer": "A",
+        "passage": ""
+      },
+      {
+        "q": "Why should a teacher give task instructions in short, sequenced steps?",
+        "a": "It makes the task more difficult",
+        "b": "It prevents learners from asking questions",
+        "c": "It replaces the need to demonstrate a task",
+        "d": "Learners can follow the procedure without holding many directions in memory",
+        "answer": "D",
+        "passage": ""
+      },
+      {
+        "q": "A learner writes ‘becaus’ instead of ‘because’. Which type of mistake is this?",
+        "a": "Subject–verb agreement",
+        "b": "Wrong tense",
+        "c": "Spelling",
+        "d": "Word order",
+        "answer": "C",
+        "passage": ""
+      },
+      {
+        "q": "A learner says, ‘She go to work every day.’ Which error is most evident?",
+        "a": "Wrong article",
+        "b": "Wrong verb form / subject–verb agreement",
+        "c": "Spelling",
+        "d": "Incorrect word stress",
+        "answer": "B",
+        "passage": ""
+      },
+      {
+        "q": "A learner says, ‘I don’t know what means this word.’ Which error is most evident?",
+        "a": "Word order in an indirect question",
+        "b": "Spelling",
+        "c": "Pronunciation of a final consonant",
+        "d": "Wrong plural ending",
+        "answer": "A",
+        "passage": ""
+      },
+      {
+        "q": "Which teacher response is an effective prompt for self-correction?",
+        "a": "‘Wrong. The answer is goes.’",
+        "b": "‘Everyone, repeat the correct sentence.’",
+        "c": "‘We will ignore that sentence.’",
+        "d": "‘She go?’ The teacher points to the subject and waits.",
+        "answer": "D",
+        "passage": ""
+      },
+      {
+        "q": "During a fluency discussion, a teacher writes down recurring errors and discusses them afterwards. This is:",
+        "a": "Peer assessment",
+        "b": "Checking instructions",
+        "c": "Delayed correction",
+        "d": "Immediate recasting of every error",
+        "answer": "C",
+        "passage": ""
+      },
+      {
+        "q": "During a controlled accuracy exercise, a learner repeatedly uses the wrong target verb form. Which response is most appropriate?",
+        "a": "Ignore the error because accuracy is the aim",
+        "b": "Give brief, immediate correction focused on the target form",
+        "c": "Wait until next month to mention it",
+        "d": "Stop the activity and explain every grammar rule",
+        "answer": "B",
+        "passage": ""
+      },
+      {
+        "q": "A teacher walks around while pairs complete a speaking task, listening and noting progress without interrupting. The teacher is:",
+        "a": "Monitoring",
+        "b": "Eliciting",
+        "c": "Drilling",
+        "d": "Nominating",
+        "answer": "A",
+        "passage": ""
+      },
+      {
+        "q": "Which is the best example of praise that supports learning?",
+        "a": "‘You are the cleverest student.’",
+        "b": "‘At last, that is acceptable.’",
+        "c": "‘Your group is better than the other one.’",
+        "d": "‘You used the linking phrase we practised to make your reason clear.’",
+        "answer": "D",
+        "passage": ""
+      },
+      {
+        "q": "A class agrees to raise a hand before speaking and to listen while a classmate is talking. These are:",
+        "a": "Learner errors",
+        "b": "Interaction patterns",
+        "c": "Classroom rules",
+        "d": "CCQs",
+        "answer": "C",
+        "passage": ""
+      },
+      {
+        "q": "A teacher alternates a short listening task, pair discussion and a quick written reflection. This mainly builds:",
+        "a": "A stricter correction routine",
+        "b": "Variety in activity and pace",
+        "c": "More teacher talking time",
+        "d": "A single fixed interaction pattern",
+        "answer": "B",
+        "passage": ""
+      },
+      {
+        "q": "A learner cannot start a pair task. The teacher gives a small hint, then lets the learner continue independently. The teacher is acting as a:",
+        "a": "Prompter",
+        "b": "Assessor",
+        "c": "Dictator",
+        "d": "Translator",
+        "answer": "A",
+        "passage": ""
+      },
+      {
+        "q": "Which grouping is most suitable when learners need to exchange different information to complete a task?",
+        "a": "Individual silent reading",
+        "b": "Whole-class repetition only",
+        "c": "Teacher lecture",
+        "d": "Pairs with an information gap",
+        "answer": "D",
+        "passage": ""
+      },
+      {
+        "q": "Why might a teacher put learners in small groups for a problem-solving task?",
+        "a": "To prevent learners from negotiating meaning",
+        "b": "To avoid monitoring the task",
+        "c": "To increase learner interaction and share ideas",
+        "d": "To ensure only the teacher speaks",
+        "answer": "C",
+        "passage": ""
+      },
+      {
+        "q": "What is the teacher’s main role while learners complete a communicative pair task?",
+        "a": "Give a new instruction every minute",
+        "b": "Monitor and provide support when needed",
+        "c": "Speak for each pair",
+        "d": "Correct every sentence immediately",
+        "answer": "B",
+        "passage": ""
+      },
+      {
+        "q": "A learner says ‘I have 20 years’ to mean their age. The teacher replies, ‘You are 20?’ and continues the conversation. This is:",
+        "a": "Recasting the learner’s error",
+        "b": "Checking instructions",
+        "c": "Eliciting a definition",
+        "d": "A spelling correction",
+        "answer": "A",
+        "passage": ""
+      },
+      {
+        "q": "Which feedback best helps learners improve after a writing task?",
+        "a": "Write ‘bad grammar’ with no example",
+        "b": "Praise only the neat handwriting",
+        "c": "Give the score without any explanation",
+        "d": "Point out a repeated verb-tense pattern and ask learners to review examples",
+        "answer": "D",
+        "passage": ""
+      },
+      {
+        "q": "A teacher asks learners to underline their own examples of past-tense verbs before checking answers. This encourages:",
+        "a": "Choral drilling",
+        "b": "Translation",
+        "c": "Self-assessment",
+        "d": "Teacher nomination",
+        "answer": "C",
+        "passage": ""
+      },
+      {
+        "q": "What is the best way to check whether learners understood a new word meaning?",
+        "a": "Ask learners to copy the word ten times",
+        "b": "Ask a simple question that distinguishes the meaning from a likely confusion",
+        "c": "Ask ‘Do you understand?’ and accept silence",
+        "d": "Repeat the definition more loudly",
+        "answer": "B",
+        "passage": ""
+      },
+      {
+        "q": "The teacher asks a learner by name to answer a question. This classroom function is:",
+        "a": "Nominating",
+        "b": "Monitoring",
+        "c": "Recasting",
+        "d": "Grouping",
+        "answer": "A",
+        "passage": ""
+      },
+      {
+        "q": "Which seating arrangement is most useful for a whole-class discussion where learners should see one another?",
+        "a": "Rows facing only the board",
+        "b": "One desk behind a screen",
+        "c": "Pairs facing away from one another",
+        "d": "A circle or horseshoe",
+        "answer": "D",
+        "passage": ""
+      }
+    ]
+  },
+  {
+    "category": "tkt",
+    "number": 2,
+    "title": "TKT Module 3 — Amaliy test 2",
+    "course": "TKT MODULE 3",
+    "lesson": "TKT 3-modul amaliy testi 2",
+    "questions": [
+      {
+        "q": "‘What do you notice about the two sentences? Which one sounds more polite?’ The teacher is primarily:",
+        "a": "Eliciting observations",
+        "b": "Checking task instructions",
+        "c": "Drilling a sound",
+        "d": "Nominating a group",
+        "answer": "A",
+        "passage": ""
+      },
+      {
+        "q": "A teacher explains a role-play, models the first exchange, and then asks pairs to begin. The model mainly:",
+        "a": "Checks spelling",
+        "b": "Gives a final assessment",
+        "c": "Replaces all learner interaction",
+        "d": "Shows learners what to do before they perform the task",
+        "answer": "D",
+        "passage": ""
+      },
+      {
+        "q": "‘You have five minutes. Write three ideas, then tell your partner.’ Which instruction sequence is clearest?",
+        "a": "Partner first, then perhaps discuss",
+        "b": "Write something and continue as usual",
+        "c": "Time limit, first step, next step",
+        "d": "Three ideas, partner, five minutes, maybe write",
+        "answer": "C",
+        "passage": ""
+      },
+      {
+        "q": "The teacher asks, ‘Can the speaker see the word on the board?’ to check the meaning of ‘hidden’. This is:",
+        "a": "A correction code",
+        "b": "A concept-checking question",
+        "c": "An instruction-checking question",
+        "d": "A nomination",
+        "answer": "B",
+        "passage": ""
+      },
+      {
+        "q": "A learner asks, ‘What does “deadline” mean?’ Which function is the learner using?",
+        "a": "Asking for clarification of vocabulary",
+        "b": "Expressing disagreement",
+        "c": "Giving peer feedback",
+        "d": "Checking a procedure",
+        "answer": "A",
+        "passage": ""
+      },
+      {
+        "q": "‘I’m not sure I agree; the second example seems more formal.’ The learner is:",
+        "a": "Giving an instruction",
+        "b": "Checking a meaning",
+        "c": "Nominating a peer",
+        "d": "Expressing a qualified disagreement",
+        "answer": "D",
+        "passage": ""
+      },
+      {
+        "q": "A learner says, ‘He don’t like coffee.’ What is the main grammatical error?",
+        "a": "Word stress",
+        "b": "Incorrect preposition",
+        "c": "Subject–verb agreement / auxiliary form",
+        "d": "Spelling",
+        "answer": "C",
+        "passage": ""
+      },
+      {
+        "q": "A learner writes ‘enviroment’. Which error category applies?",
+        "a": "Pronoun reference",
+        "b": "Spelling",
+        "c": "Word order",
+        "d": "Tense choice",
+        "answer": "B",
+        "passage": ""
+      },
+      {
+        "q": "Which is a useful way to make instructions accessible without changing the task goal?",
+        "a": "Use familiar words, one step at a time, and a quick demonstration",
+        "b": "Use longer technical explanations",
+        "c": "Give all instructions only in writing",
+        "d": "Avoid checking whether anyone can begin",
+        "answer": "A",
+        "passage": ""
+      },
+      {
+        "q": "A teacher says, ‘I went to the market,’ and stresses ‘went’ to draw attention to the irregular past form. This is:",
+        "a": "Checking instructions",
+        "b": "Grouping learners",
+        "c": "Giving a reward",
+        "d": "Highlighting a language feature through stress",
+        "answer": "D",
+        "passage": ""
+      },
+      {
+        "q": "A learner says, ‘Could you give me an example?’ What is the learner doing?",
+        "a": "Making a complaint",
+        "b": "Giving a classroom rule",
+        "c": "Requesting further explanation",
+        "d": "Correcting the teacher",
+        "answer": "C",
+        "passage": ""
+      },
+      {
+        "q": "Which teacher response best encourages a hesitant learner to continue speaking?",
+        "a": "‘No one else may speak now.’",
+        "b": "‘Take your time. What happened next?’",
+        "c": "‘You should know this already.’",
+        "d": "‘Stop; I’ll answer for you.’",
+        "answer": "B",
+        "passage": ""
+      },
+      {
+        "q": "A teacher uses learners’ first language briefly to clarify a safety instruction, then returns to English. This can be appropriate when it:",
+        "a": "Makes an important instruction clear and supports the lesson aim",
+        "b": "Replaces all English input in every lesson",
+        "c": "Prevents learners from practising English",
+        "d": "Is used without considering learner level",
+        "answer": "A",
+        "passage": ""
+      },
+      {
+        "q": "A learner says, ‘Yesterday I have seen my friend.’ Which feature needs correction?",
+        "a": "Spelling of friend",
+        "b": "Plural noun formation",
+        "c": "Question word order",
+        "d": "Tense choice in a past-time context",
+        "answer": "D",
+        "passage": ""
+      },
+      {
+        "q": "The teacher asks, ‘What could you say instead of “very big”?’ This is:",
+        "a": "Giving a mark",
+        "b": "Organising groups",
+        "c": "Prompting learners to produce a more precise expression",
+        "d": "Checking instructions",
+        "answer": "C",
+        "passage": ""
+      },
+      {
+        "q": "A teacher moves closer to a noisy pair, makes eye contact and points to the task sheet without interrupting the class. This is:",
+        "a": "Peer assessment",
+        "b": "Non-verbal classroom management",
+        "c": "Explicit grammar correction",
+        "d": "Eliciting vocabulary",
+        "answer": "B",
+        "passage": ""
+      },
+      {
+        "q": "Learners know they should open their books, date the page and begin the starter task when the lesson starts. These repeated actions are:",
+        "a": "Classroom routines",
+        "b": "Assessment criteria",
+        "c": "Learner functions",
+        "d": "Correction codes",
+        "answer": "A",
+        "passage": ""
+      },
+      {
+        "q": "A teacher asks pairs to compare answers before whole-class feedback. This gives learners a chance to:",
+        "a": "Avoid the learning task",
+        "b": "Receive a final grade",
+        "c": "Listen only to the teacher",
+        "d": "Check and discuss their ideas with a peer",
+        "answer": "D",
+        "passage": ""
+      },
+      {
+        "q": "A teacher groups learners with different strengths for a collaborative task. The main potential benefit is:",
+        "a": "The teacher no longer needs to set a task",
+        "b": "Mixed groups always eliminate errors",
+        "c": "Learners can contribute different knowledge and support one another",
+        "d": "The stronger learner must do all the work",
+        "answer": "C",
+        "passage": ""
+      },
+      {
+        "q": "When should a teacher usually monitor a short pair discussion?",
+        "a": "Only when every learner is silent",
+        "b": "During the task, observing participation and noting useful feedback",
+        "c": "Only before the lesson begins",
+        "d": "After the class has left",
+        "answer": "B",
+        "passage": ""
+      },
+      {
+        "q": "A teacher writes ‘sp’ beside a misspelt word and lets the learner correct it. This feedback strategy:",
+        "a": "Signals the type of error and promotes self-correction",
+        "b": "Provides the full answer immediately",
+        "c": "Assesses speaking fluency",
+        "d": "Checks classroom rules",
+        "answer": "A",
+        "passage": ""
+      },
+      {
+        "q": "Why might immediate correction be avoided during a fluency activity?",
+        "a": "Learners do not need feedback",
+        "b": "Grammar is never relevant to speaking",
+        "c": "The teacher should not listen to learners",
+        "d": "Frequent interruption can disrupt communication and confidence",
+        "answer": "D",
+        "passage": ""
+      },
+      {
+        "q": "A teacher gives feedback on whether learners achieved the task outcome, then comments on useful language. The feedback focuses on:",
+        "a": "Only classroom behaviour",
+        "b": "Only the teacher’s performance",
+        "c": "Both task success and language use",
+        "d": "Only handwriting",
+        "answer": "C",
+        "passage": ""
+      },
+      {
+        "q": "A learner completes a checklist against lesson criteria and identifies one next step. This is:",
+        "a": "A classroom routine",
+        "b": "Self-assessment for learning",
+        "c": "Choral repetition",
+        "d": "Teacher nomination",
+        "answer": "B",
+        "passage": ""
+      },
+      {
+        "q": "A teacher gives a quiet learner extra planning time and sentence starters before a discussion. This is an example of:",
+        "a": "Adapting support to learners’ needs",
+        "b": "Lowering every lesson objective",
+        "c": "Removing pair interaction",
+        "d": "Giving the learner a punishment",
+        "answer": "A",
+        "passage": ""
+      },
+      {
+        "q": "Which action helps the teacher manage transitions between activities efficiently?",
+        "a": "Wait until the class becomes noisy",
+        "b": "Change tasks without explanation",
+        "c": "Repeat the same instruction several times at random",
+        "d": "Give a clear signal and explain the next step before learners move",
+        "answer": "D",
+        "passage": ""
+      },
+      {
+        "q": "A teacher assigns roles such as timekeeper and reporter to group members. This can:",
+        "a": "Replace the learning objective",
+        "b": "Guarantee that no monitoring is needed",
+        "c": "Make participation and responsibilities clearer",
+        "d": "Prevent learners from using English",
+        "answer": "C",
+        "passage": ""
+      },
+      {
+        "q": "Which is the best example of constructive peer feedback?",
+        "a": "‘I did not read your work.’",
+        "b": "‘Your reason is clear; add an example to support it.’",
+        "c": "‘This is wrong.’",
+        "d": "‘You are better than everyone else.’",
+        "answer": "B",
+        "passage": ""
+      },
+      {
+        "q": "A teacher asks learners to compare today’s speaking recording with an earlier one and note progress. The teacher is encouraging:",
+        "a": "Reflection on learning progress",
+        "b": "Instruction checking",
+        "c": "Nominating",
+        "d": "Choral drilling",
+        "answer": "A",
+        "passage": ""
+      },
+      {
+        "q": "For a pronunciation focus, the teacher models a word, marks the stressed syllable and asks learners to repeat it. Which role is most evident?",
+        "a": "Assessor only",
+        "b": "Observer only",
+        "c": "Group secretary",
+        "d": "Language model and drill leader",
+        "answer": "D",
+        "passage": ""
+      }
+    ]
+  }
+]
