@@ -685,9 +685,9 @@ function ensureDemoContent() {
 
   const readings = [t("Advanced Passage 1", 60, 9, 0, 0, 50, 2000)];
 
-  const tkt1 = [t("TKT 1-modul mock testi 1", 80, 80, 80, 2, 16), t("TKT 1-modul mock testi 2", 80, 80, 80, 1, 61)];
-  const tkt2 = [t("TKT 2-modul mock testi 1", 80, 80, 80, 0, 9), t("TKT 2-modul mock testi 2", 80, 80, 80, 0, 11)];
-  const tkt3 = [t("TKT 3-modul mock testi 1", 80, 80, 80, 0, 7), t("TKT 3-modul amaliy testi 2", 80, 80, 0, 0, 8)];
+  const tkt1 = [t("TKT 1-modul mock testi 1", 80, 80, 80, 2, 16)];
+  const tkt2 = [t("TKT 2-modul mock testi 1", 80, 80, 80, 0, 9)];
+  const tkt3 = [t("TKT 3-modul mock testi 1", 80, 80, 80, 0, 7), t("TKT 3-modul amaliy testi 2", 80, 80, 80, 0, 8)];
 
   const toifaId = ensureCourse({
   legacyTitle: "Attestatsiya   mock testlar",
@@ -714,21 +714,21 @@ function ensureDemoContent() {
   const tkt1Id = ensureCourse({
   legacyTitle: "TKT   mock testlar",
   title: "TKT MODULE 1",
-  description: "TKT 1-modul: til tizimi va o'qitish metodikasi asoslari.",
+  description: "TKT 1-modul: til tizimi va o'qitish metodikasi asoslari. Har bir testda 80 ta savol.",
   category: "tkt"
   });
   tkt1.forEach((spec, i) => putTest(tkt1Id, spec, i + 1, i === 0 ? "TKT MOCK 1   Methodology": undefined));
 
   const tkt2Id = ensureCourse({
   title: "TKT MODULE 2",
-  description: "TKT 2-modul: dars rejalashtirish va resurslardan foydalanish.",
+  description: "TKT 2-modul: dars rejalashtirish va resurslardan foydalanish. Har bir testda 80 ta savol.",
   category: "tkt"
   });
   tkt2.forEach((spec, i) => putTest(tkt2Id, spec, i + 1));
 
   const tkt3Id = ensureCourse({
   title: "TKT MODULE 3",
-  description: "TKT 3-modul: sinfni boshqarish va o'quvchilarni qo'llab-quvvatlash.",
+  description: "TKT 3-modul: sinfni boshqarish va o'quvchilarni qo'llab-quvvatlash. Har bir testda 80 ta savol.",
   category: "tkt"
   });
   tkt3.forEach((spec, i) => putTest(tkt3Id, spec, i + 1));
@@ -739,17 +739,47 @@ function ensureDemoContent() {
 
 ensureDemoContent();
 
+for (const [title, description] of [
+  ["TKT MODULE 1", "TKT 1-modul: til tizimi va o'qitish metodikasi asoslari. Har bir testda 80 ta savol."],
+  ["TKT MODULE 2", "TKT 2-modul: dars rejalashtirish va resurslardan foydalanish. Har bir testda 80 ta savol."],
+  ["TKT MODULE 3", "TKT 3-modul: sinfni boshqarish va o'quvchilarni qo'llab-quvvatlash. Har bir testda 80 ta savol."]
+]) {
+  db.prepare("UPDATE courses SET description = ? WHERE title = ? AND category = 'tkt'").run(description, title);
+}
+
 function seedPreparedTests() {
   const sources = [
     JSON.parse(fs.readFileSync(path.join(__dirname, "seed-data", "attestation-mocks.json"), "utf8")),
+    JSON.parse(fs.readFileSync(path.join(__dirname, "seed-data", "tkt-modules-1-2.json"), "utf8")),
     JSON.parse(fs.readFileSync(path.join(__dirname, "seed-data", "tkt-module-3.json"), "utf8")),
   ];
+  const readingRows = JSON.parse(fs.readFileSync(path.join(__dirname, "seed-data", "attestation-reading.json"), "utf8"));
+  const readingPassages = new Map(readingRows.filter((q) => q.passageId && q.passage).map((q) => [q.passageId, q.passage]));
+  const preparedReading = readingRows.map((q) => ({ ...q, passage: readingPassages.get(q.passageId) || q.passage || "" }));
+  const readingSections = [
+    ["Reading 1–6 · Neurolinguistics and Adult Language Acquisition", 1, 6],
+    ["Reading 7–11 · The Explorer's Discovery", 7, 11],
+    ["Reading 12–15 · Urban Green Spaces and Public Health", 12, 15],
+    ["1-bosqich · Mutaxassislik fani", 16, 35],
+    ["2-bosqich · Kasbiy Standartlar", 36, 40],
+    ["3-bosqich · Pedagogik Mahorat", 41, 50]
+  ];
+  const readingMigrationNeeded = metaGet("attestation_reading_layout", "") !== "2026-11-22-v1";
+  let migratedReadingSets = 0;
+  const replaceReadingSections = (lessonId) => {
+    db.prepare("DELETE FROM test_sections WHERE lesson_id = ?").run(lessonId);
+    const insertSection = db.prepare("INSERT INTO test_sections (lesson_id, title, from_no, to_no, passage, position) VALUES (?, ?, ?, ?, '', ?)");
+    readingSections.forEach(([title, from, to], index) => insertSection.run(lessonId, title, from, to, index + 1));
+  };
   const insertQuestion = db.prepare(
     "INSERT INTO questions (lesson_id, text, o1, o2, o3, o4, correct, passage) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
   );
+  const updateReadingQuestion = db.prepare("UPDATE questions SET text = ?, o1 = ?, o2 = ?, o3 = ?, o4 = ?, correct = ?, passage = ? WHERE id = ?");
   let addedSets = 0;
   for (const sets of sources) {
     for (const set of sets) {
+      const isAttestationFifty = set.category === "attestation" && Number(set.number) >= 1 && Number(set.number) <= 10 && set.questions.length === 50;
+      if (isAttestationFifty) set.questions.splice(0, preparedReading.length, ...preparedReading);
       const course = db.prepare("SELECT id FROM courses WHERE title = ? ORDER BY id LIMIT 1").get(set.course || (set.category === "mock" ? "2026 KUZ PLATFORMA MOCKLARI" : "Toifa testlari"));
       if (!course) continue;
       let lessonTitle = set.lesson;
@@ -765,8 +795,21 @@ function seedPreparedTests() {
         lesson = { id: Number(info.lastInsertRowid), question_count: 0 };
       }
       const currentCount = Number(db.prepare("SELECT COUNT(*) AS n FROM questions WHERE lesson_id = ?").get(lesson.id)?.n || 0);
+      if (isAttestationFifty && readingMigrationNeeded && currentCount >= preparedReading.length) {
+        const existingReading = db.prepare("SELECT id FROM questions WHERE lesson_id = ? ORDER BY id LIMIT 15").all(lesson.id);
+        existingReading.forEach((row, index) => {
+          const q = preparedReading[index];
+          updateReadingQuestion.run(q.q, q.a, q.b, q.c, q.d, "ABCD".indexOf(q.answer.toUpperCase()) + 1, q.passage || "", row.id);
+        });
+      }
       if (currentCount >= set.questions.length) {
+        if (isAttestationFifty && readingMigrationNeeded) {
+          replaceReadingSections(lesson.id);
+          if (readingMigrationNeeded) migratedReadingSets += 1;
+        }
         if (set.category === "tkt") {
+          db.prepare("UPDATE lessons SET question_count = ?, max_score = ?, duration_min = 80 WHERE id = ?")
+            .run(set.questions.length, set.questions.length, lesson.id);
           const existingQuestions = db.prepare("SELECT id, text, passage FROM questions WHERE lesson_id = ? ORDER BY id").all(lesson.id);
           const updatePassage = db.prepare("UPDATE questions SET passage = ? WHERE id = ?");
           existingQuestions.forEach((row, index) => {
@@ -787,6 +830,10 @@ function seedPreparedTests() {
         const count = set.questions.length;
         db.prepare("UPDATE lessons SET type = 'test', question_count = ?, max_score = ?, duration_min = ? WHERE id = ?")
           .run(count, count, set.category === "tkt" ? 80 : 90, lesson.id);
+        if (isAttestationFifty) {
+          replaceReadingSections(lesson.id);
+          if (readingMigrationNeeded && count === 50) migratedReadingSets += 1;
+        }
         db.exec("COMMIT");
         addedSets += 1;
       } catch (error) {
@@ -795,6 +842,7 @@ function seedPreparedTests() {
       }
     }
   }
+  if (readingMigrationNeeded && migratedReadingSets === 10) metaSet("attestation_reading_layout", "2026-11-22-v1");
   if (addedSets) console.log(`[seed] ${addedSets} new test sets added from prepared question banks`);
 }
 
@@ -817,6 +865,9 @@ const h = (v) =>
 .replace(/'/g, "&#39;");
 
 const nl2br = (s) => h(s).replace(/\r?\n/g, "<br>");
+const testReadingHtml = (s) => h(s)
+  .replace(/(neuroplasticity|magnetic resonance imaging \(MRI\)|MRI|spontaneous speech|crack|unstable|surge|This environmental degradation|These creative solutions|Furthermore|This economic pressure)/gi, '<mark class="reading-highlight">$1</mark>')
+  .replace(/\r?\n/g, "<br>");
 
 function renderLessonMarkdown(value) {
   const source = String(value == null ? "" : value).replace(/\r\n?/g, "\n");
@@ -1119,6 +1170,35 @@ function normalizeBirthDate(value) {
   return `${yearText}-${monthText}-${dayText}`;
 }
 
+function passwordPolicyError(password) {
+  if (password.length < 8) return "Parol kamida 8 ta belgidan iborat bo'lishi kerak.";
+  if (password.length > 64) return "Parol 64 ta belgidan oshmasligi kerak.";
+  if (!/[A-Z]/.test(password)) return "Parolda kamida bitta katta lotin harfi bo'lishi kerak.";
+  if (!/[a-z]/.test(password)) return "Parolda kamida bitta kichik lotin harfi bo'lishi kerak.";
+  if (!/[0-9]/.test(password)) return "Parolda kamida bitta raqam bo'lishi kerak.";
+  if (!/[^A-Za-z0-9\s]/.test(password)) return "Parolda kamida bitta maxsus belgi bo'lishi kerak.";
+  return "";
+}
+
+function passwordRequirementsMarkup() {
+  return '<small class="password-hint">Kamida 8 ta belgi: katta va kichik lotin harfi, raqam hamda maxsus belgi. Eng ko\'pi 64 ta belgi.</small>';
+}
+
+function resetPasswordForm(phone, token, error = "") {
+  return `<section class="login-modern"><div class="login-card">
+    <h1 class="login-title">Yangi parol o'rnating</h1>
+    <p class="login-sub">Telegram tasdiqlash kodi qabul qilindi. Yangi parolni shu yerda belgilang.</p>
+    ${error ? alertBox(error, "error") : ""}
+    <form method="post" action="/login/reset/password" class="login-form" autocomplete="on">
+      <input type="hidden" name="phone" value="${h(phone)}">
+      <input type="hidden" name="reset_token" value="${h(token)}">
+      <div class="field"><label>Yangi parol</label><input name="password" type="password" required minlength="8" maxlength="64" autocomplete="new-password">${passwordRequirementsMarkup()}</div>
+      <div class="field"><label>Parolni tasdiqlang</label><input name="password_confirm" type="password" required minlength="8" maxlength="64" autocomplete="new-password"></div>
+      <button class="btn-continue" type="submit">Parolni saqlash</button>
+    </form>
+  </div></section>`;
+}
+
 function normalizeTelegramUsername(value) {
   return String(value || "")
     .trim()
@@ -1347,7 +1427,7 @@ ${seoTags}
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%2312b5a6'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='18' font-weight='bold' text-anchor='middle' fill='%2303211d'%3EH%3C/text%3E%3C/svg%3E">
 <script async src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>try{document.documentElement.dataset.theme=localStorage.getItem('ht_theme')||'dark';}catch(e){document.documentElement.dataset.theme='dark';}</script>
-<link rel="stylesheet" href="/assets/platform.css?v=20261122a">
+<link rel="stylesheet" href="/assets/platform.css?v=20261122e">
 </head>
 <body${isStudentPage ? ` class="student-page${isDashboard ? " is-dashboard" : ""}"` : ""}>
 <header class="topbar">
@@ -1370,6 +1450,7 @@ ${seoTags}
   <span class="theme-moon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A8.5 8.5 0 1 1 11.2 3a6.6 6.6 0 0 0 9.8 9.8Z"/></svg></span>
   </button>
   </div>
+  <button class="app-refresh" type="button" data-app-refresh aria-label="Ilovani serverdan yangilash" title="Serverdagi so'nggi o'zgarishlarni yuklash"><span aria-hidden="true">⟳</span><b>Yangilash</b></button>
   <button class="menu-toggle" type="button" id="menuToggle" aria-label="Menyu" aria-expanded="false">
   <span></span><span></span><span></span>
   </button>
@@ -1549,6 +1630,30 @@ c.addEventListener('change', function () { b.disabled = !c.checked; });
   }, 300);
   }
 
+  document.querySelectorAll('[data-birth-date]').forEach(function (input) {
+    function formatDate(value) {
+      var digits = String(value || '').replace(/\\D/g, '').slice(0, 8);
+      if (digits.length <= 2) return digits;
+      if (digits.length <= 4) return digits.slice(0, 2) + '.' + digits.slice(2);
+      return digits.slice(0, 2) + '.' + digits.slice(2, 4) + '.' + digits.slice(4);
+    }
+    function applyMask() {
+      var start = input.selectionStart || 0;
+      var digitsBefore = input.value.slice(0, start).replace(/\\D/g, '').length;
+      var formatted = formatDate(input.value);
+      input.value = formatted;
+      var position = 0, seen = 0;
+      while (position < formatted.length && seen < digitsBefore) {
+        if (/\\d/.test(formatted[position])) seen += 1;
+        position += 1;
+      }
+      if (formatted[position] === '.') position += 1;
+      input.setSelectionRange(position, position);
+    }
+    input.value = formatDate(input.value);
+    input.addEventListener('input', applyMask);
+  });
+
   document.querySelectorAll('[data-copy]').forEach(function (btn) {
   btn.addEventListener('click', function () {
   var value = btn.getAttribute('data-copy');
@@ -1612,7 +1717,24 @@ c.addEventListener('change', function () { b.disabled = !c.checked; });
 })();
 </script>
 <script>
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=4').then(function (registration) { registration.update().catch(function () {}); }).catch(function () {});
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=7').then(function (registration) { registration.update().catch(function () {}); }).catch(function () {});
+document.querySelectorAll('[data-app-refresh]').forEach(function (button) {
+  button.addEventListener('click', async function () {
+    if (button.disabled) return;
+    var oldText = button.innerHTML;
+    button.disabled = true;
+    button.innerHTML = '<span aria-hidden="true">⟳</span><b>Yangilanmoqda...</b>';
+    try {
+      if ('serviceWorker' in navigator) {
+        var registration = await navigator.serviceWorker.getRegistration();
+        if (registration) await registration.update();
+      }
+    } catch (e) {}
+    button.innerHTML = '<span aria-hidden="true">✓</span><b>Yangilandi</b>';
+    window.location.reload();
+    setTimeout(function () { button.disabled = false; button.innerHTML = oldText; }, 2500);
+  });
+});
 </script>
 </body>
 </html>`;
@@ -1712,8 +1834,8 @@ function courseProgress(userId, courseId) {
 .prepare(
   `SELECT
   (SELECT COUNT(*) FROM lessons WHERE course_id = ?) AS total,
-  (SELECT COUNT(*) FROM progress p JOIN lessons l ON l.id = p.lesson_id
-  WHERE l.course_id = ? AND p.user_id = ? AND (l.type <> 'test' OR p.score >= 80)) AS done`
+  (SELECT COUNT(*) FROM progress p JOIN lessons l ON l.id = p.lesson_id JOIN courses c ON c.id = l.course_id
+  WHERE l.course_id = ? AND p.user_id = ? AND (l.type <> 'test' OR (c.category = 'attestation' AND p.score IS NOT NULL) OR (c.category <> 'attestation' AND p.score >= 80))) AS done`
   )
 .get(courseId, courseId, userId);
   return { total: row.total || 0, done: row.done || 0 };
@@ -1973,32 +2095,17 @@ async function sendLoginCode(chatId, code) {
   return Boolean(response && response.ok);
 }
 
-async function sendResetPassword(chatId, password) {
-  const response = await telegramApi("sendMessage", {
-    chat_id: chatId,
-    text: `<b>Yangi parolingiz</b>\n\n<code>${password}</code>\n\nPlatformaga kirishda ushbu 4 raqamli paroldan foydalaning.`,
-    parse_mode: "HTML",
-    reply_markup: { inline_keyboard: [[{ text: "Nusxalash", copy_text: { text: password } }]] }
-  });
-  return Boolean(response && response.ok);
-}
-
-function telegramDuelKeyboard(path, label = "Duelni ochish") {
+function telegramDuelKeyboard(path) {
   const base = platformPublicUrl();
   if (!base) return null;
   const url = base + path;
-  return {
-  inline_keyboard: [
-  [{ text: `a  ${label}`, web_app: { url } }],
-  [{ text: "xR Brauzerda ochish", url }]
-  ]
-  };
+  return { inline_keyboard: [[{ text: "Brauzerda ochish", url }]] };
 }
 
-async function sendUserMessage(userId, text, path, label = "Duelni ochish") {
+async function sendUserMessage(userId, text, path) {
   const user = db.prepare("SELECT telegram_id FROM users WHERE id = ?").get(userId);
   if (!user || !user.telegram_id) return false;
-  const keyboard = telegramDuelKeyboard(path, label);
+  const keyboard = telegramDuelKeyboard(path);
   const payload = {
   chat_id: user.telegram_id,
   text,
@@ -2007,13 +2114,6 @@ async function sendUserMessage(userId, text, path, label = "Duelni ochish") {
   };
   if (keyboard) payload.reply_markup = keyboard;
   let data = await telegramApi("sendMessage", payload);
-  if (keyboard && data && !data.ok) {
-  const base = platformPublicUrl();
-  if (base) {
-  payload.reply_markup = { inline_keyboard: [[{ text: `a  ${label}`, url: base + path }]] };
-  data = await telegramApi("sendMessage", payload);
-  }
-  }
   return !!(data && data.ok);
 }
 
@@ -2039,9 +2139,8 @@ async function notifyTournamentMatchPlayers(tournamentId, round) {
   const opponent = playerId === match.p1 ? match.p2name: match.p1name;
   await sendUserMessage(
   playerId,
-  `—  <b>${label} boshlandi</b>\nRaqibingiz: <b>${h(opponent || "?")}</b>\n15 ta aralash savol. Har savolga 60 soniya. Ilovani oching.`,
-  `/duel/tournament/match/${match.id}`,
-  "Duelni ochish"
+  `—  <b>${label} boshlandi</b>\nRaqibingiz: <b>${h(opponent || "?")}</b>\n15 ta aralash savol. Har savolga 60 soniya. Brauzerda oching.`,
+  `/duel/tournament/match/${match.id}`
   );
   }
   }
@@ -2090,14 +2189,14 @@ async function handleDuelInviteStart(chatId, rawCode) {
   const duelUrl = `${platformPublicUrl() || "https://habibateacher.uz"}/duel/${encodeURIComponent(code)}`;
   const response = await telegramApi("sendMessage", {
     chat_id: chatId,
-    text: `Duel tayyor, ${creator.name || "o'quvchi"}! Raqibingizni kontaktlardan tanlang. Telegram xabarni bot nomidan yuborish uchun keyingi oynada taklif natijasini tanlab jo'nating.`,
+    text: `Duel tayyor, ${creator.name || "o'quvchi"}! Raqibingizni kontaktlardan tanlang.`,
     reply_markup: {
       inline_keyboard: [
         [{
           text: "Telegram kontaktini tanlash",
           switch_inline_query_chosen_chat: { query: `duel_${code}`, allow_user_chats: true }
         }],
-        [{ text: "Duel xonasini ochish", url: duelUrl }]
+        [{ text: "Brauzerda ochish", url: duelUrl }]
       ]
     },
     disable_web_page_preview: true
@@ -2125,7 +2224,7 @@ async function handleDuelInlineQuery(inlineQuery) {
     ) {
       const duelUrl = `${platformPublicUrl() || "https://habibateacher.uz"}/duel/${encodeURIComponent(code)}`;
       const questionCount = Math.min(10, Number(duel.total_questions) || 10);
-      const inviteText = `⚔️ <b>${h(duel.creator_name || "O'quvchi")}</b> sizni Habiba Teacher'da duelga chaqiryapti!\n\n📚 Test: <b>${h(duel.lesson_title || "Aralash test")}</b>\n🔢 Savollar: ${questionCount}\n\nTaklifni qabul qilish uchun havolani oching.`;
+      const inviteText = `⚔️ <b>${h(duel.creator_name || "O'quvchi")}</b> sizni Habiba Teacher'da duelga chaqiryapti!\n\n📚 Test: <b>${h(duel.lesson_title || "Aralash test")}</b>\n🔢 Savollar: ${questionCount}\n\nTaklifni qabul qilish uchun brauzerda oching.`;
       results.push({
         type: "article",
         id: `duel_${code}`,
@@ -2137,7 +2236,7 @@ async function handleDuelInlineQuery(inlineQuery) {
           disable_web_page_preview: true
         },
         reply_markup: {
-          inline_keyboard: [[{ text: "Taklifni qabul qilish", url: duelUrl }]]
+          inline_keyboard: [[{ text: "Brauzerda ochish", url: duelUrl }]]
         }
       });
     }
@@ -2305,17 +2404,24 @@ function startPlatformBot() {
   loop();
 }
 
-function testResultStats(lessonId) {
+function testResultStats(lessonId, category = "") {
   const rows = db
 .prepare("SELECT score FROM progress WHERE lesson_id = ? AND score IS NOT NULL")
 .all(lessonId);
-  const buckets = [
-  { label: "70% va yuqori", min: 70, max: 100 },
-  { label: "51-70%", min: 51, max: 69 },
-  { label: "31-50%", min: 31, max: 50 },
-  { label: "11-30%", min: 11, max: 30 },
-  { label: "0-10%", min: 0, max: 10 }
-  ].map((b) => ({...b, count: rows.filter((r) => r.score >= b.min && r.score <= b.max).length }));
+  const ranges = category === "attestation"
+    ? [
+        { label: "Oliy toifa · 80–100%", min: 80, max: 100 },
+        { label: "Birinchi toifa · 70–79%", min: 70, max: 79 },
+        { label: "Ikkinchi toifa · 0–69%", min: 0, max: 69 }
+      ]
+    : [
+        { label: "70% va yuqori", min: 70, max: 100 },
+        { label: "51–69%", min: 51, max: 69 },
+        { label: "31–50%", min: 31, max: 50 },
+        { label: "11–30%", min: 11, max: 30 },
+        { label: "0–10%", min: 0, max: 10 }
+      ];
+  const buckets = ranges.map((b) => ({...b, count: rows.filter((r) => r.score >= b.min && r.score <= b.max).length }));
   const top = db
 .prepare(
   `SELECT u.id, u.name, p.score
@@ -2359,7 +2465,7 @@ function testLanding(lesson, { user, admin, owned }) {
   `${course ? course.title: "Testlar"} bo'limidagi test. Jami savollar ${qcount} ta, ajratilgan vaqt   ${formatDuration(
   lesson.duration_min
   )}. Natija test yakunlangach avtomatik hisoblanadi va reytingga qo'shiladi.`;
-  const stats = testResultStats(lesson.id);
+  const stats = testResultStats(lesson.id, course && course.category);
   const maxCount = Math.max(1,...stats.buckets.map((b) => b.count));
   const progressRow = user
   ? db.prepare("SELECT score FROM progress WHERE user_id = ? AND lesson_id = ?").get(user.id, lesson.id)
@@ -3728,7 +3834,7 @@ function dashboardPage(user) {
 
   return `<section class="dash-hero">
     <div class="wrap dash-welcome-wrap">
-      <div class="dash-quote"><span class="dash-quote-symbol" aria-hidden="true">&#128172;</span><div><span>${h(quoteText)}</span><small class="dash-quote-author">— ${h(quoteSource)}</small></div></div>
+      <div class="dash-quote"><span class="dash-quote-symbol" aria-hidden="true">&#128172;</span><div><small class="dash-quote-label">Bugungi kun hikmati</small><span>${h(quoteText)}</span><small class="dash-quote-author">— ${h(quoteSource)}</small></div></div>
       <div class="dash-welcome-row">
         <div>
           <span class="eyebrow">Xush kelibsiz</span>
@@ -3776,7 +3882,7 @@ function dashboardPage(user) {
           ru: { installed: "Приложение уже установлено.", help: "Откройте меню браузера и выберите «Установить приложение» или «Добавить на главный экран»." },
           en: { installed: "The app is already installed.", help: "Open your browser menu and choose Install app or Add to Home screen." }
         };
-        if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js').catch(function () {});
+        if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=7').catch(function () {});
         window.addEventListener('beforeinstallprompt', function (event) {
           event.preventDefault();
           installPrompt = event;
@@ -4119,11 +4225,11 @@ function testDocument({ title, body }) {  return `<!DOCTYPE html>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%231e40af'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='18' font-weight='bold' text-anchor='middle' fill='white'%3EH%3C/text%3E%3C/svg%3E">
 <script async src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>try{document.documentElement.dataset.theme=localStorage.getItem('ht_theme')||'dark';}catch(e){document.documentElement.dataset.theme='dark';}</script>
-<link rel="stylesheet" href="/assets/platform.css?v=20261122a">
+<link rel="stylesheet" href="/assets/platform.css?v=20261122e">
 </head>
 <body class="test-body student-page">
 ${body}
-<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=4').then(function (registration) { registration.update().catch(function () {}); }).catch(function () {});</script>
+<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=7').then(function (registration) { registration.update().catch(function () {}); }).catch(function () {});</script>
 </body>
 </html>`;
 }
@@ -4159,7 +4265,7 @@ function testPage(lesson, questions, testSections = [], attemptId = 0) {
   const slides = questions
 .map(
   (q, i) => `<section class="q-slide${i === 0 ? " is-active": ""}" data-i="${i}">
-  <div class="q-passage-data" hidden>${nl2br(passages[i])}</div>
+  <div class="q-passage-data" hidden>${testReadingHtml(passages[i])}</div>
   <div class="q-head">${i + 1}-savol</div>
   <h2 class="q-title">${h(q.text)}</h2>
   <div class="q-options">
@@ -4168,7 +4274,7 @@ function testPage(lesson, questions, testSections = [], attemptId = 0) {
   (n) => `<label class="q-opt">
   <input type="radio" name="q${q.id}" value="${n}">
   <span class="q-letter">${"ABCD"[n - 1]}</span>
-  <span class="q-text">${h(q["o" + n])}</span>
+  <span class="q-text">${i >= 11 && i < 15 ? testReadingHtml(q["o" + n]) : h(q["o" + n])}</span>
   </label>`
   )
 .join("")}
@@ -4191,6 +4297,10 @@ function testPage(lesson, questions, testSections = [], attemptId = 0) {
   if (cursor > total) break;
   }
   if (cursor <= total) sections.push({ title: "Savollar", from: cursor, to: total });
+  } else if (total > 40) {
+  sections.push({ title: "1-bosqich. Mutaxassislik fani", from: 1, to: 35 });
+  sections.push({ title: "2-bosqich. Kasbiy Standartlar", from: 36, to: 40 });
+  sections.push({ title: "3-bosqich. Pedagogik Mahorat", from: 41, to: total });
   } else if (total > 35) {
   sections.push({ title: "1-bosqich. Mutaxassislik fani", from: 1, to: 35 });
   sections.push({ title: "2-bosqich. Kasbiy Standartlar", from: 36, to: total });
@@ -4261,7 +4371,7 @@ function testPage(lesson, questions, testSections = [], attemptId = 0) {
   <div class="q-row${hasPassage ? "": " single"}">
   ${
   hasPassage
-  ? `<aside class="q-reading-pane"><div class="q-reading" id="readingContent">${nl2br(
+  ? `<aside class="q-reading-pane"><div class="q-reading" id="readingContent">${testReadingHtml(
   passages[0] || ""
   )}</div></aside>
   <div class="q-resizer" id="qResizer" aria-hidden="true"><span></span></div>`
@@ -4461,7 +4571,14 @@ function testPage(lesson, questions, testSections = [], attemptId = 0) {
 function testResultPage(lesson, questions, score, answers = {}, passMark = 80) {
   const total = questions.length;
   const correct = total ? Math.round((score / 100) * total): 0;
-  const passed = score >= passMark;
+  const course = db.prepare("SELECT category FROM courses WHERE id = ?").get(lesson.course_id);
+  const isAttestation = course && course.category === "attestation";
+  const passed = isAttestation || score >= passMark;
+  const attestationGrade = score >= 80
+    ? "Oliy toifaga o'tdingiz"
+    : score >= 70
+      ? "Birinchi toifaga o'tdingiz"
+      : "Ikkinchi toifa";
   const mistakes = questions.filter((q) => String(answers[`q${q.id}`] || "") !== String(q.correct));
   const review = Object.keys(answers).length
     ? `<section class="answer-review"><h2>Xatolarni ko'rib chiqing</h2>${mistakes.length ? mistakes.map((q) => `<article class="answer-mistake"><b>${h(q.text)}</b><p class="wrong-answer">Sizning javobingiz: ${h(q[`o${Number(answers[`q${q.id}`])}`] || "Javob berilmadi")}</p><p class="right-answer">To'g'ri javob: ${h(q[`o${q.correct}`])}</p>${q.passage ? `<details><summary>Matnni ko'rish</summary><p>${nl2br(q.passage)}</p></details>` : ""}</article>`).join("") : `<p class="muted">Xato javob yo'q — a'lo!</p>`}</section>`
@@ -4476,9 +4593,9 @@ function testResultPage(lesson, questions, score, answers = {}, passMark = 80) {
   <div class="result-card">
   <span class="pill">Test yakunlandi</span>
   <div class="score-circle">${score}%</div>
-  <h1>${passed ? "Yaxshi natija!": "Yana urinib ko'ring"}</h1>
+  <h1>${isAttestation ? attestationGrade : passed ? "Yaxshi natija!": "Yana urinib ko'ring"}</h1>
   <p class="muted">${correct} / ${total} to'g'ri javob</p>
-  <p class="muted">O'tish uchun ${passMark}% kerak.</p>
+  ${isAttestation ? `<p class="muted">${score >= 80 ? "80–100%" : score >= 70 ? "70–79%" : "70% dan kam"} natija</p>` : `<p class="muted">O'tish uchun ${passMark}% kerak.</p>`}
   <div class="actions">
   ${passed ? `<a class="btn btn-primary" href="${moduleHref(lesson)}">Testlarga qaytish</a>` : `<a class="btn btn-primary" href="/test/${lesson.id}?start=1">Qayta topshirish</a>`}
   ${passed ? `<a class="btn btn-ghost" href="/test/${lesson.id}?start=1">Yana topshirish</a>` : ""}
@@ -4985,16 +5102,16 @@ const server = http.createServer(async (req, res) => {
   const body = authCard(
   "Ro'yxatdan o'tish",
   duelInvite ? "Duelga qo'shilish uchun ma'lumotlaringizni kiriting." : "Ma'lumotlaringizni kiriting va yangi parol yarating.",
-  `<form method="post" action="/register" class="form">
+  `<form method="post" action="/register" class="form" autocomplete="on">
   ${next ? `<input type="hidden" name="next" value="${h(next)}">`: ""}
   <input type="hidden" name="tg_init_data" value="">
-  <div class="field"><label>Ismingiz</label><input name="name" required maxlength="40" autocomplete="given-name" placeholder="Habiba"></div>
-  <div class="field"><label>Familiyangiz</label><input name="surname" required maxlength="60" autocomplete="family-name" placeholder="Karimova"></div>
-  <div class="field"><label>Otangizning ismi (otchestvo)</label><input name="father_name" required maxlength="60" placeholder="Abdulla qizi / Abdulla o'g'li"></div>
-  <div class="field"><label>Tug'ilgan kun.oy.yil</label><input name="birth_date" required inputmode="numeric" pattern="[0-9]{2}\\.[0-9]{2}\\.[0-9]{4}" placeholder="kun.oy.yil, masalan 05.09.1995"></div>
-  <div class="field"><label>Telefon raqamingiz</label><input name="phone" data-phone required inputmode="tel" autocomplete="tel" placeholder="+998 93 568 00 91"></div>
-  <div class="field"><label>Yangi parol (4 ta raqam)</label><input name="password" type="password" required minlength="4" maxlength="4" pattern="[0-9]{4}" inputmode="numeric" autocomplete="new-password" placeholder="Masalan: 1234"></div>
-  <div class="field"><label>Parolni qayta tasdiqlang</label><input name="password_confirm" type="password" required minlength="4" maxlength="4" pattern="[0-9]{4}" inputmode="numeric" autocomplete="new-password" placeholder="Parolni yana kiriting"></div>
+  <div class="field"><label>Ismingiz</label><input name="name" required maxlength="40" autocomplete="off" placeholder="Habiba"></div>
+  <div class="field"><label>Familiyangiz</label><input name="surname" required maxlength="60" autocomplete="off" placeholder="Karimova"></div>
+  <div class="field"><label>Otangizning ismi (otchestvo)</label><input name="father_name" required maxlength="60" autocomplete="off" placeholder="Abdulla qizi / Abdulla o'g'li"></div>
+  <div class="field"><label>Tug'ilgan kun.oy.yil</label><input name="birth_date" data-birth-date required inputmode="numeric" maxlength="10" autocomplete="off" pattern="[0-9]{2}\\.[0-9]{2}\\.[0-9]{4}" placeholder="kun.oy.yil, masalan 05.09.1995"></div>
+  <div class="field"><label>Telefon raqamingiz</label><input name="phone" data-phone required inputmode="tel" autocomplete="username" placeholder="+998 93 568 00 91"></div>
+  <div class="field"><label>Parol</label><input name="password" type="password" required minlength="8" maxlength="64" autocomplete="new-password">${passwordRequirementsMarkup()}</div>
+  <div class="field"><label>Parolni qayta tasdiqlang</label><input name="password_confirm" type="password" required minlength="8" maxlength="64" autocomplete="new-password" placeholder="Parolni yana kiriting"></div>
   <button class="btn btn-primary" type="submit">Ro'yxatdan o'tish</button>
   </form>`,
   `<p class="alt">Akkountingiz bormi? <a href="/login${next ? `?next=${encodeURIComponent(next)}`: ""}">Kirish</a></p>`,
@@ -5014,6 +5131,7 @@ const server = http.createServer(async (req, res) => {
   const phone = normalizePhone(fields.phone);
   const duelInvite = /^\/duel\/[A-Z0-9]{6}$/i.test(next);
   const password = String(fields.password || "");
+  const passwordError = passwordPolicyError(password);
   const passwordConfirm = String(fields.password_confirm || "");
   const tgUser = telegramUserFromInitData(fields.tg_init_data);
   const rawTelegram = String((tgUser && tgUser.id) || fields.telegram_id || "").trim();
@@ -5034,7 +5152,7 @@ const server = http.createServer(async (req, res) => {
   else if (!/^[\p{L}\s'-]{2,}$/u.test(fatherName)) error = "Otangizning ismini to'g'ri kiriting.";
   else if (!birthDate) error = "Tug'ilgan sanani kun.oy.yil ko'rinishida to'g'ri kiriting.";
   else if (!validPhoneInput(fields.phone) || !validPhone(phone)) error = "Telefon raqami faqat 9 ta raqamdan iborat bo'lishi kerak.";
-  else if (!/^\d{4}$/.test(password)) error = "Parol aynan 4 ta raqamdan iborat bo'lishi kerak.";
+  else if (passwordError) error = passwordError;
   else if (password !== passwordConfirm) error = "Parollar bir xil emas. Qayta tekshiring.";
   else if (telegramId && db.prepare("SELECT 1 FROM users WHERE telegram_id = ?").get(telegramId))
   error = "Bu Telegram ID allaqachon ro'yxatdan o'tgan. Bir ID   bitta akkaunt.";
@@ -5048,16 +5166,16 @@ const server = http.createServer(async (req, res) => {
   "Ro'yxatdan o'tish",
   duelInvite ? "Duelga qo'shilish uchun ma'lumotlaringizni kiriting." : "Ma'lumotlaringizni tekshirib, ro'yxatdan o'ting.",
   `${alertBox(error)}
-  <form method="post" action="/register" class="form">
+  <form method="post" action="/register" class="form" autocomplete="on">
   ${next ? `<input type="hidden" name="next" value="${h(next)}">`: ""}
   <input type="hidden" name="tg_init_data" value="">
-  <div class="field"><label>Ismingiz</label><input name="name" value="${h(firstName)}" required maxlength="40" autocomplete="given-name"></div>
-  <div class="field"><label>Familiyangiz</label><input name="surname" value="${h(surname)}" required maxlength="60" autocomplete="family-name"></div>
-  <div class="field"><label>Otangizning ismi (otchestvo)</label><input name="father_name" value="${h(fatherName)}" required maxlength="60"></div>
-  <div class="field"><label>Tug'ilgan kun.oy.yil</label><input name="birth_date" value="${h(birthDateInput)}" required inputmode="numeric" pattern="[0-9]{2}\\.[0-9]{2}\\.[0-9]{4}" placeholder="kun.oy.yil, masalan 05.09.1995"></div>
-  <div class="field"><label>Telefon raqamingiz</label><input name="phone" data-phone value="${h(fields.phone || "")}" required inputmode="tel" maxlength="17" autocomplete="tel" placeholder="+998 90 123 45 67"></div>
-  <div class="field"><label>Yangi parol (4 ta raqam)</label><input name="password" type="password" required minlength="4" maxlength="4" pattern="[0-9]{4}" inputmode="numeric" autocomplete="new-password"></div>
-  <div class="field"><label>Parolni qayta tasdiqlang</label><input name="password_confirm" type="password" required minlength="4" maxlength="4" pattern="[0-9]{4}" inputmode="numeric" autocomplete="new-password"></div>
+  <div class="field"><label>Ismingiz</label><input name="name" value="${h(firstName)}" required maxlength="40" autocomplete="off"></div>
+  <div class="field"><label>Familiyangiz</label><input name="surname" value="${h(surname)}" required maxlength="60" autocomplete="off"></div>
+  <div class="field"><label>Otangizning ismi (otchestvo)</label><input name="father_name" value="${h(fatherName)}" required maxlength="60" autocomplete="off"></div>
+  <div class="field"><label>Tug'ilgan kun.oy.yil</label><input name="birth_date" data-birth-date value="${h(birthDateInput)}" required inputmode="numeric" maxlength="10" autocomplete="off" pattern="[0-9]{2}\\.[0-9]{2}\\.[0-9]{4}" placeholder="kun.oy.yil, masalan 05.09.1995"></div>
+  <div class="field"><label>Telefon raqamingiz</label><input name="phone" data-phone value="${h(fields.phone || "")}" required inputmode="tel" maxlength="17" autocomplete="username" placeholder="+998 90 123 45 67"></div>
+  <div class="field"><label>Parol</label><input name="password" type="password" required minlength="8" maxlength="64" autocomplete="new-password">${passwordRequirementsMarkup()}</div>
+  <div class="field"><label>Parolni qayta tasdiqlang</label><input name="password_confirm" type="password" required minlength="8" maxlength="64" autocomplete="new-password"></div>
   <button class="btn btn-primary" type="submit">Ro'yxatdan o'tish</button>
   </form>`,
   `<p class="alt">Akkountingiz bormi? <a href="/login${next ? `?next=${encodeURIComponent(next)}`: ""}">Kirish</a></p>`,
@@ -5096,18 +5214,18 @@ const server = http.createServer(async (req, res) => {
     wrong: "Tasdiqlash kodi noto'g'ri. Qayta kiriting.",
     expired: "Kod muddati tugadi. Yangi kod so'rang.",
     blocked: "Urinishlar ko'p bo'ldi. Yangi kod so'rang.",
-    sent: "Yangi parol Telegram botga yuborildi. Botdagi xabarlarni tekshiring."
+    updated: "Parol yangilandi. Endi yangi parol bilan kiring."
   };
   const body = `<section class="login-modern"><div class="login-card">
     <h1 class="login-title">Parolni tiklash</h1>
     <p class="login-sub">Telefoningizga ulangan Telegram bot orqali parolni tiklang.</p>
-    ${alerts[err] ? alertBox(alerts[err], err === "sent" ? "success" : "error") : ""}
+    ${alerts[err] ? alertBox(alerts[err], err === "updated" ? "success" : "error") : ""}
     ${err === "telegram" || err === "sendcode" ? `<p class="center-actions"><a class="btn btn-ghost" href="${h(botLink())}" target="_blank" rel="noopener">Telegram botni ochish</a></p>` : ""}
     ${step === "verify" ? `<form method="post" action="/login/reset/verify" class="login-form">
       <input type="hidden" name="phone" value="${h(phoneRaw)}">
       <p class="login-sub"><b>${h(phoneRaw)}</b> raqamiga ulangan botga 6 xonali kod yuborildi.</p>
       <div class="field"><label>Tasdiqlash kodi</label><input name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" placeholder="123456" required></div>
-      <button class="btn-continue" type="submit">Yangi parolni olish</button>
+      <button class="btn-continue" type="submit">Tasdiqlash</button>
     </form><form method="post" action="/login/reset/start" class="login-resend"><input type="hidden" name="phone" value="${h(phoneRaw)}"><button class="link" type="submit">Kodni qayta yuborish</button></form>`
     : `<form method="post" action="/login/reset/start" class="login-form">
       <div class="field"><label>Telefon</label><input name="phone" data-phone value="${h(phoneRaw)}" inputmode="tel" maxlength="17" autocomplete="tel-national" placeholder="+998 90 123 45 67" required></div>
@@ -5156,17 +5274,47 @@ const server = http.createServer(async (req, res) => {
     return redirect(res, `${back}&err=blocked`);
   }
   if (!userRow || Number(userRow.is_blocked)) return redirect(res, "/login/reset?err=notfound");
-  if (!/^\d{6}$/.test(code) || loginCodeHash(phone, code) !== codeRow.code_hash) {
+  if (!/^\d{6}$/.test(code) || !safeEqual(loginCodeHash(phone, code), codeRow.code_hash)) {
     db.prepare("UPDATE login_codes SET attempts = attempts + 1 WHERE phone = ?").run(phone);
     return redirect(res, `${back}&err=wrong`);
   }
-  const chatId = resolveTelegramChatId(userRow);
-  if (!chatId) return redirect(res, "/login/reset?err=telegram");
-  const newPassword = String(randomInt(1000, 10000));
-  if (!(await sendResetPassword(chatId, newPassword))) return redirect(res, `${back}&err=sendcode`);
-  db.prepare("UPDATE users SET pass = ?, password_failures = 0 WHERE id = ?").run(hashPassword(newPassword), userRow.id);
+  const resetToken = randomBytes(32).toString("hex");
+  db.prepare("UPDATE login_codes SET code_hash = ?, expires_at = ?, attempts = 0, created_at = ? WHERE phone = ?")
+    .run(loginCodeHash(phone, resetToken), Date.now() + 10 * 60 * 1000, nowISO(), phone);
+  send(res, 200, layout({ title: "Yangi parol", body: resetPasswordForm(phone, resetToken), noindex: true }));
+  return;
+  }
+
+  if (p === "/login/reset/password" && method === "POST") {
+  const phone = normalizePhone(fields.phone);
+  const resetToken = String(fields.reset_token || "");
+  const password = String(fields.password || "");
+  const passwordConfirm = String(fields.password_confirm || "");
+  const codeRow = validPhone(phone) ? db.prepare("SELECT * FROM login_codes WHERE phone = ?").get(phone) : null;
+  if (!codeRow || codeRow.expires_at < Date.now()) {
+    if (codeRow) db.prepare("DELETE FROM login_codes WHERE phone = ?").run(phone);
+    return redirect(res, "/login/reset?err=expired");
+  }
+  if (codeRow.attempts >= 5) {
+    db.prepare("DELETE FROM login_codes WHERE phone = ?").run(phone);
+    return redirect(res, "/login/reset?err=blocked");
+  }
+  if (!/^[a-f0-9]{64}$/i.test(resetToken) || !safeEqual(loginCodeHash(phone, resetToken), codeRow.code_hash)) {
+    db.prepare("UPDATE login_codes SET attempts = attempts + 1 WHERE phone = ?").run(phone);
+    send(res, 400, layout({ title: "Yangi parol", body: resetPasswordForm(formatLocalPhone(phone), resetToken, "Tiklash havolasi noto'g'ri. Qayta urinib ko'ring."), noindex: true }));
+    return;
+  }
+  const userRow = findUserByPhone(phone, "id, is_blocked");
+  if (!userRow || Number(userRow.is_blocked)) return redirect(res, "/login/reset?err=notfound");
+  const policyError = passwordPolicyError(password);
+  if (policyError || password !== passwordConfirm) {
+    const error = policyError || "Parollar bir xil emas. Qayta tekshiring.";
+    send(res, 400, layout({ title: "Yangi parol", body: resetPasswordForm(formatLocalPhone(phone), resetToken, error), noindex: true }));
+    return;
+  }
+  db.prepare("UPDATE users SET pass = ?, password_failures = 0 WHERE id = ?").run(hashPassword(password), userRow.id);
   db.prepare("DELETE FROM login_codes WHERE phone = ?").run(phone);
-  return redirect(res, "/login/reset?err=sent");
+  return redirect(res, "/login/reset?err=updated");
   }
 
   /* -------------------------------------------------------------- login */
@@ -5279,9 +5427,9 @@ const server = http.createServer(async (req, res) => {
   ${nextHidden}
   <div class="phone-wrap">
   <span class="phone-ico"><svg viewBox="0 0 24 24"><path d="M6.5 3h3l1.5 4-2 1.5a12 12 0 0 0 6.5 6.5L17 13l4 1.5v3A2.5 2.5 0 0 1 18.5 20 15.5 15.5 0 0 1 4 5.5 2.5 2.5 0 0 1 6.5 3Z"/></svg></span>
-  <span class="phone-prefix">+998</span><input id="phoneInput" name="phone" value="${h(phoneRaw)}" required inputmode="numeric" maxlength="12" placeholder="90 123 45 67" autocomplete="tel-national">
+  <span class="phone-prefix">+998</span><input id="phoneInput" name="phone" value="${h(phoneRaw)}" required inputmode="numeric" maxlength="12" placeholder="90 123 45 67" autocomplete="username">
   </div>
-  <div class="field"><label>Parol (4 ta raqam)</label><input name="password" type="password" required minlength="4" maxlength="4" pattern="[0-9]{4}" inputmode="numeric" autocomplete="current-password"></div>
+  <div class="field"><label>Parol</label><input name="password" type="password" required maxlength="64" autocomplete="current-password"></div>
   <button class="btn-continue" type="submit">Kirish <span>&rarr;</span></button>
   </form>
   ` : `
@@ -5289,7 +5437,7 @@ const server = http.createServer(async (req, res) => {
   ${nextHidden}
   <div class="phone-wrap">
   <span class="phone-ico"><svg viewBox="0 0 24 24"><path d="M6.5 3h3l1.5 4-2 1.5a12 12 0 0 0 6.5 6.5L17 13l4 1.5v3A2.5 2.5 0 0 1 18.5 20 15.5 15.5 0 0 1 4 5.5 2.5 2.5 0 0 1 6.5 3Z"/></svg></span>
-  <span class="phone-prefix">+998</span><input id="phoneInput" name="phone" value="${h(phoneRaw)}" required inputmode="numeric" maxlength="12" placeholder="90 123 45 67" autocomplete="tel-national">
+  <span class="phone-prefix">+998</span><input id="phoneInput" name="phone" value="${h(phoneRaw)}" required inputmode="numeric" maxlength="12" placeholder="90 123 45 67" autocomplete="username">
   </div>
   <button class="btn-continue" type="submit">Davom etish <span>&rarr;</span></button>
   </form>
@@ -5397,7 +5545,7 @@ const server = http.createServer(async (req, res) => {
 
   const next = safeNext(fields.next || url.searchParams.get("next"));
 
-  // Phone and the four-digit password are required for sign-in.
+  // Phone and password are required for sign-in. Existing accounts may still have legacy passwords.
   if (url.searchParams.get("pw") !== "1") {
     return redirect(res, `/login?phone=${encodeURIComponent(formatLocalPhone(fields.phone))}${next ? `&next=${encodeURIComponent(next)}` : ""}`);
   }
@@ -5430,7 +5578,7 @@ const server = http.createServer(async (req, res) => {
   ${next ? `<input type="hidden" name="next" value="${h(next)}">`: ""}
   <input type="hidden" name="tg_init_data" value="">
   <div class="field"><label>Telefon</label><input name="phone" data-phone value="${h(fields.phone || "")}" required></div>
-  <div class="field"><label>Parol (4 ta raqam)</label><input name="password" type="password" required minlength="4" maxlength="4" pattern="[0-9]{4}" inputmode="numeric"></div>
+  <div class="field"><label>Parol</label><input name="password" type="password" required maxlength="64" autocomplete="current-password"></div>
   <button class="btn btn-primary" type="submit">Kirish</button>
   </form>`,
   `<p class="alt">Akkountingiz yo'qmi? <a href="/register${next ? `?next=${encodeURIComponent(next)}`: ""}">Ro'yxatdan o'tish</a></p>`,
@@ -5596,9 +5744,8 @@ const server = http.createServer(async (req, res) => {
   </article>`).join("");
   const body = `
   <section class="page-hero center">
-  <span class="eyebrow">Tariflar</span>
   <h1>Tariflar</h1>
-  <p class="lead">O'zingizga mos muddatni tanlang; narxlarni admin boshqaradi.</p>
+  <p class="lead">O'zingizga mos muddatni tanlang.</p>
   </section>
   <section class="section tight">
   <div class="wrap plans-wrap">
@@ -5642,6 +5789,7 @@ const server = http.createServer(async (req, res) => {
   (SELECT COUNT(*) FROM questions q WHERE q.lesson_id = l.id) AS qcount
   FROM lessons l JOIN courses c ON c.id = l.course_id
   WHERE l.type = 'test' AND c.category = ? AND c.is_published = 1
+    AND (c.category <> 'tkt' OR EXISTS (SELECT 1 FROM questions q WHERE q.lesson_id = l.id))
   ORDER BY l.course_id, l.position, l.id`
   )
 .all(cat);
@@ -7153,11 +7301,11 @@ const server = http.createServer(async (req, res) => {
   <a class="back" href="/admin">&larr; Admin panel</a>
   <div class="page-head"><div><h1>Admin paroli</h1><p class="muted">Admin panelga kirish parolini o'zgartirish.</p></div></div>
   ${saved ? alertBox("Parol saqlandi.", "success") : ""}
-  ${err ? alertBox("Parollar mos emas yoki 6 belgidan qisqa.") : ""}
+  ${err ? alertBox("Parol talablarga javob bermadi yoki kiritilgan parollar mos emas.") : ""}
   <div class="card">
   <form method="post" action="/admin/password" class="form">
-  <div class="field"><label>Yangi parol</label><input name="password" type="password" required minlength="6" autofocus></div>
-  <div class="field"><label>Yangi parolni qayta kiriting</label><input name="password2" type="password" required minlength="6"></div>
+  <div class="field"><label>Yangi parol</label><input name="password" type="password" required minlength="8" maxlength="64" autocomplete="new-password" autofocus>${passwordRequirementsMarkup()}</div>
+  <div class="field"><label>Yangi parolni qayta kiriting</label><input name="password2" type="password" required minlength="8" maxlength="64" autocomplete="new-password"></div>
   <button class="btn btn-primary" type="submit">Saqlash</button>
   </form>
   </div>`;
@@ -7166,7 +7314,7 @@ const server = http.createServer(async (req, res) => {
   }
   const password = String(fields.password || "");
   const password2 = String(fields.password2 || "");
-  if (password.length < 6 || password !== password2) {
+  if (passwordPolicyError(password) || password !== password2) {
   redirect(res, "/admin/password?err=1");
   return;
   }

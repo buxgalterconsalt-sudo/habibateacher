@@ -3868,6 +3868,39 @@ html[data-theme="light"] .passage {
   font-size: 0.75rem;
 }
 
+/* Keep the reading, question, navigation and 50-question palette together on desktop. */
+@media (min-width: 1001px) {
+  .solve-wrap {
+    padding: 12px 18px 18px;
+  }
+
+  .q-row {
+    min-height: clamp(300px, 44vh, 460px);
+  }
+
+  .q-reading,
+  .q-panel {
+    max-height: clamp(300px, 44vh, 460px);
+  }
+
+  .q-nav-row {
+    justify-content: space-between;
+    margin: 10px 0;
+  }
+
+  .aside-card {
+    padding: 12px 16px;
+  }
+
+  .step-block + .step-block {
+    margin-top: 10px;
+  }
+
+  .solve-legend {
+    margin: 10px 0;
+  }
+}
+
 .legend-item {
   display: inline-flex;
   align-items: center;
@@ -6224,3 +6257,23 @@ img, video, iframe { max-width: 100%; }
 .lesson-file-input { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; clip-path: inset(50%); }
 .lesson-file-input:focus + button { outline: 2px solid var(--primary); }
 .lesson-file-actions small { max-width: 100%; overflow-wrap: anywhere; }
+.password-hint { color: #e5484d !important; font-size: .7rem; line-height: 1.4; }
+body.is-dashboard .dash-quote .dash-quote-label { display: block; margin-bottom: 5px; color: var(--primary-soft); font-size: .68rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.app-refresh {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 11px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(148, 205, 220, .06);
+  color: var(--text);
+  font: inherit;
+  font-size: .82rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.app-refresh:hover:not(:disabled) { border-color: var(--primary); background: rgba(148, 205, 220, .12); }
+.app-refresh:disabled { opacity: .7; cursor: wait; }
+.app-refresh span { font-size: 1.1rem; line-height: 1; }
+mark.reading-highlight { padding: 0 .12em; border-radius: 3px; background: rgba(250, 204, 21, .28); color: inherit; font-weight: 800; }

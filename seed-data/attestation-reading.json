@@ -1,0 +1,140 @@
+[
+  {
+    "q": "What is the central claim of the passage about adult language learning?",
+    "a": "Adults cannot acquire a new language after adolescence.",
+    "b": "Adult brains can adapt during language learning, although progress depends on continued practice.",
+    "c": "MRI scans can identify the exact words a learner will say.",
+    "d": "Spontaneous speech develops without exposure to a language.",
+    "answer": "B",
+    "passage": "Neurolinguistics and Adult Language Acquisition\n\nLearning a new language as an adult is not simply a matter of memorising vocabulary. The brain continually adjusts as it responds to new sounds, meanings and patterns. This capacity for change, known as neuroplasticity, allows neural connections to strengthen with repeated, meaningful use. Age may influence the pace and route of learning, but it does not close the door to acquiring another language.\n\nMagnetic resonance imaging (MRI) studies of adult learners have reported changes in activity and, in some cases, in the density of grey matter in regions involved in language processing. These findings suggest that sustained language study is associated with measurable brain adaptation. A scan alone, however, cannot prove that one teaching method caused a change or that every learner's brain will respond in exactly the same way.\n\nLearners often understand a grammar rule before they can use it quickly in conversation. Spontaneous speech requires fast access to words and structures while a speaker listens, plans and responds. Frequent interaction and retrieval practice can make that access more automatic. For this reason, adults benefit from regular, meaningful speaking opportunities alongside explicit study.",
+    "passageId": "neurolinguistics"
+  },
+  {
+    "q": "In the passage, what does neuroplasticity mean?",
+    "a": "The ability to understand speech without learning vocabulary.",
+    "b": "A permanent loss of language ability in adulthood.",
+    "c": "The use of brain scans to measure speaking speed.",
+    "d": "The brain's capacity to adapt by strengthening or changing neural connections.",
+    "answer": "D",
+    "passageId": "neurolinguistics"
+  },
+  {
+    "q": "What did MRI studies of adult language learners report?",
+    "a": "All adult learners developed identical language-processing regions.",
+    "b": "Learners stopped needing practice after their first scan.",
+    "c": "Some studies found changes in activity and grey-matter density in language-related regions.",
+    "d": "MRI scans proved that one specific teaching method always works best.",
+    "answer": "C",
+    "passageId": "neurolinguistics"
+  },
+  {
+    "q": "Why does the writer caution readers about interpreting MRI findings?",
+    "a": "MRI cannot be used to study adult learners.",
+    "b": "A reported association does not by itself prove cause or guarantee the same outcome for everyone.",
+    "c": "Grey matter is unrelated to language processing.",
+    "d": "The studies measured only children's vocabulary.",
+    "answer": "B",
+    "passageId": "neurolinguistics"
+  },
+  {
+    "q": "Why may a learner who knows a grammar rule still struggle to speak spontaneously?",
+    "a": "Conversation requires rapid access to language while listening, planning and responding.",
+    "b": "Adults are unable to retrieve words from memory.",
+    "c": "Grammar rules prevent speakers from understanding other people.",
+    "d": "Spontaneous speech depends only on MRI activity.",
+    "answer": "A",
+    "passageId": "neurolinguistics"
+  },
+  {
+    "q": "Which learning practice does the passage recommend for developing more automatic speech?",
+    "a": "Avoiding conversation until every grammar rule is memorised.",
+    "b": "Repeating isolated word lists without using them.",
+    "c": "Replacing all speaking practice with brain scans.",
+    "d": "Taking part in frequent, meaningful interaction and retrieval practice.",
+    "answer": "D",
+    "passageId": "neurolinguistics"
+  },
+  {
+    "q": "Which sequence best matches the events in the explorer's account?",
+    "a": "The river rose; Mira found the map; the team entered the cave; the warning appeared.",
+    "b": "The team found a compass; the bridge collapsed; Mira entered the cave; the storm began.",
+    "c": "Mira spotted a marker; the team crossed the stream; they found the chamber; a warning sign made them turn back.",
+    "d": "The warning sign appeared; Mira spotted a marker; the team crossed the stream; they found the chamber.",
+    "answer": "C",
+    "passage": "The Explorer's Discovery\n\nAt dawn, explorer Mira and her team followed an old survey map into a mountain valley. A red marker carved into a pine tree confirmed that they were on the right trail. By midday, they reached a narrow stream. The wooden footbridge was slick, but Mira tested each plank before the team crossed one at a time.\n\nOn the far bank, a line of unusual stones led them to a shallow cave. Inside, they discovered a small chamber containing pottery and a weathered journal. As Mira examined it, a low rumble shook dust from the ceiling. Her torch caught a warning painted beside a crack in the rock: the upper passage was unstable.\n\nWater began to surge through a channel near the entrance. Mira photographed the journal, marked the chamber on her map, and led everyone back across the stream. The team left the objects untouched and reached higher ground before the rain intensified.",
+    "passageId": "explorer"
+  },
+  {
+    "q": "Which event happened immediately before the team discovered the chamber?",
+    "a": "They crossed the stream and followed a line of unusual stones to a shallow cave.",
+    "b": "They reached higher ground before the rain intensified.",
+    "c": "Mira photographed the journal and marked the chamber on her map.",
+    "d": "The team read the warning beside the unstable rock.",
+    "answer": "A",
+    "passageId": "explorer"
+  },
+  {
+    "q": "Which words in the account most clearly signal immediate physical danger?",
+    "a": "survey map and red marker",
+    "b": "pottery and weathered journal",
+    "c": "photographed and marked",
+    "d": "crack, unstable and surge",
+    "answer": "D",
+    "passageId": "explorer"
+  },
+  {
+    "q": "In the final paragraph, what does surge most nearly mean?",
+    "a": "To become silent and disappear.",
+    "b": "To move suddenly and powerfully in a large flow.",
+    "c": "To freeze into a solid surface.",
+    "d": "To travel slowly along a marked path.",
+    "answer": "B",
+    "passageId": "explorer"
+  },
+  {
+    "q": "Why did Mira lead the team out of the chamber?",
+    "a": "They had already found a safe road to the village.",
+    "b": "The journal instructed them to leave the valley.",
+    "c": "The unstable rock and rising water made remaining unsafe.",
+    "d": "They wanted to take the pottery before anyone saw it.",
+    "answer": "C",
+    "passageId": "explorer"
+  },
+  {
+    "q": "Choose the sentence that best fits gap 1.",
+    "a": "Furthermore, shaded paths encourage walking and informal social contact.",
+    "b": "This environmental degradation raises urban temperatures and worsens air quality.",
+    "c": "These creative solutions include rooftop gardens, pocket parks and tree-lined corridors.",
+    "d": "This economic pressure can make maintaining green sites difficult.",
+    "answer": "B",
+    "passage": "Urban Green Spaces and Public Health — Gapped Text\n\nAs cities expand, new roads and buildings often replace trees and open soil. [1] Residents then face greater heat exposure, while polluted air can aggravate respiratory problems.\n\nUrban planners are responding with several practical interventions: planting street trees, creating pocket parks and adding gardens to rooftops. [2] When these places are safe and easy to reach, people can use them for exercise and rest. [3] Time in green surroundings can also support social connection and reduce everyday stress.\n\nHowever, land in city centres is expensive, and local budgets must serve many priorities. [4] Long-term planning and community involvement can help protect these public spaces.\n\nChoose the sentence that best completes each numbered gap. The answer choices contain linking clues that connect each sentence to the surrounding text.",
+    "passageId": "urban"
+  },
+  {
+    "q": "Choose the sentence that best fits gap 2.",
+    "a": "Furthermore, shaded paths encourage walking and informal social contact.",
+    "b": "This environmental degradation raises urban temperatures and worsens air quality.",
+    "c": "These creative solutions include rooftop gardens, pocket parks and tree-lined corridors.",
+    "d": "This economic pressure can make maintaining green sites difficult.",
+    "answer": "C",
+    "passageId": "urban"
+  },
+  {
+    "q": "Choose the sentence that best fits gap 3.",
+    "a": "Furthermore, shaded paths encourage walking and informal social contact.",
+    "b": "This environmental degradation raises urban temperatures and worsens air quality.",
+    "c": "These creative solutions include rooftop gardens, pocket parks and tree-lined corridors.",
+    "d": "This economic pressure can make maintaining green sites difficult.",
+    "answer": "A",
+    "passageId": "urban"
+  },
+  {
+    "q": "Choose the sentence that best fits gap 4.",
+    "a": "Furthermore, shaded paths encourage walking and informal social contact.",
+    "b": "This environmental degradation raises urban temperatures and worsens air quality.",
+    "c": "These creative solutions include rooftop gardens, pocket parks and tree-lined corridors.",
+    "d": "This economic pressure can make maintaining green sites difficult.",
+    "answer": "D",
+    "passageId": "urban"
+  }
+]
