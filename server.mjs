@@ -1000,9 +1000,10 @@ function removeAttestationMockTests() {
         db.prepare(`DELETE FROM duel_questions WHERE question_id IN (${questionMarks})`).run(...questionIds);
         db.prepare(`DELETE FROM tournament_questions WHERE question_id IN (${questionMarks})`).run(...questionIds);
       }
-      for (const table of ["test_attempts", "progress", "purchases", "likes", "video_watch", "lesson_viewers", "test_sections", "materials", "questions", "lessons"]) {
+      for (const table of ["test_attempts", "progress", "purchases", "likes", "video_watch", "lesson_viewers", "test_sections", "materials", "questions"]) {
         db.prepare(`DELETE FROM ${table} WHERE lesson_id IN (${marks})`).run(...lessonIds);
       }
+      db.prepare(`DELETE FROM lessons WHERE id IN (${marks})`).run(...lessonIds);
     }
     metaSet(migrationKey, "1");
     db.exec("COMMIT");
