@@ -6325,6 +6325,13 @@ const server = http.createServer(async (req, res) => {
   ORDER BY CASE WHEN ? = 'attestation' AND c.title = 'Toifa testlari' THEN 1 ELSE 0 END, c.id`
   )
 .all(...queryCategories, cat);
+  if (cat === "attestation") {
+    courses.sort((a, b) => {
+      const aIsToifa = String(a.title || "").trim().toLocaleLowerCase() === "toifa testlari";
+      const bIsToifa = String(b.title || "").trim().toLocaleLowerCase() === "toifa testlari";
+      return Number(aIsToifa) - Number(bIsToifa);
+    });
+  }
 
   const tests = db
 .prepare(
