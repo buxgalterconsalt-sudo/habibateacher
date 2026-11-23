@@ -118,6 +118,19 @@ const SITE_TEXT_DEFAULTS = {
   final_eyebrow: "KEYINGI QADAM — SIZDAN", final_title: "Kasbiy maqsadingizga", final_accent: "bugun yaqinlashing.", final_description: "Yo'nalishni tanlang va o'z rejangiz bo'yicha tayyorgarlikni boshlang.", final_button: "Ro'yxatdan o'tish", final_button_logged: "O'qishni boshlash", footer_tagline: "Ingliz tili o'qituvchilari uchun imtihonlarga tayyorlov platformasi.", footer_credit: "Avtor: Habiba Mo'minjonovna. Barcha huquqlar himoyalangan."
 };
 
+Object.assign(SITE_TEXT_DEFAULTS, {
+  dashboard_page_title: "Kabinet", dashboard_registered_notice: "Siz muvaffaqiyatli ro'yxatdan o'tdingiz.", dashboard_quote_title: "Bugungi kun hikmati", dashboard_quote_override: "", dashboard_quote_source: "",
+  dashboard_greeting_eyebrow: "Xush kelibsiz", dashboard_greeting_prefix: "Salom,", dashboard_welcome_lead: "O'rganishni davom eting va maqsadingizga erishing!",
+  dashboard_streak_label: "kunlik streak", dashboard_refresh_label: "Yangilash", dashboard_refresh_aria: "Platformani yangilash", dashboard_refresh_help: "Serverdagi so'nggi o'zgarishlarni yuklash", dashboard_install_label: "Ilovani o'rnatish", dashboard_install_aria: "Ilovani o'rnatish", dashboard_install_ready: "Ilova qurilmangizga o'rnatilgan.", dashboard_install_help: "Brauzer menyusidan 'Ilovani o'rnatish' yoki 'Bosh ekranga qo'shish'ni tanlang.",
+  dashboard_done_title: "Barcha testlar yakunlandi!", dashboard_done_description: "Tabriklaymiz, barcha testlarni yechib bo'ldingiz.", dashboard_plan_required: "Tarif talab qilinadi", dashboard_next_test: "Keyingi test", dashboard_open_access: "Kirishni ochish",
+  dashboard_completed: "yakunlangan", dashboard_progress_title: "Testlar jarayoni", dashboard_test_unit: "test", dashboard_progress_encouragement: "Yaxshi boshladingiz, davom eting 🚀", dashboard_first_test_hint: "Birinchi testni boshlang 🚀",
+  dashboard_rank_position: "Guruhda o'rningiz", dashboard_achievements: "Yutuqlar", dashboard_group_ranking: "Guruh reytingi", dashboard_active_results: "Faol o'quvchilarning natijalari", dashboard_weekly: "Haftalik",
+  dashboard_weekly_empty: "Bu hafta hali hech kim test yakunlamadi. Birinchi bo'ling!", dashboard_daily_growth: "Har kuni ozgina o'sish ham katta natijaga olib keladi.", dashboard_tests_title: "Testlar", dashboard_test_count_suffix: "ta test",
+  dashboard_test_search: "Testlarni qidirish...", dashboard_grid_view: "Katak ko'rinishi", dashboard_list_view: "Ro'yxat ko'rinishi", dashboard_no_tests: "Hozircha testlar yo'q.",
+  dashboard_status_previous: "Avval oldingi test", dashboard_status_done: "Tugatildi", dashboard_status_plan: "Tarif kerak", dashboard_status_start: "Boshlash", dashboard_time_short: "daq", dashboard_duration_unit: "daqiqa", dashboard_day_unit: "kun",
+  dashboard_page_label: "Sahifa", dashboard_test_list_label: "test"
+});
+
 const HOME_SECTION_LABELS = {
   hero: "Bosh sahifa yuqori qismi",
   overview: "Orbita va afzalliklar",
@@ -1725,7 +1738,7 @@ function navFor(user, admin, publicPage = false) {
   <a href="/tkt">${h(copy.nav_tkt)}</a>
   <a href="/duel">${h(copy.nav_duel)}</a>
   <a href="/courses">${h(copy.nav_courses)}</a>
-  <a href="/dashboard">Kabinet</a>
+  <a href="/dashboard">${h(siteTexts().dashboard_page_title || "Kabinet")}</a>
   ${Number(user.is_author) ? `<a href="/author">Muallif paneli</a>` : ""}
   <a href="/leaderboard">${h(copy.nav_leaderboard)}</a>
   <a class="btn btn-sm student-plan" href="/plans">${h(copy.nav_plans)}</a>
@@ -1822,7 +1835,7 @@ ${seoTags}
   ${
   user
   ? `<div class="mobile-user">${h(user.name)}</div>
-  <a href="/dashboard">Kabinet</a>
+  <a href="/dashboard">${h(siteTexts().dashboard_page_title || "Kabinet")}</a>
   <form method="post" action="/logout"><button class="mobile-link-btn" type="submit">Chiqish</button></form>`
 : `<a class="mobile-login" href="/login">Kirish</a>`
   }`
@@ -4036,6 +4049,7 @@ function dashboardTestSequence(userId) {
 }
 
 function dashboardPage(user) {
+  const copy = siteTexts();
   const sequence = dashboardTestSequence(user.id);
   const lessons = sequence.tests;
   const done = sequence.completed;
@@ -4134,6 +4148,8 @@ function dashboardPage(user) {
   const quoteAttribution = quoteSource.startsWith("Sahih ")
     ? `Sahih hadis · ${quoteSource}`
     : /maqoli/i.test(quoteSource) ? quoteSource : "";
+  const dashboardQuoteText = copy.dashboard_quote_override.trim() || quoteText;
+  const dashboardQuoteAttribution = copy.dashboard_quote_override.trim() ? copy.dashboard_quote_source : quoteAttribution;
 
   const nextCard = next
     ? `<a class="dash-hero-card" href="${
@@ -4143,32 +4159,32 @@ function dashboardPage(user) {
         <span class="dash-hero-copy">
           <small>${h(next.course_title)}</small>
           <b>${h(next.title)}</b>
-          <span class="muted">${nextNeedsPlan ? "Tarif talab qilinadi" : "Keyingi test"} | ${
-        nextNeedsPlan ? "Kirishni ochish" : `${Number(next.duration_min) || 30} daqiqa`
-      } | ${completed}/${total} yakunlangan</span>
-        <span class="dash-hero-progress"><i><b style="width:${pct}%"></b></i><small>${completed}/${total} test yakunlangan</small></span>
+          <span class="muted">${nextNeedsPlan ? copy.dashboard_plan_required : copy.dashboard_next_test} | ${
+        nextNeedsPlan ? copy.dashboard_open_access : `${Number(next.duration_min) || 30} ${h(copy.dashboard_duration_unit)}`
+      } | ${completed}/${total} ${h(copy.dashboard_completed)}</span>
+        <span class="dash-hero-progress"><i><b style="width:${pct}%"></b></i><small>${completed}/${total} ${h(copy.dashboard_test_unit)} ${h(copy.dashboard_completed)}</small></span>
         </span>
         <span class="dash-hero-go">&rarr;</span>
       </a>`
-    : `<div class="dash-hero-card done"><span class="dash-hero-ico">&#10003;</span><span class="dash-hero-copy"><b>Barcha testlar yakunlandi!</b><span class="muted">Tabriklaymiz, barcha testlarni yechib bo'ldingiz.</span></span></div>`;
+    : `<div class="dash-hero-card done"><span class="dash-hero-ico">&#10003;</span><span class="dash-hero-copy"><b>${h(copy.dashboard_done_title)}</b><span class="muted">${h(copy.dashboard_done_description)}</span></span></div>`;
 
   const lessonCards = lessons.length
     ? `<section class="dl-group">
-      <div class="dl-group-head"><h3>Testlar</h3><span>${lessons.length} ta test</span></div>
+      <div class="dl-group-head"><h3>${h(copy.dashboard_tests_title)}</h3><span>${lessons.length} ${h(copy.dashboard_test_count_suffix)}</span></div>
       <div class="dl-grid">${lessons.map((l, i) => {
         const isDone = done.has(l.id);
         const sequenceLocked = firstIncompleteIndex >= 0 && i > firstIncompleteIndex;
         const lockedPaidTest = !sequenceLocked && Number(l.price) > 0 && !testOwned(user.id, l.id);
         const href = sequenceLocked ? "" : lockedPaidTest ? "/plans" : `/test/${l.id}`;
         const cardTag = sequenceLocked ? "div" : "a";
-        const status = sequenceLocked ? "Avval oldingi test" : isDone ? "Tugatildi" : lockedPaidTest ? "Tarif kerak" : "Boshlash";
+        const status = sequenceLocked ? copy.dashboard_status_previous : isDone ? copy.dashboard_status_done : lockedPaidTest ? copy.dashboard_status_plan : copy.dashboard_status_start;
         return `<${cardTag} class="dl-card${isDone ? " done" : ""}${sequenceLocked ? " sequence-locked" : ""}"${href ? ` href="${href}"` : ""} data-title="${h(
           (l.title + " " + l.course_title).toLowerCase()
         )}">
           <span class="dl-top"><span class="dl-ico">${isDone ? "&#10003;" : i + 1}</span><span class="dl-status${isDone && !sequenceLocked ? " done" : ""}">${status}</span></span>
           <span class="dl-module">${h(l.course_title)}</span><b class="dl-title">${h(l.title)}</b>
           <span class="dl-sub">${h(l.course_title)}</span>
-          <span class="dl-foot"><span class="dl-time">${Number(l.duration_min) || 30} daq</span><span class="dl-arrow">${sequenceLocked ? "&#128274;" : "&rarr;"}</span></span>
+          <span class="dl-foot"><span class="dl-time">${Number(l.duration_min) || 30} ${h(copy.dashboard_time_short)}</span><span class="dl-arrow">${sequenceLocked ? "&#128274;" : "&rarr;"}</span></span>
         </${cardTag}>`;
       }).join("")}</div>
     </section>`
@@ -4181,7 +4197,7 @@ function dashboardPage(user) {
         <span class="dash-podium-medal">${i + 1}</span>
         <span class="dash-podium-avatar">${h(w.name.slice(0, 1).toUpperCase())}</span>
         <b>${h(w.name)}</b>
-        <small>${w.c} test · ${h(weeklyStreaks.get(Number(w.id)) || 0)} kun 🔥</small>
+        <small>${w.c} ${h(copy.dashboard_test_unit)} · ${h(weeklyStreaks.get(Number(w.id)) || 0)} ${h(copy.dashboard_day_unit)} 🔥</small>
       </div>`
     )
     .join("");
@@ -4192,7 +4208,7 @@ function dashboardPage(user) {
           (w, i) => `<div class="dash-rank-row">
             <span class="dash-rank-num">${i + 4}</span>
             <b>${h(w.name)}</b>
-            <span class="muted">${w.c} test</span>
+            <span class="muted">${w.c} ${h(copy.dashboard_test_unit)}</span>
           </div>`
         )
         .join("")
@@ -4200,43 +4216,44 @@ function dashboardPage(user) {
 
   return `<section class="dash-hero">
     <div class="wrap dash-welcome-wrap">
-      <div class="dash-quote"><span class="dash-quote-symbol" aria-hidden="true">&#128172;</span><div><small class="dash-quote-label">Bugungi kun hikmati</small><span>${h(quoteText)}</span>${quoteAttribution ? `<small class="dash-quote-author">— ${h(quoteAttribution)}</small>` : ""}</div></div>
+      <div class="dash-quote"><span class="dash-quote-symbol" aria-hidden="true">&#128172;</span><div><small class="dash-quote-label">${h(copy.dashboard_quote_title)}</small><span>${h(dashboardQuoteText)}</span>${dashboardQuoteAttribution ? `<small class="dash-quote-author">— ${h(dashboardQuoteAttribution)}</small>` : ""}</div></div>
       <div class="dash-welcome-row">
         <div>
-          <span class="eyebrow">Xush kelibsiz</span>
-          <h1>Salom, ${h(user.name.split(" ")[0])}! <span aria-hidden="true">&#128075;</span></h1>
-          <p class="lead">O'rganishni davom eting va maqsadingizga erishing!</p>
+          <span class="eyebrow">${h(copy.dashboard_greeting_eyebrow)}</span>
+          <h1>${h(copy.dashboard_greeting_prefix)} ${h(user.name.split(" ")[0])}! <span aria-hidden="true">&#128075;</span></h1>
+          <p class="lead">${h(copy.dashboard_welcome_lead)}</p>
         </div>
-        <div class="dash-welcome-actions"><div class="dash-streak"><span aria-hidden="true">&#128293;</span><div><b>${streak}</b><small>kunlik streak</small></div></div><button class="dash-install dash-refresh" type="button" data-app-refresh aria-label="Platformani yangilash" title="Serverdagi so'nggi o'zgarishlarni yuklash"><span aria-hidden="true">&#8635;</span> Yangilash</button><button class="dash-install" id="installApp" type="button"><span aria-hidden="true">&#8681;</span> Ilovani o'rnatish</button></div>
+        <div class="dash-welcome-actions"><div class="dash-streak"><span aria-hidden="true">&#128293;</span><div><b>${streak}</b><small>${h(copy.dashboard_streak_label)}</small></div></div><button class="dash-install dash-refresh" type="button" data-app-refresh aria-label="${h(copy.dashboard_refresh_aria)}" title="${h(copy.dashboard_refresh_help)}"><span aria-hidden="true">&#8635;</span> ${h(copy.dashboard_refresh_label)}</button><button class="dash-install" id="installApp" type="button" aria-label="${h(copy.dashboard_install_aria)}"><span aria-hidden="true">&#8681;</span> ${h(copy.dashboard_install_label)}</button></div>
       </div>
+      ${siteCopyExtraMarkup("dashboard")}
     </div>
   </section>
   <section class="section tight">
     <div class="wrap">
       ${nextCard}
       <div class="dash-top">
-        <div class="dash-stat dash-stat-progress"><div><span>Testlar jarayoni</span><b>${completed}<small> / ${total} test</small></b></div><div class="dash-progress-track"><i style="width:${pct}%"></i></div><small>${completed ? "Yaxshi boshladingiz, davom eting 🚀" : "Birinchi testni boshlang 🚀"}</small></div>
-        <div class="dash-stat dash-rank-stat"><span aria-hidden="true">&#127942;</span><b>${rank}<small> / ${classSize}</small></b><small>Guruhda o'rningiz</small></div>
-        <div class="dash-stat dash-ach-stat"><span aria-hidden="true">&#127892;</span><b>${achievements}<small> / ${totalAchievements}</small></b><small>Yutuqlar</small></div>
+        <div class="dash-stat dash-stat-progress"><div><span>${h(copy.dashboard_progress_title)}</span><b>${completed}<small> / ${total} ${h(copy.dashboard_test_unit)}</small></b></div><div class="dash-progress-track"><i style="width:${pct}%"></i></div><small>${completed ? h(copy.dashboard_progress_encouragement) : h(copy.dashboard_first_test_hint)}</small></div>
+        <div class="dash-stat dash-rank-stat"><span aria-hidden="true">&#127942;</span><b>${rank}<small> / ${classSize}</small></b><small>${h(copy.dashboard_rank_position)}</small></div>
+        <div class="dash-stat dash-ach-stat"><span aria-hidden="true">&#127892;</span><b>${achievements}<small> / ${totalAchievements}</small></b><small>${h(copy.dashboard_achievements)}</small></div>
       </div>
       <div class="dash-cols">
         <div class="card dash-rank">
-          <div class="card-head"><div><h2>Guruh reytingi</h2><p class="muted small">Faol o'quvchilarning natijalari</p></div><a class="badge" href="/leaderboard">Haftalik &rarr;</a></div>
-          ${weekly.length ? `<div class="dash-podium">${weeklyPodium}</div>${weeklyRows}` : `<p class="muted small">Bu hafta hali hech kim test yakunlamadi. Birinchi bo'ling!</p>`}
-          <div class="dash-leader-note"><span aria-hidden="true">&#10024;</span> Har kuni ozgina o'sish ham katta natijaga olib keladi.</div>
+          <div class="card-head"><div><h2>${h(copy.dashboard_group_ranking)}</h2><p class="muted small">${h(copy.dashboard_active_results)}</p></div><a class="badge" href="/leaderboard">${h(copy.dashboard_weekly)} &rarr;</a></div>
+          ${weekly.length ? `<div class="dash-podium">${weeklyPodium}</div>${weeklyRows}` : `<p class="muted small">${h(copy.dashboard_weekly_empty)}</p>`}
+          <div class="dash-leader-note"><span aria-hidden="true">&#10024;</span> ${h(copy.dashboard_daily_growth)}</div>
         </div>
       </div>
 
       <div class="card dash-all">
         <div class="card-head dash-all-head">
-          <div><h2>Testlar</h2><p class="muted small">${total} ta test</p></div>
+          <div><h2>${h(copy.dashboard_tests_title)}</h2><p class="muted small">${total} ${h(copy.dashboard_test_count_suffix)}</p></div>
           <div class="dl-tools">
-            <input id="dlSearch" class="dl-search" placeholder="Testlarni qidirish..." aria-label="Testlarni qidirish">
-            <button type="button" class="dl-view active" data-view="grid" aria-label="Katak ko'rinishi">&#9638;</button>
-            <button type="button" class="dl-view" data-view="list" aria-label="Ro'yxat ko'rinishi">&#9776;</button>
+            <input id="dlSearch" class="dl-search" placeholder="${h(copy.dashboard_test_search)}" aria-label="${h(copy.dashboard_test_search)}">
+            <button type="button" class="dl-view active" data-view="grid" aria-label="${h(copy.dashboard_grid_view)}">&#9638;</button>
+            <button type="button" class="dl-view" data-view="list" aria-label="${h(copy.dashboard_list_view)}">&#9776;</button>
           </div>
         </div>
-        <div class="dl-groups" id="dlGrid">${lessonCards || `<p class="muted">Hozircha testlar yo'q.</p>`}</div>
+        <div class="dl-groups" id="dlGrid">${lessonCards || `<p class="muted">${h(copy.dashboard_no_tests)}</p>`}</div>
         <div class="dl-pager" id="dlPager"></div>
       </div>
       <script>
@@ -4244,7 +4261,7 @@ function dashboardPage(user) {
         var installButton = document.getElementById('installApp');
         var installPrompt = null;
         var installMessages = {
-          uz: { installed: "Ilova qurilmangizga o'rnatilgan.", help: "Brauzer menyusidan 'Ilovani o'rnatish' yoki 'Bosh ekranga qo'shish'ni tanlang." },
+          uz: { installed: ${JSON.stringify(copy.dashboard_install_ready)}, help: ${JSON.stringify(copy.dashboard_install_help)} },
           ru: { installed: "Приложение уже установлено.", help: "Откройте меню браузера и выберите «Установить приложение» или «Добавить на главный экран»." },
           en: { installed: "The app is already installed.", help: "Open your browser menu and choose Install app or Add to Home screen." }
         };
@@ -4313,7 +4330,7 @@ function dashboardPage(user) {
             ? 'Страница ' + page + ' / ' + pages + ' | тесты ' + list.length
             : lang === 'en'
             ? 'Page ' + page + ' / ' + pages + ' | ' + list.length + ' tests'
-            : 'Sahifa ' + page + ' / ' + pages + ' | ' + list.length + ' ta test';
+            : ${JSON.stringify(copy.dashboard_page_label)} + ' ' + page + ' / ' + pages + ' | ' + list.length + ' ' + ${JSON.stringify(copy.dashboard_test_list_label)};
           pager.appendChild(info);
         }
         if (search) search.addEventListener('input', function () { page = 1; render(); });
@@ -6420,10 +6437,11 @@ const server = http.createServer(async (req, res) => {
   /* --------------------------------------------------------------- duel */
   if (p === "/dashboard" && method === "GET") {
   if (!user) return redirect(res, "/login?next=/dashboard");
-  const registeredNotice = url.searchParams.get("registered") === "1"
-    ? alertBox("Siz muvaffaqiyatli ro'yxatdan o'tdingiz.", "success")
+  const registeredCopy = siteTexts().dashboard_registered_notice;
+  const registeredNotice = url.searchParams.get("registered") === "1" && registeredCopy
+    ? alertBox(registeredCopy, "success")
     : "";
-  send(res, 200, layout({ title: "Kabinet", body: `${registeredNotice}${dashboardPage(user)}`, user }));
+  send(res, 200, layout({ title: siteTexts().dashboard_page_title || "Kabinet", body: `${registeredNotice}${dashboardPage(user)}`, user }));
   return;
   }
 
@@ -8121,7 +8139,18 @@ const server = http.createServer(async (req, res) => {
       { id: "faq", title: "Tariflar va savol-javob", fields: [["pricing_eyebrow", "Tariflar kichik sarlavhasi"], ["pricing_title", "Tariflar sarlavhasi"], ["pricing_accent", "Rangli sarlavha qismi"], ["pricing_description", "Tariflar tavsifi"], ["pricing_all", "Barcha tariflar tugmasi"], ["pricing_button", "Tarif kartasi tugmasi"], ["faq_eyebrow", "Savol-javob kichik sarlavhasi"], ["faq_title", "Savol-javob sarlavhasi"], ["faq_accent", "Rangli sarlavha qismi"], ["faq_description", "Savol-javob tavsifi"], ["faq_contact", "Bog'lanish tugmasi"], ["faq_q1", "Savol 1"], ["faq_a1", "Javob 1"], ["faq_q2", "Savol 2"], ["faq_a2", "Javob 2"], ["faq_q3", "Savol 3"], ["faq_a3", "Javob 3"], ["faq_q4", "Savol 4"], ["faq_a4", "Javob 4"]] },
       { id: "footer", title: "Yakuniy chaqiriq va footer", fields: [["final_eyebrow", "Yakuniy bo'lim kichik sarlavhasi"], ["final_title", "Yakuniy sarlavha"], ["final_accent", "Rangli sarlavha qismi"], ["final_description", "Yakuniy bo'lim tavsifi"], ["final_button", "Tugma"], ["final_button_logged", "Kirish qilganlar tugmasi"], ["footer_tagline", "Pastki qism tavsifi"], ["footer_about", "Footer biz haqimizda havolasi"], ["footer_credit", "Footer muallif va huquq yozuvi"]] }
     ];
-    const isLong = (key) => /description|faq_a|footer_credit|orbit_kicker/.test(key);
+    groups.push({ id: "dashboard", title: "Kabinet", fields: [
+      ["dashboard_page_title", "Sahifa nomi"], ["dashboard_registered_notice", "Ro'yxatdan o'tganlik xabari"], ["dashboard_quote_title", "Bugungi hikmat sarlavhasi"], ["dashboard_quote_override", "Hikmat matni o'rniga (ixtiyoriy)"], ["dashboard_quote_source", "Hikmat manbasi"],
+      ["dashboard_greeting_eyebrow", "Xush kelibsiz yozuvi"], ["dashboard_greeting_prefix", "Salomlashish so'zi"], ["dashboard_welcome_lead", "Kabinet kirish tavsifi"],
+      ["dashboard_streak_label", "Kunlik streak yozuvi"], ["dashboard_refresh_label", "Yangilash tugmasi"], ["dashboard_refresh_aria", "Yangilash tugmasi uchun yordamchi matn"], ["dashboard_refresh_help", "Yangilash izohi"], ["dashboard_install_label", "Ilovani o'rnatish tugmasi"], ["dashboard_install_aria", "Ilova tugmasi uchun yordamchi matn"], ["dashboard_install_ready", "Ilova o'rnatilgan xabari"], ["dashboard_install_help", "Ilovani o'rnatish bo'yicha yordam"],
+      ["dashboard_done_title", "Barcha testlar tugaganda sarlavha"], ["dashboard_done_description", "Barcha testlar tugaganda tavsif"], ["dashboard_plan_required", "Tarif talab qilinadi yozuvi"], ["dashboard_next_test", "Keyingi test yozuvi"], ["dashboard_open_access", "Kirishni ochish yozuvi"],
+      ["dashboard_completed", "Yakunlangan yozuvi"], ["dashboard_progress_title", "Testlar jarayoni"], ["dashboard_test_unit", "Test birligi"], ["dashboard_progress_encouragement", "Jarayon uchun ruhlantiruvchi yozuv"], ["dashboard_first_test_hint", "Birinchi test uchun yozuv"],
+      ["dashboard_rank_position", "Guruhdagi o'rin yozuvi"], ["dashboard_achievements", "Yutuqlar yozuvi"], ["dashboard_group_ranking", "Guruh reytingi sarlavhasi"], ["dashboard_active_results", "Faol o'quvchilar tavsifi"], ["dashboard_weekly", "Haftalik tugma"],
+      ["dashboard_weekly_empty", "Haftalik natija bo'sh bo'lgandagi yozuv"], ["dashboard_daily_growth", "Kunlik ruhlantiruvchi yozuv"], ["dashboard_tests_title", "Testlar sarlavhasi"], ["dashboard_test_count_suffix", "Testlar soni qo'shimchasi"],
+      ["dashboard_test_search", "Test qidiruv maydoni"], ["dashboard_grid_view", "Katak ko'rinishidagi yordamchi matn"], ["dashboard_list_view", "Ro'yxat ko'rinishidagi yordamchi matn"], ["dashboard_no_tests", "Testlar bo'sh bo'lgandagi yozuv"],
+      ["dashboard_status_previous", "Oldingi test holati"], ["dashboard_status_done", "Tugatilgan holati"], ["dashboard_status_plan", "Tarif kerak holati"], ["dashboard_status_start", "Boshlash holati"], ["dashboard_time_short", "Daqiqa qisqartmasi"], ["dashboard_duration_unit", "Daqiqa birligi"], ["dashboard_day_unit", "Kun birligi"], ["dashboard_page_label", "Sahifa yozuvi"], ["dashboard_test_list_label", "Test ro'yxati so'zi"]
+    ]});
+    const isLong = (key) => /description|faq_a|footer_credit|orbit_kicker|dashboard_(quote_override|quote_source|welcome_lead|done_description|progress_encouragement|first_test_hint|weekly_empty|daily_growth|refresh_help|install_ready|install_help)/.test(key);
     const removedCopyKeys = new Set(siteCopyRemoved());
     const copyExtras = siteCopyExtras();
     const fields = groups.map((group, groupIndex) => {
@@ -8177,14 +8206,14 @@ const server = http.createServer(async (req, res) => {
     for (const [key, fallback] of Object.entries(SITE_TEXT_DEFAULTS)) {
       if (removedCopyKeys.includes(key)) { saved[key] = String(previousSiteTexts[key] ?? fallback); continue; }
       const value = String(fields[key] ?? fallback).trim().replace(/\s+/g, " ");
-      const max = key.startsWith("nav_") ? 32 : key === "site_name" ? 80 : /description|faq_a|footer_credit|orbit_kicker/.test(key) ? 500 : 180;
+      const max = key.startsWith("nav_") ? 32 : key === "site_name" ? 80 : /description|faq_a|footer_credit|orbit_kicker|dashboard_(quote_override|quote_source|welcome_lead|done_description|progress_encouragement|first_test_hint|weekly_empty|daily_growth|refresh_help|install_ready|install_help)/.test(key) ? 500 : 180;
       if (value.length > max) return redirect(res, "/admin/site-settings?err=length");
       saved[key] = value || fallback;
     }
     metaSet("site_texts_json", JSON.stringify(saved));
     let submittedCopyExtras = [];
     try { submittedCopyExtras = JSON.parse(String(fields.site_copy_extras || "[]")); } catch (e) {}
-    const allowedCopyGroups = new Set(["nav", "hero", "overview", "directions", "features", "program", "faq", "footer"]);
+    const allowedCopyGroups = new Set(["nav", "hero", "overview", "directions", "features", "program", "faq", "footer", "dashboard"]);
     const copyExtraIds = new Set();
     const normalizedCopyExtras = (Array.isArray(submittedCopyExtras) ? submittedCopyExtras : []).slice(0, 100).map((row, index) => {
       const id = String(row.id || `copy_${index + 1}`).replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 40);
@@ -9472,4 +9501,3 @@ startTournamentScheduler();
 startReminderScheduler();
 startEngagementScheduler();
 startPlatformBot();
-
