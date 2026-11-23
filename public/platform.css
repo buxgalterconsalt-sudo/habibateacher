@@ -5551,6 +5551,8 @@ body.is-dashboard .dl-search { min-height: 46px; }
 .dl-card:hover {
   border-color: var(--line-strong);
 }
+.dl-card.sequence-locked { cursor: not-allowed; opacity: .64; }
+.dl-card.sequence-locked:hover { border-color: var(--line); transform: none; box-shadow: none; }
 
 .dl-card.done {
   border-color: rgba(45, 212, 191, 0.35);

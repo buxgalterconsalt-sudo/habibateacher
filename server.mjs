@@ -1727,7 +1727,7 @@ ${seoTags}
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%2312b5a6'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='18' font-weight='bold' text-anchor='middle' fill='%2303211d'%3EH%3C/text%3E%3C/svg%3E">
 <script async src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>try{document.documentElement.dataset.theme=localStorage.getItem('ht_theme')||'dark';}catch(e){document.documentElement.dataset.theme='dark';}</script>
-<link rel="stylesheet" href="/assets/platform.css?v=20261123home4">
+<link rel="stylesheet" href="/assets/platform.css?v=20261123home5">
 </head>
 <body${admin && !publicPage ? ` class="admin-page"` : isStudentPage ? ` class="student-page${isDashboard ? " is-dashboard" : ""}"` : ""}>
 <header class="topbar">
@@ -3970,22 +3970,31 @@ function startReminderScheduler() {
 }
 
 
+function dashboardTestSequence(userId) {
+  const tests = db.prepare(
+    `SELECT l.*, c.title AS course_title, c.category AS course_category
+     FROM lessons l JOIN courses c ON c.id = l.course_id
+     WHERE c.is_published = 1 AND l.type = 'test'
+     ORDER BY c.id, l.position, l.id`
+  ).all();
+  const completed = new Set(db.prepare(
+    `SELECT p.lesson_id FROM progress p JOIN lessons l ON l.id = p.lesson_id
+     JOIN courses c ON c.id = l.course_id
+     WHERE p.user_id = ? AND l.type = 'test' AND p.score IS NOT NULL AND c.is_published = 1`
+  ).all(userId).map((row) => Number(row.lesson_id)));
+  return { tests, completed };
+}
+
 function dashboardPage(user) {
-  const lessons = db
-    .prepare(
-      `SELECT l.*, c.title AS course_title, c.category AS course_category
-       FROM lessons l JOIN courses c ON c.id = l.course_id
-       WHERE c.is_published = 1 AND l.type = 'video'
-       ORDER BY c.id, l.position, l.id`
-    )
-    .all();
-  const doneRows = db.prepare("SELECT p.lesson_id FROM progress p JOIN lessons l ON l.id = p.lesson_id WHERE p.user_id = ? AND l.type = 'video'").all(user.id);
-  const done = new Set(doneRows.map((r) => r.lesson_id));
+  const sequence = dashboardTestSequence(user.id);
+  const lessons = sequence.tests;
+  const done = sequence.completed;
   const total = lessons.length;
   const completed = lessons.filter((l) => done.has(l.id)).length;
   const pct = total ? Math.round((completed / total) * 100) : 0;
+  const firstIncompleteIndex = lessons.findIndex((lesson) => !done.has(lesson.id));
   const next = lessons.find((l) => !done.has(l.id));
-  const nextNeedsPlan = !!(next && next.type === "video" && !isIntroVideoLesson(next.id) && !hasLessonPermission(user.id, next.id));
+  const nextNeedsPlan = !!(next && Number(next.price) > 0 && !testOwned(user.id, next.id));
   const clock = tashkentClock();
   const activityDays = db.prepare("SELECT DISTINCT substr(completed_at, 1, 10) AS day FROM progress WHERE user_id = ? AND completed_at <> '' ORDER BY day DESC LIMIT 400").all(user.id);
   const dayStamp = (value) => {
@@ -4006,7 +4015,7 @@ function dashboardPage(user) {
     .prepare(
       `SELECT rank FROM (
          SELECT user_id, COUNT(*) AS c, RANK() OVER (ORDER BY COUNT(*) DESC) AS rank
-         FROM progress WHERE lesson_id IN (SELECT id FROM lessons WHERE type = 'video') GROUP BY user_id
+         FROM progress WHERE lesson_id IN (SELECT id FROM lessons WHERE type = 'test') GROUP BY user_id
        ) t WHERE user_id = ?`
     )
     .get(user.id);
@@ -4019,7 +4028,7 @@ function dashboardPage(user) {
     .prepare(
       `SELECT u.id, u.name, COUNT(DISTINCT p.lesson_id) AS c
        FROM progress p JOIN users u ON u.id = p.user_id JOIN lessons l ON l.id = p.lesson_id
-       WHERE l.type = 'video' AND p.completed_at >= ? GROUP BY p.user_id ORDER BY c DESC, u.name LIMIT 5`
+       WHERE l.type = 'test' AND p.completed_at >= ? GROUP BY p.user_id ORDER BY c DESC, u.name LIMIT 5`
     )
     .all(weekStart);
   const weeklyIds = weekly.map((row) => Number(row.id));
@@ -4084,31 +4093,33 @@ function dashboardPage(user) {
         <span class="dash-hero-copy">
           <small>${h(next.course_title)}</small>
           <b>${h(next.title)}</b>
-          <span class="muted">${nextNeedsPlan ? "Tarif talab qilinadi" : TYPE_LABEL[next.type] || next.type} | ${
-        nextNeedsPlan ? "Kirishni ochish" : next.type === "test" ? `${Number(next.duration_min) || 30} daqiqa` : "dars"
-      } | ${completed}/${total} tugatilgan</span>
-        <span class="dash-hero-progress"><i><b style="width:${pct}%"></b></i><small>${completed}/${total} dars tugatilgan</small></span>
+          <span class="muted">${nextNeedsPlan ? "Tarif talab qilinadi" : "Keyingi test"} | ${
+        nextNeedsPlan ? "Kirishni ochish" : `${Number(next.duration_min) || 30} daqiqa`
+      } | ${completed}/${total} yakunlangan</span>
+        <span class="dash-hero-progress"><i><b style="width:${pct}%"></b></i><small>${completed}/${total} test yakunlangan</small></span>
         </span>
         <span class="dash-hero-go">&rarr;</span>
       </a>`
-    : `<div class="dash-hero-card done"><span class="dash-hero-ico">âœ“</span><span class="dash-hero-copy"><b>Barcha darslar tugatilgan!</b><span class="muted">Tabriklaymiz, siz barcha materiallarni o'zlashtirdingiz.</span></span></div>`;
+    : `<div class="dash-hero-card done"><span class="dash-hero-ico">&#10003;</span><span class="dash-hero-copy"><b>Barcha testlar yakunlandi!</b><span class="muted">Tabriklaymiz, barcha testlarni yechib bo'ldingiz.</span></span></div>`;
 
   const lessonCards = lessons.length
     ? `<section class="dl-group">
-      <div class="dl-group-head"><h3>Darslar</h3><span>${lessons.length} ta video</span></div>
+      <div class="dl-group-head"><h3>Testlar</h3><span>${lessons.length} ta test</span></div>
       <div class="dl-grid">${lessons.map((l, i) => {
         const isDone = done.has(l.id);
-        const lockedVideo = l.type === "video" && !isIntroVideoLesson(l.id) && !hasLessonPermission(user.id, l.id);
-        const href = lockedVideo ? "/plans" : l.type === "test" ? `/test/${l.id}` : `/lesson/${l.id}`;
-        const totalNotice = l.type === "test" ? "Test" : `${Number(l.duration_min) || 0} daq`;
-        return `<a class="dl-card${isDone ? " done" : ""}" href="${href}" data-title="${h(
+        const sequenceLocked = firstIncompleteIndex >= 0 && i > firstIncompleteIndex;
+        const lockedPaidTest = !sequenceLocked && Number(l.price) > 0 && !testOwned(user.id, l.id);
+        const href = sequenceLocked ? "" : lockedPaidTest ? "/plans" : `/test/${l.id}`;
+        const cardTag = sequenceLocked ? "div" : "a";
+        const status = sequenceLocked ? "Avval oldingi test" : isDone ? "Tugatildi" : lockedPaidTest ? "Tarif kerak" : "Boshlash";
+        return `<${cardTag} class="dl-card${isDone ? " done" : ""}${sequenceLocked ? " sequence-locked" : ""}"${href ? ` href="${href}"` : ""} data-title="${h(
           (l.title + " " + l.course_title).toLowerCase()
         )}">
-          <span class="dl-top"><span class="dl-ico">${isDone ? "&#10003;" : i + 1}</span><span class="dl-status${isDone ? " done" : ""}">${isDone ? "Tugatildi" : lockedVideo ? "Tarif kerak" : l.type === "test" ? "Test" : "Ochish"}</span></span>
+          <span class="dl-top"><span class="dl-ico">${isDone ? "&#10003;" : i + 1}</span><span class="dl-status${isDone && !sequenceLocked ? " done" : ""}">${status}</span></span>
           <span class="dl-module">${h(l.course_title)}</span><b class="dl-title">${h(l.title)}</b>
           <span class="dl-sub">${h(l.course_title)}</span>
-          <span class="dl-foot"><span class="dl-time">${totalNotice}</span><span class="dl-arrow">&rarr;</span></span>
-        </a>`;
+          <span class="dl-foot"><span class="dl-time">${Number(l.duration_min) || 30} daq</span><span class="dl-arrow">${sequenceLocked ? "&#128274;" : "&rarr;"}</span></span>
+        </${cardTag}>`;
       }).join("")}</div>
     </section>`
     : "";
@@ -4120,7 +4131,7 @@ function dashboardPage(user) {
         <span class="dash-podium-medal">${i + 1}</span>
         <span class="dash-podium-avatar">${h(w.name.slice(0, 1).toUpperCase())}</span>
         <b>${h(w.name)}</b>
-        <small>${w.c} dars · ${h(weeklyStreaks.get(Number(w.id)) || 0)} kun 🔥</small>
+        <small>${w.c} test · ${h(weeklyStreaks.get(Number(w.id)) || 0)} kun 🔥</small>
       </div>`
     )
     .join("");
@@ -4131,7 +4142,7 @@ function dashboardPage(user) {
           (w, i) => `<div class="dash-rank-row">
             <span class="dash-rank-num">${i + 4}</span>
             <b>${h(w.name)}</b>
-            <span class="muted">${w.c} dars</span>
+            <span class="muted">${w.c} test</span>
           </div>`
         )
         .join("")
@@ -4154,28 +4165,28 @@ function dashboardPage(user) {
     <div class="wrap">
       ${nextCard}
       <div class="dash-top">
-        <div class="dash-stat dash-stat-progress"><div><span>Kurs jarayoni</span><b>${completed}<small> / ${total} dars</small></b></div><div class="dash-progress-track"><i style="width:${pct}%"></i></div><small>${completed ? "Yaxshi boshladingiz, davom eting 🚀" : "Birinchi video darsni boshlang 🚀"}</small></div>
+        <div class="dash-stat dash-stat-progress"><div><span>Testlar jarayoni</span><b>${completed}<small> / ${total} test</small></b></div><div class="dash-progress-track"><i style="width:${pct}%"></i></div><small>${completed ? "Yaxshi boshladingiz, davom eting 🚀" : "Birinchi testni boshlang 🚀"}</small></div>
         <div class="dash-stat dash-rank-stat"><span aria-hidden="true">&#127942;</span><b>${rank}<small> / ${classSize}</small></b><small>Guruhda o'rningiz</small></div>
         <div class="dash-stat dash-ach-stat"><span aria-hidden="true">&#127892;</span><b>${achievements}<small> / ${totalAchievements}</small></b><small>Yutuqlar</small></div>
       </div>
       <div class="dash-cols">
         <div class="card dash-rank">
           <div class="card-head"><div><h2>Guruh reytingi</h2><p class="muted small">Faol o'quvchilarning natijalari</p></div><a class="badge" href="/leaderboard">Haftalik &rarr;</a></div>
-          ${weekly.length ? `<div class="dash-podium">${weeklyPodium}</div>${weeklyRows}` : `<p class="muted small">Bu hafta hali hech kim dars tugatmadi. Birinchi bo'ling!</p>`}
+          ${weekly.length ? `<div class="dash-podium">${weeklyPodium}</div>${weeklyRows}` : `<p class="muted small">Bu hafta hali hech kim test yakunlamadi. Birinchi bo'ling!</p>`}
           <div class="dash-leader-note"><span aria-hidden="true">&#10024;</span> Har kuni ozgina o'sish ham katta natijaga olib keladi.</div>
         </div>
       </div>
 
       <div class="card dash-all">
         <div class="card-head dash-all-head">
-          <div><h2>Video darslar</h2><p class="muted small">${total} ta dars</p></div>
+          <div><h2>Testlar</h2><p class="muted small">${total} ta test</p></div>
           <div class="dl-tools">
-            <input id="dlSearch" class="dl-search" placeholder="Darslarni qidirish..." aria-label="Darslarni qidirish">
+            <input id="dlSearch" class="dl-search" placeholder="Testlarni qidirish..." aria-label="Testlarni qidirish">
             <button type="button" class="dl-view active" data-view="grid" aria-label="Katak ko'rinishi">&#9638;</button>
             <button type="button" class="dl-view" data-view="list" aria-label="Ro'yxat ko'rinishi">&#9776;</button>
           </div>
         </div>
-        <div class="dl-groups" id="dlGrid">${lessonCards || `<p class="muted">Hozircha darslar yo'q.</p>`}</div>
+        <div class="dl-groups" id="dlGrid">${lessonCards || `<p class="muted">Hozircha testlar yo'q.</p>`}</div>
         <div class="dl-pager" id="dlPager"></div>
       </div>
       <script>
@@ -4249,10 +4260,10 @@ function dashboardPage(user) {
           info.className = 'dl-pageinfo';
           var lang = document.documentElement.lang;
           info.textContent = lang === 'ru'
-            ? 'Страница ' + page + ' / ' + pages + ' | уроки ' + list.length
+            ? 'Страница ' + page + ' / ' + pages + ' | тесты ' + list.length
             : lang === 'en'
-            ? 'Page ' + page + ' / ' + pages + ' | ' + list.length + ' lessons'
-            : 'Sahifa ' + page + ' / ' + pages + ' | ' + list.length + ' ta dars';
+            ? 'Page ' + page + ' / ' + pages + ' | ' + list.length + ' tests'
+            : 'Sahifa ' + page + ' / ' + pages + ' | ' + list.length + ' ta test';
           pager.appendChild(info);
         }
         if (search) search.addEventListener('input', function () { page = 1; render(); });
@@ -6810,6 +6821,13 @@ const server = http.createServer(async (req, res) => {
   if (testMatch && (method === "GET" || method === "POST")) {
   const lesson = db.prepare("SELECT * FROM lessons WHERE id = ?").get(Number(testMatch[1]));
   if (!lesson || lesson.type !== "test") return notFound(res, user, admin);
+  if (user && !admin) {
+    const sequence = dashboardTestSequence(user.id);
+    const currentIndex = sequence.tests.findIndex((item) => Number(item.id) === Number(lesson.id));
+    if (currentIndex < 0) return redirect(res, "/dashboard");
+    const unmetPrevious = currentIndex > 0 ? sequence.tests.slice(0, currentIndex).find((item) => !sequence.completed.has(Number(item.id))) : null;
+    if (unmetPrevious) return redirect(res, `/test/${unmetPrevious.id}`);
+  }
 
   const isSubmit = testMatch[2] === "/submit";
   const isStart = url.searchParams.get("start") === "1";
