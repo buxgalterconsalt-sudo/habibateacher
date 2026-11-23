@@ -6619,3 +6619,26 @@ html[data-theme="light"] .home-final-card { background: linear-gradient(120deg, 
 @media (max-width: 640px) { .home-count-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } .home-custom-fields { grid-template-columns: 1fr; } .home-custom-fields label:nth-child(2) { grid-column: auto; } }
 @media (max-width: 520px) { .home-count-stats { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 640px) { .site-copy-grid { grid-template-columns: 1fr; } .site-copy-extra-row { grid-template-columns: 1fr; } }
+
+@media (max-width: 900px) {
+  .bar { gap: 8px; min-width: 0; padding-inline: 14px; }
+  .brand { flex: 1 1 auto; min-width: 0; overflow: hidden; }
+  .brand > span:nth-child(2) { overflow: hidden; text-overflow: ellipsis; }
+  .bar-right { min-width: 0; gap: 8px; }
+  .app-refresh { display: grid; flex: 0 0 38px; width: 38px; height: 38px; place-items: center; padding: 7px; }
+  .app-refresh b { display: none; }
+  .menu-toggle { flex: 0 0 38px; }
+}
+
+.landing-home .scroll-row {
+  --scroll-in-x: 0px;
+  translate: var(--scroll-in-x) 26px;
+  scale: .94;
+  opacity: 0;
+  transition: translate .72s cubic-bezier(.2,.7,.25,1), scale .72s cubic-bezier(.2,.7,.25,1), opacity .62s ease;
+  transition-delay: var(--scroll-delay, 0ms);
+}
+.landing-home .scroll-row.is-in-view { translate: 0 0; scale: 1; opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+  .landing-home .scroll-row { translate: none; scale: 1; opacity: 1; transition: none; }
+}
