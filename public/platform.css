@@ -5785,6 +5785,9 @@ html:not([data-theme="light"]) .tag { color: #ff9a61; }
 .btn-orange { background: #ea5e04; color: #131213; box-shadow: none; }
 .home-hero { border: 0; background: radial-gradient(620px 420px at 86% 20%, rgba(12, 119, 166, .09), transparent 68%); }
 .landing-hero-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(340px, .9fr); gap: clamp(36px, 7vw, 100px); align-items: center; padding-block: clamp(58px, 8vw, 112px) clamp(56px, 7vw, 90px); }
+.landing-home .landing-hero-copy,.landing-home .landing-hero-art { position: relative; will-change: transform; }
+.landing-home .landing-hero-copy { z-index: 2; transform-origin: center center; }
+.landing-home .landing-hero-art { z-index: 1; transform-origin: center center; }
 .landing-hero-copy { max-width: 690px; }
 .landing-hero-copy .eyebrow { background: rgba(234, 94, 4, .08); color: #a64305; border-color: rgba(234, 94, 4, .15); }
 html:not([data-theme="light"]) .landing-hero-copy .eyebrow { color: #ff9a61; }
@@ -6549,6 +6552,7 @@ html[data-theme="light"] .home-final-card { background: linear-gradient(120deg, 
 }
 @media (max-width: 640px) {
   .landing-home .landing-hero-grid { padding-block: 46px 28px; }
+  .landing-home .landing-hero-copy,.landing-home .landing-hero-art { transform-origin: center center; }
   .landing-home .landing-hero-copy h1 { max-width: 12ch; font-size: clamp(2.75rem, 13vw, 4.15rem); }
   .landing-home .landing-hero-art { min-height: 320px; }
   .landing-home .hero-photo-frame { width: min(86%, 370px); height: 350px; }
