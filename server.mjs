@@ -2174,7 +2174,7 @@ const formatSum = (value) => String(Number(value) || 0).replace(/\B(?=(\d{3})+(?
 
 /* --------------------------------------------------------------------- AI */
 function testOwned(userId, lessonId) {
-  return hasPlanAccess(userId) || !!db.prepare("SELECT 1 FROM purchases WHERE user_id = ? AND lesson_id = ?").get(userId, lessonId);
+  return hasPlanAccess(userId);
 }
 
 function moduleHref(lesson) {
@@ -2787,8 +2787,8 @@ function testLanding(lesson, { user, admin, owned }) {
 : `<p class="muted small">Tayyor bo'lsangiz, testni boshlang.</p>`
   }`;
   } else {
-  action = `<p class="muted small">Test pullik. To'lovdan so'ng admin uni hisobingizga ochadi.</p>
-  <a class="btn btn-primary" href="${h(config.telegram || "#")}" target="_blank" rel="noopener">Telegram orqali sotib olish</a>`;
+  action = `<p class="muted small">Pullik testlarni yechish uchun faol tarif sotib oling.</p>
+  <a class="btn btn-primary" href="/plans">Tariflarni ko'rish</a>`;
   }
 
   const distRows = stats.buckets
@@ -6221,14 +6221,7 @@ const server = http.createServer(async (req, res) => {
   )
 .all(cat);
 
-  const ownedIds = new Set(
-  user
-  ? db
-.prepare("SELECT lesson_id FROM purchases WHERE user_id = ?")
-.all(user.id)
-.map((r) => r.lesson_id)
-: []
-  );
+  const userHasPlan = !!user && hasPlanAccess(user.id);
 
   const byCourse = new Map();
   for (const test of tests) {
@@ -6265,7 +6258,7 @@ const server = http.createServer(async (req, res) => {
   </div>`
 : ""
   }
-  <div class="grid test-grid">${list.map((t) => testCard(t, ownedIds.has(t.id))).join("")}${addCard}</div>
+  <div class="grid test-grid">${list.map((t) => testCard(t, Number(t.price) > 0 && userHasPlan)).join("")}${addCard}</div>
   </section>`;
   })
 .filter(Boolean)
@@ -6832,7 +6825,7 @@ const server = http.createServer(async (req, res) => {
   const isSubmit = testMatch[2] === "/submit";
   const isStart = url.searchParams.get("start") === "1";
   const price = Number(lesson.price) || 0;
-  const owned = !!user && (price === 0 || testOwned(user.id, lesson.id));
+  const owned = !!admin || (!!user && (price === 0 || testOwned(user.id, lesson.id)));
   const startHref = `/test/${lesson.id}?start=1`;
 
   if (method === "GET" && !isSubmit && !isStart && !url.searchParams.has("result")) {
