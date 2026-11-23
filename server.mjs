@@ -1319,18 +1319,19 @@ const DIRECTIONS = [
   { id: "attestation", title: "Attestatsiya", description: "Ingliz tili o'qituvchilari uchun toifa attestatsiyasiga tayyorgarlik." },
   { id: "tkt", title: "TKT", description: "Teaching Knowledge Test modullari va metodika bo'yicha sinovlar." },
   { id: "cpd", title: "CPD", description: "Uzluksiz kasbiy rivojlanish uchun test va materiallar." },
-  { id: "bsb", title: "BSB", description: "BSB bo'yicha sinovlar va tayyorlov materiallari." },
-  { id: "chsb", title: "CHSB", description: "CHSB bo'yicha sinovlar va tayyorlov materiallari." }
+  { id: "bsb-chsb", title: "BSB va CHSB", description: "BSB va CHSB bo'yicha sinovlar hamda tayyorlov materiallari." }
 ];
 const DIRECTION_IDS = DIRECTIONS.map((direction) => direction.id);
-const CAT_LABEL = { attestation: "Attestatsiya", tkt: "TKT", cpd: "CPD", bsb: "BSB", chsb: "CHSB", other: "CPD" };
+const CAT_LABEL = { attestation: "Attestatsiya", tkt: "TKT", cpd: "CPD", "bsb-chsb": "BSB va CHSB", bsb: "BSB va CHSB", chsb: "BSB va CHSB", other: "CPD" };
 function categoryLabel(category) {
   if (category === "other" || category === "cpd") return metaGet("other_category_label", "CPD") || "CPD";
   return CAT_LABEL[category] || "Attestatsiya";
 }
 
 function directionCategories(category) {
-  return category === "cpd" ? ["cpd", "other"] : [category];
+  if (category === "cpd") return ["cpd", "other"];
+  if (category === "bsb-chsb") return ["bsb-chsb", "bsb", "chsb"];
+  return [category];
 }
 
 function icon(name) {
@@ -2258,7 +2259,7 @@ function testOwned(userId, lessonId) {
 
 function moduleHref(lesson) {
   const course = db.prepare("SELECT category FROM courses WHERE id = ?").get(lesson.course_id);
-  const category = course && course.category === "other" ? "cpd" : course && DIRECTION_IDS.includes(course.category) ? course.category : "attestation";
+  const category = course && course.category === "other" ? "cpd" : course && ["bsb", "chsb"].includes(course.category) ? "bsb-chsb" : course && DIRECTION_IDS.includes(course.category) ? course.category : "attestation";
   return `/${category}`;
 }
 
@@ -5404,19 +5405,18 @@ const server = http.createServer(async (req, res) => {
   (SELECT COUNT(*) FROM lessons l JOIN courses c ON c.id = l.course_id WHERE l.type = 'test' AND c.is_published = 1 AND c.category = 'attestation') AS tests_attestation,
   (SELECT COUNT(*) FROM lessons l JOIN courses c ON c.id = l.course_id WHERE l.type = 'test' AND c.is_published = 1 AND c.category = 'tkt') AS tests_tkt,
   (SELECT COUNT(*) FROM lessons l JOIN courses c ON c.id = l.course_id WHERE l.type = 'test' AND c.is_published = 1 AND c.category IN ('cpd', 'other')) AS tests_cpd,
-  (SELECT COUNT(*) FROM lessons l JOIN courses c ON c.id = l.course_id WHERE l.type = 'test' AND c.is_published = 1 AND c.category = 'bsb') AS tests_bsb,
-  (SELECT COUNT(*) FROM lessons l JOIN courses c ON c.id = l.course_id WHERE l.type = 'test' AND c.is_published = 1 AND c.category = 'chsb') AS tests_chsb,
+  (SELECT COUNT(*) FROM lessons l JOIN courses c ON c.id = l.course_id WHERE l.type = 'test' AND c.is_published = 1 AND c.category IN ('bsb-chsb','bsb','chsb')) AS tests_bsb_chsb,
   (SELECT COUNT(*) FROM progress) AS done`
   )
 .get();
   stats.courses = DIRECTIONS.length;
   const directionCourseRows = db.prepare(`SELECT c.category, COUNT(DISTINCT c.id) AS courses, COUNT(l.id) AS tests
     FROM courses c LEFT JOIN lessons l ON l.course_id = c.id AND l.type = 'test'
-    WHERE c.is_published = 1 AND c.category IN ('attestation','tkt','cpd','other','bsb','chsb')
+    WHERE c.is_published = 1 AND c.category IN ('attestation','tkt','cpd','other','bsb-chsb','bsb','chsb')
     GROUP BY c.category`).all();
   const directionStats = Object.fromEntries(DIRECTIONS.map((direction) => [direction.id, { courses: 0, tests: 0 }]));
   for (const row of directionCourseRows) {
-    const directionId = row.category === "other" ? "cpd" : row.category;
+    const directionId = row.category === "other" ? "cpd" : ["bsb", "chsb"].includes(row.category) ? "bsb-chsb" : row.category;
     if (directionStats[directionId]) {
       directionStats[directionId].courses += Number(row.courses) || 0;
       directionStats[directionId].tests += Number(row.tests) || 0;
@@ -5555,8 +5555,7 @@ const server = http.createServer(async (req, res) => {
   <div class="stat"><b>${stats.tests_attestation}</b><span>${h(copy.stat_test_attestation)}</span></div>
   <div class="stat"><b>${stats.tests_tkt}</b><span>${h(copy.stat_test_tkt)}</span></div>
   <div class="stat"><b>${stats.tests_cpd}</b><span>${h(copy.stat_test_cpd)}</span></div>
-  <div class="stat"><b>${stats.tests_bsb}</b><span>BSB testlari</span></div>
-  <div class="stat"><b>${stats.tests_chsb}</b><span>CHSB testlari</span></div>
+  <div class="stat"><b>${stats.tests_bsb_chsb}</b><span>BSB va CHSB testlari</span></div>
   </div>
   </section>
 
@@ -5640,7 +5639,6 @@ const server = http.createServer(async (req, res) => {
     ...customHomeSections.filter((section) => !section.visible).map((section) => `[data-home-section="custom_${section.id}"]`)
   ].join(",");
   if (hiddenSections) body += `<style>${hiddenSections}{display:none!important}</style>`;
-  body += `<script>(function(){var hero=document.querySelector('.landing-home .home-hero');var copy=hero&&hero.querySelector('.landing-hero-copy');var art=hero&&hero.querySelector('.landing-hero-art');if(!hero||!copy||!art||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;var pending=false;function draw(){pending=false;var progress=Math.max(0,Math.min(1,window.scrollY/(window.innerHeight*.75)));var scale=1-progress*.22;var artScale=1-progress*.32;var compact=window.matchMedia('(max-width: 640px)').matches;if(compact){copy.style.transform='translate3d(0,'+(progress*54)+'px,0) scale('+scale+')';art.style.transform='translate3d(0,'+(-progress*82)+'px,0) scale('+artScale+')'}else{copy.style.transform='translate3d('+(progress*62)+'px,'+(progress*8)+'px,0) scale('+scale+')';art.style.transform='translate3d('+(-progress*76)+'px,'+(-progress*8)+'px,0) scale('+artScale+')'}copy.style.opacity=String(1-progress*.12);art.style.opacity=String(1-progress*.12)}function schedule(){if(pending)return;pending=true;window.requestAnimationFrame(draw)}window.addEventListener('scroll',schedule,{passive:true});window.addEventListener('resize',schedule,{passive:true});schedule()})();</script>`;
   body += `<script>(function(){var home=document.querySelector('.landing-home');if(!home||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;var selectors=['.home-hero .landing-hero-copy > *','.home-hero .landing-hero-art > *','.home-statbar > *','.home-overview-grid > *','.home-overview-copy > *','.home-orbit-tags > *','.home-pillar-list > *','.landing-home .section-head > *','.landing-home .direction-card','.landing-home .course-card','.landing-home .about-grid > *','.landing-home .check-list > *','.landing-home .home-features .grid > *','.landing-home .home-journey-grid > *','.landing-home .home-steps > *','.landing-home .home-plan-card','.landing-home .home-faq-grid > *','.landing-home .home-faq-list > *','.landing-home .home-final-card > *','.landing-home [data-home-section^="custom_"] .home-custom-copy > *','.landing-home img'];var rows=new Set();selectors.forEach(function(selector){home.querySelectorAll(selector).forEach(function(row){if(row.textContent.trim()||row.matches('img'))rows.add(row)})});var items=Array.from(rows);items.forEach(function(row){var index=Array.prototype.indexOf.call(row.parentElement.children,row);row.classList.add('scroll-row');row.style.setProperty('--scroll-in-x',index%2?'34px':'-34px');row.style.setProperty('--scroll-delay',(index%4)*65+'ms')});if(!('IntersectionObserver' in window)){items.forEach(function(row){row.classList.add('is-in-view')});return}var observer=new IntersectionObserver(function(entries){entries.forEach(function(entry){if(entry.isIntersecting){entry.target.classList.add('is-in-view');observer.unobserve(entry.target)}})},{threshold:.08,rootMargin:'0px 0px -4% 0px'});items.forEach(function(row){observer.observe(row)})})();</script>`;
   body += `<script>(function(){var orbit=document.querySelector('[data-scroll-orbit]');if(!orbit||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;var card=orbit.closest('.home-orbit-card');var rings=[].slice.call(orbit.querySelectorAll('i'));var base=[-26,40,-55];var pending=false;function draw(){pending=false;var r=card.getBoundingClientRect();var p=Math.max(-1,Math.min(1,(window.innerHeight*.52-(r.top+r.height/2))/(window.innerHeight*.78)));rings.forEach(function(el,i){var direction=i===1?1:-1;var angle=base[i]+p*56*direction;var scales=[.73,.68,.75];el.style.transform='translate3d('+(p*(i-1)*20)+'px,'+(-p*30*(i+1))+'px,0) rotate('+angle+'deg) scaleX('+scales[i]+')'});orbit.style.transform='translate3d('+(p*24)+'px,'+(-p*48)+'px,0) rotate('+(p*18)+'deg)'}function schedule(){if(pending)return;pending=true;window.requestAnimationFrame(draw)}window.addEventListener('scroll',schedule,{passive:true});window.addEventListener('resize',schedule,{passive:true});schedule()})();</script>`;
 
@@ -6324,8 +6322,9 @@ const server = http.createServer(async (req, res) => {
   }
 
   /* ---------------------------------------------------------- categories */
-  if (["/attestation", ...DIRECTION_IDS.filter((id) => id !== "attestation").map((id) => `/${id}`)].includes(p) && method === "GET") {
-  const cat = p.slice(1);
+  if (["/attestation", ...DIRECTION_IDS.filter((id) => id !== "attestation").map((id) => `/${id}`), "/bsb", "/chsb"].includes(p) && method === "GET") {
+  const requestedCategory = p.slice(1);
+  const cat = ["bsb", "chsb"].includes(requestedCategory) ? "bsb-chsb" : requestedCategory;
   const direction = DIRECTIONS.find((item) => item.id === cat) || DIRECTIONS[0];
   const directionTitle = categoryLabel(cat);
   const meta = cat === "attestation"
@@ -8057,7 +8056,7 @@ const server = http.createServer(async (req, res) => {
     const body = `<div class="page-head"><div><h1>Muallif paneli</h1><p class="muted">Kurslar, darslar va test materiallarini boshqaring.</p></div></div>
       <div class="grid three">${courseRows}</div>
       <div class="card" style="margin-top:22px"><h2>Yangi kurs</h2><form method="post" action="/admin/course" class="form">
-      <div class="field"><label>Yo'nalish</label><select name="category"><option value="attestation">Attestatsiya</option><option value="tkt">TKT</option><option value="cpd">${h(categoryLabel("cpd"))}</option><option value="bsb">BSB</option><option value="chsb">CHSB</option></select></div>
+      <div class="field"><label>Yo'nalish</label><select name="category"><option value="attestation">Attestatsiya</option><option value="tkt">TKT</option><option value="cpd">${h(categoryLabel("cpd"))}</option><option value="bsb-chsb">BSB va CHSB</option></select></div>
       <div class="field"><label>Kurs nomi</label><input name="title" required maxlength="160"></div><div class="field"><label>Tavsif</label><textarea name="description" rows="2"></textarea></div>
       <button class="btn btn-primary" type="submit">Kurs yaratish</button></form></div>`;
     send(res, 200, layout({ title: "Muallif paneli", body, user, admin }));
@@ -8140,8 +8139,7 @@ const server = http.createServer(async (req, res) => {
   <option value="attestation">Attestatsiya</option>
   <option value="tkt">TKT</option>
   <option value="cpd">${h(categoryLabel("cpd"))}</option>
-  <option value="bsb">BSB</option>
-  <option value="chsb">CHSB</option>
+  <option value="bsb-chsb">BSB va CHSB</option>
   </select>
   </div>
   <div class="field"><label>Kurs nomi</label><input name="title" required placeholder="Masalan: Atestatsiya testlariga tayyorlov"></div>
@@ -8432,7 +8430,7 @@ const server = http.createServer(async (req, res) => {
   if (!contentManager) return redirect(res, "/admin/login");
   const title = String(fields.title || "").trim();
   const description = String(fields.description || "").trim();
-  const category = [...DIRECTION_IDS, "other"].includes(fields.category)
+  const category = [...DIRECTION_IDS, "other", "bsb", "chsb"].includes(fields.category)
   ? fields.category
 : "attestation";
   if (!title) return redirect(res, "/admin");
@@ -8480,7 +8478,7 @@ const server = http.createServer(async (req, res) => {
   if (!adminCourseMatch[2] && method === "POST") {
   const title = String(fields.title || "").trim();
   const description = String(fields.description || "").trim();
-  const category = [...DIRECTION_IDS, "other"].includes(fields.category)
+  const category = [...DIRECTION_IDS, "other", "bsb", "chsb"].includes(fields.category)
   ? fields.category
 : course.category || "attestation";
   if (title) {
@@ -8577,12 +8575,11 @@ const server = http.createServer(async (req, res) => {
    ["attestation", "Attestatsiya"],
    ["tkt", "TKT"],
    ["cpd", categoryLabel("cpd")],
-   ["bsb", "BSB"],
-   ["chsb", "CHSB"]
+   ["bsb-chsb", "BSB va CHSB"]
   ]
 .map(
   ([value, label]) =>
-   `<option value="${value}"${((course.category === "other" ? "cpd" : course.category) || "attestation") === value ? " selected": ""}>${h(label)}</option>`
+   `<option value="${value}"${((course.category === "other" ? "cpd" : ["bsb", "chsb"].includes(course.category) ? "bsb-chsb" : course.category) || "attestation") === value ? " selected": ""}>${h(label)}</option>`
   )
 .join("")}
   </select>
