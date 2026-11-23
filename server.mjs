@@ -1738,7 +1738,6 @@ function navFor(user, admin, publicPage = false) {
 
   const links = `
   <a href="/">${h(copy.nav_home)}</a>
-  <a href="/#directions">Yo'nalishlar</a>
   <a href="/attestation">${h(copy.nav_attestation)}</a>
   <a href="/tkt">${h(copy.nav_tkt)}</a>
   <a href="/duel">${h(copy.nav_duel)}</a>
@@ -1749,7 +1748,6 @@ function navFor(user, admin, publicPage = false) {
   if (user) {
   return `<nav class="nav nav-student">
   <a href="/">${h(copy.nav_home)}</a>
-  <a href="/#directions">Yo'nalishlar</a>
   <a href="/attestation">${h(copy.nav_attestation)}</a>
   <a href="/tkt">${h(copy.nav_tkt)}</a>
   <a href="/duel">${h(copy.nav_duel)}</a>
@@ -1842,7 +1840,6 @@ ${seoTags}
   ? `<a href="/admin">Admin</a><a href="/admin/students">O'quvchilar</a><a href="/admin/site-settings">Sayt sozlamalari</a><a href="/leaderboard">Reyting</a><a href="/">Saytni ko'rish</a>
   <form method="post" action="/admin/logout"><button class="mobile-link-btn" type="submit">Chiqish</button></form>`
    : `<a href="/">${h(copy.nav_home)}</a>
-   <a href="/#directions">Yo'nalishlar</a>
   <a href="/attestation">${h(copy.nav_attestation)}</a>
   <a href="/tkt">${h(copy.nav_tkt)}</a>
   <a href="/duel">${h(copy.nav_duel)}</a>
@@ -6324,9 +6321,10 @@ const server = http.createServer(async (req, res) => {
   const courses = db
 .prepare(
   `SELECT c.*, (SELECT COUNT(*) FROM lessons l WHERE l.course_id = c.id) AS lesson_count
-  FROM courses c WHERE c.category IN (${categoryMarks}) AND c.is_published = 1 ORDER BY c.id`
+  FROM courses c WHERE c.category IN (${categoryMarks}) AND c.is_published = 1
+  ORDER BY CASE WHEN ? = 'attestation' AND c.title = 'Toifa testlari' THEN 1 ELSE 0 END, c.id`
   )
-.all(...queryCategories);
+.all(...queryCategories, cat);
 
   const tests = db
 .prepare(
