@@ -5417,7 +5417,7 @@ const server = http.createServer(async (req, res) => {
   <img src="/img/habiba-stage.jpg" alt="Habiba teacher ingliz tili o'qituvchilari bilan mashg'ulotda">
   <div class="hero-photo-caption"><small>HABIBA TEACHER</small><b>${h(copy.hero_image_caption)}</b></div>
   </div>
-  <div class="hero-float-card one">${copy.hero_float_mark ? `<span class="hero-float-mark">${h(copy.hero_float_mark)}</span>` : ""}<span><strong>${h(copy.hero_float_title)}</strong><small>${h(copy.hero_float_description)}</small></span></div>
+  ${copy.hero_float_title || copy.hero_float_description ? `<div class="hero-float-card one">${copy.hero_float_title && copy.hero_float_mark ? `<span class="hero-float-mark">${h(copy.hero_float_mark)}</span>` : ""}<span>${copy.hero_float_title ? `<strong>${h(copy.hero_float_title)}</strong>` : ""}${copy.hero_float_description ? `<small>${h(copy.hero_float_description)}</small>` : ""}</span></div>` : ""}
   </div>
   </div>
   <div class="wrap home-statbar">
