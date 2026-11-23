@@ -6577,6 +6577,18 @@ html[data-theme="light"] .home-final-card { background: linear-gradient(120deg, 
 .site-copy-group > summary span { color: var(--muted); font-size: .75rem; font-weight: 500; }
 .site-copy-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 18px; padding: 0 20px 20px; border-top: 1px solid var(--line); }
 .site-copy-grid .field { margin-top: 14px; }
+.site-copy-field-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 7px; }
+.site-copy-field-top label { margin: 0; }
+.site-copy-field[hidden] { display: none; }
+.site-copy-restore:empty { display: none; }
+.site-copy-restore { display: flex; flex-wrap: wrap; gap: 8px; grid-column: 1 / -1; }
+.site-copy-extras { display: grid; gap: 12px; grid-column: 1 / -1; }
+.site-copy-extra-row { display: grid; grid-template-columns: minmax(0, .75fr) minmax(0, 1.5fr) auto; align-items: end; gap: 10px; padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-solid); }
+.site-copy-extra-row label { display: grid; gap: 5px; color: var(--muted); font-size: .8rem; }
+.site-copy-extra-row textarea { resize: vertical; }
+.site-copy-grid > [data-copy-add] { justify-self: start; }
+.site-copy-extra-public { display: grid; gap: 8px; max-width: 760px; margin: 18px auto; }
+.site-copy-extra-public p { margin: 0; padding: 12px 16px; border: 1px solid var(--home-line, var(--line)); border-radius: 12px; background: var(--surface); color: var(--text); }
 .home-section-settings { display: grid; gap: 16px; padding: 20px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); }
 .home-section-settings h2 { margin: 0 0 6px; font-size: 1.12rem; }
 .home-section-settings p { margin: 0; }
@@ -6602,4 +6614,4 @@ html[data-theme="light"] .home-final-card { background: linear-gradient(120deg, 
 @media (max-width: 900px) { .home-count-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (max-width: 640px) { .home-count-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } .home-custom-fields { grid-template-columns: 1fr; } .home-custom-fields label:nth-child(2) { grid-column: auto; } }
 @media (max-width: 520px) { .home-count-stats { grid-template-columns: minmax(0, 1fr); } }
-@media (max-width: 640px) { .site-copy-grid { grid-template-columns: 1fr; } }
+@media (max-width: 640px) { .site-copy-grid { grid-template-columns: 1fr; } .site-copy-extra-row { grid-template-columns: 1fr; } }

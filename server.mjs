@@ -162,15 +162,41 @@ function homeSectionOrder(customSections = homeCustomSections()) {
   return order;
 }
 
-function siteTexts() {
+function siteTexts(includeRemoved = false) {
   let saved = {};
   try { saved = JSON.parse(metaGet("site_texts_json", "{}")) || {}; } catch (e) {}
+  const removed = new Set(siteCopyRemoved());
   const result = {};
   for (const [key, fallback] of Object.entries(SITE_TEXT_DEFAULTS)) {
     const legacy = key === "nav_courses" ? metaGet("course_nav_label", "") : "";
-    result[key] = String(saved[key] ?? (legacy || fallback)).slice(0, 500);
+    result[key] = removed.has(key) && !includeRemoved ? "" : String(saved[key] ?? (legacy || fallback)).slice(0, 500);
   }
   return result;
+}
+
+function siteCopyRemoved() {
+  try {
+    const keys = JSON.parse(metaGet("site_copy_removed_json", "[]"));
+    return Array.isArray(keys) ? keys.filter((key) => Object.hasOwn(SITE_TEXT_DEFAULTS, key)) : [];
+  } catch (e) { return []; }
+}
+
+function siteCopyExtras() {
+  try {
+    const rows = JSON.parse(metaGet("site_copy_extras_json", "[]"));
+    if (!Array.isArray(rows)) return [];
+    return rows.slice(0, 100).map((row, index) => ({
+      id: String(row.id || `copy_${index + 1}`).replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 40),
+      group: String(row.group || "hero").slice(0, 40),
+      label: String(row.label || "").trim().slice(0, 100),
+      text: String(row.text || "").trim().slice(0, 1000)
+    })).filter((row) => row.id && row.label && row.text);
+  } catch (e) { return []; }
+}
+
+function siteCopyExtraMarkup(group) {
+  const rows = siteCopyExtras().filter((row) => row.group === group);
+  return rows.length ? `<div class="site-copy-extra-public">${rows.map((row) => `<p><b>${h(row.label)}</b> ${h(row.text)}</p>`).join("")}</div>` : "";
 }
 
 function courseNavLabel() {
@@ -1751,7 +1777,7 @@ ${seoTags}
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%2312b5a6'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='18' font-weight='bold' text-anchor='middle' fill='%2303211d'%3EH%3C/text%3E%3C/svg%3E">
 <script async src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>try{document.documentElement.dataset.theme=localStorage.getItem('ht_theme')||'dark';}catch(e){document.documentElement.dataset.theme='dark';}</script>
-<link rel="stylesheet" href="/assets/platform.css?v=20261123home7">
+<link rel="stylesheet" href="/assets/platform.css?v=20261123home8">
 </head>
 <body${admin && !publicPage ? ` class="admin-page"` : isStudentPage ? ` class="student-page${isDashboard ? " is-dashboard" : ""}"` : ""}>
 <header class="topbar">
@@ -5535,6 +5561,13 @@ const server = http.createServer(async (req, res) => {
   </div>`;
 
   body += additions;
+  const copyExtraSections = { nav: "final", hero: "hero", overview: "overview", directions: "directions", features: "features", program: "program", faq: "faq", footer: "final" };
+  for (const [group, section] of Object.entries(copyExtraSections)) {
+    const markup = siteCopyExtraMarkup(group);
+    if (!markup) continue;
+    const sectionPattern = new RegExp(`(<section\\b(?=[^>]*data-home-section="${section}")[^>]*>[\\s\\S]*?)(<\\/section>)`);
+    body = body.replace(sectionPattern, (_match, content, closing) => `${content}${markup}${closing}`);
+  }
   const sectionBlocks = new Map();
   body = body.replace(/<section\b(?=[^>]*data-home-section="([^"]+)")[^>]*>[\s\S]*?<\/section>/g, (block, key) => {
     sectionBlocks.set(key, block);
@@ -8072,22 +8105,35 @@ const server = http.createServer(async (req, res) => {
 
   if (p === "/admin/site-settings" && method === "GET") {
     if (!admin) return redirect(res, "/admin/login");
-    const copy = siteTexts();
+    const copy = siteTexts(true);
     const homeSections = homeSectionVisibility();
     const customHomeSections = homeCustomSections();
     const sectionOrder = homeSectionOrder(customHomeSections);
     const groups = [
-      { title: "Menyu va sayt nomi", fields: [["site_name", "Sayt nomi"], ["nav_home", "Bosh sahifa"], ["nav_attestation", "Attestatsiya"], ["nav_tkt", "TKT"], ["nav_duel", "Duel"], ["nav_courses", "Kurslar / yo'nalishlar"], ["nav_plans", "Tariflar"], ["nav_leaderboard", "Reyting"]] },
-      { title: "Bosh sahifa — asosiy qism", fields: [["hero_eyebrow", "Yuqori kichik yozuv"], ["hero_title", "Sarlavhaning birinchi qismi"], ["hero_accent", "Rangli sarlavha qismi"], ["hero_title_end", "Sarlavhaning oxirgi qismi"], ["hero_description", "Tavsif"], ["hero_primary", "Asosiy tugma"], ["hero_primary_logged", "Kirish qilganlar tugmasi"], ["hero_secondary", "Ikkinchi tugma"], ["hero_trust_1", "Afzallik 1"], ["hero_trust_2", "Afzallik 2"], ["hero_trust_3", "Afzallik 3"], ["hero_note", "Yangilik xabari"], ["hero_image_caption", "Rasm osti yozuvi"], ["hero_float_title", "TKT kartasi sarlavhasi"], ["hero_float_description", "TKT kartasi tavsifi"]] },
-      { title: "Hisoblagich, kirish qismi va orbitalar", fields: [["stat_directions", "Yo'nalishlar hisoblagichi"], ["stat_lessons", "Video darslar hisoblagichi"], ["stat_tests", "Barcha testlar hisoblagichi"], ["stat_test_attestation", "Attestatsiya testlari nomi"], ["stat_test_tkt", "TKT testlari nomi"], ["stat_test_cpd", "CPD testlari nomi"], ["stat_students", "O'quvchilar hisoblagichi"], ["stat_note_title", "Hisoblagich yonidagi sarlavha"], ["stat_note_description", "Hisoblagich yonidagi izoh"], ["orbit_kicker", "Orbital karta yuqori yozuvi"], ["orbit_test", "Orbital test yorlig'i"], ["orbit_lesson", "Orbital dars yorlig'i"], ["orbit_result", "Orbital natija yorlig'i"], ["orbit_tag_1", "Orbital teg 1"], ["orbit_tag_2", "Orbital teg 2"], ["orbit_tag_3", "Orbital teg 3"], ["orbit_tag_4", "Orbital teg 4"], ["overview_eyebrow", "Kirish bo'limi kichik sarlavhasi"], ["overview_title", "Kirish bo'limi sarlavhasi"], ["overview_accent", "Rangli sarlavha qismi"], ["overview_description", "Kirish bo'limi tavsifi"], ["pillar_1_title", "Afzallik 1 sarlavhasi"], ["pillar_1_description", "Afzallik 1 tavsifi"], ["pillar_2_title", "Afzallik 2 sarlavhasi"], ["pillar_2_description", "Afzallik 2 tavsifi"], ["pillar_3_title", "Afzallik 3 sarlavhasi"], ["pillar_3_description", "Afzallik 3 tavsifi"]] },
-      { title: "Yo'nalishlar va kurslar", fields: [["direction_heading", "Yo'nalishlar sarlavhasi"], ["direction_description", "Yo'nalishlar tavsifi"], ["direction_attestation_title", "Attestatsiya kartasi sarlavhasi"], ["direction_attestation_description", "Attestatsiya kartasi tavsifi"], ["direction_tkt_title", "TKT kartasi sarlavhasi"], ["direction_tkt_description", "TKT kartasi tavsifi"], ["direction_open", "Karta tugmasi"], ["course_section_eyebrow", "Kurslar kichik sarlavhasi"], ["course_section_title", "Kurslar bo'limi sarlavhasi"], ["course_section_description", "Kurslar bo'limi tavsifi"], ["course_section_button", "Kurslar tugmasi"]] },
-      { title: "Biz haqimizda va imkoniyatlar", fields: [["about_eyebrow", "Biz haqimizda kichik sarlavha"], ["about_title", "Biz haqimizda sarlavhasi"], ["about_description", "Biz haqimizda tavsifi"], ["about_check_1", "Afzallik ro'yxati 1"], ["about_check_2", "Afzallik ro'yxati 2"], ["about_check_3", "Afzallik ro'yxati 3"], ["about_check_4", "Afzallik ro'yxati 4"], ["about_card_title", "Yon kartadagi sarlavha"], ["about_card_description", "Yon kartadagi izoh"], ["feature_eyebrow", "Imkoniyatlar kichik sarlavhasi"], ["feature_title", "Imkoniyatlar sarlavhasi"], ["feature_pdf_title", "PDF karta sarlavhasi"], ["feature_pdf_description", "PDF karta tavsifi"], ["feature_video_title", "Video karta sarlavhasi"], ["feature_video_description", "Video karta tavsifi"], ["feature_test_title", "Test karta sarlavhasi"], ["feature_test_description", "Test karta tavsifi"]] },
-      { title: "O'quv dasturi", fields: [["program_eyebrow", "Bo'lim kichik sarlavhasi"], ["program_title", "Bo'lim sarlavhasi"], ["program_accent", "Rangli sarlavha qismi"], ["program_description", "Bo'lim tavsifi"], ["program_direction_suffix", "Yo'nalishlar soni qo'shimchasi"], ["program_lesson_suffix", "Darslar soni qo'shimchasi"], ["program_course_button", "Dastur tugmasi"], ["program_attestation_tag", "1-bosqich yorlig'i"], ["program_tkt_tag", "2-bosqich yorlig'i"], ["program_practice_tag", "3-bosqich yorlig'i"], ["program_step_1_title", "Bosqich 1 sarlavhasi"], ["program_step_1_description", "Bosqich 1 tavsifi"], ["program_step_2_title", "Bosqich 2 sarlavhasi"], ["program_step_2_description", "Bosqich 2 tavsifi"], ["program_step_3_title", "Bosqich 3 sarlavhasi"], ["program_step_3_description", "Bosqich 3 tavsifi"]] },
-      { title: "Tariflar va savol-javob", fields: [["pricing_eyebrow", "Tariflar kichik sarlavhasi"], ["pricing_title", "Tariflar sarlavhasi"], ["pricing_accent", "Rangli sarlavha qismi"], ["pricing_description", "Tariflar tavsifi"], ["pricing_all", "Barcha tariflar tugmasi"], ["pricing_button", "Tarif kartasi tugmasi"], ["faq_eyebrow", "Savol-javob kichik sarlavhasi"], ["faq_title", "Savol-javob sarlavhasi"], ["faq_accent", "Rangli sarlavha qismi"], ["faq_description", "Savol-javob tavsifi"], ["faq_contact", "Bog'lanish tugmasi"], ["faq_q1", "Savol 1"], ["faq_a1", "Javob 1"], ["faq_q2", "Savol 2"], ["faq_a2", "Javob 2"], ["faq_q3", "Savol 3"], ["faq_a3", "Javob 3"], ["faq_q4", "Savol 4"], ["faq_a4", "Javob 4"]] },
-      { title: "Yakuniy chaqiriq va footer", fields: [["final_eyebrow", "Yakuniy bo'lim kichik sarlavhasi"], ["final_title", "Yakuniy sarlavha"], ["final_accent", "Rangli sarlavha qismi"], ["final_description", "Yakuniy bo'lim tavsifi"], ["final_button", "Tugma"], ["final_button_logged", "Kirish qilganlar tugmasi"], ["footer_tagline", "Pastki qism tavsifi"], ["footer_about", "Footer biz haqimizda havolasi"], ["footer_credit", "Footer muallif va huquq yozuvi"]] }
+      { id: "nav", title: "Menyu va sayt nomi", fields: [["site_name", "Sayt nomi"], ["nav_home", "Bosh sahifa"], ["nav_attestation", "Attestatsiya"], ["nav_tkt", "TKT"], ["nav_duel", "Duel"], ["nav_courses", "Kurslar / yo'nalishlar"], ["nav_plans", "Tariflar"], ["nav_leaderboard", "Reyting"]] },
+      { id: "hero", title: "Bosh sahifa — asosiy qism", fields: [["hero_eyebrow", "Yuqori kichik yozuv"], ["hero_title", "Sarlavhaning birinchi qismi"], ["hero_accent", "Rangli sarlavha qismi"], ["hero_title_end", "Sarlavhaning oxirgi qismi"], ["hero_description", "Tavsif"], ["hero_primary", "Asosiy tugma"], ["hero_primary_logged", "Kirish qilganlar tugmasi"], ["hero_secondary", "Ikkinchi tugma"], ["hero_trust_1", "Afzallik 1"], ["hero_trust_2", "Afzallik 2"], ["hero_trust_3", "Afzallik 3"], ["hero_note", "Yangilik xabari"], ["hero_image_caption", "Rasm osti yozuvi"], ["hero_float_title", "TKT kartasi sarlavhasi"], ["hero_float_description", "TKT kartasi tavsifi"]] },
+      { id: "overview", title: "Hisoblagich, kirish qismi va orbitalar", fields: [["stat_directions", "Yo'nalishlar hisoblagichi"], ["stat_lessons", "Video darslar hisoblagichi"], ["stat_tests", "Barcha testlar hisoblagichi"], ["stat_test_attestation", "Attestatsiya testlari nomi"], ["stat_test_tkt", "TKT testlari nomi"], ["stat_test_cpd", "CPD testlari nomi"], ["stat_students", "O'quvchilar hisoblagichi"], ["stat_note_title", "Hisoblagich yonidagi sarlavha"], ["stat_note_description", "Hisoblagich yonidagi izoh"], ["orbit_kicker", "Orbital karta yuqori yozuvi"], ["orbit_test", "Orbital test yorlig'i"], ["orbit_lesson", "Orbital dars yorlig'i"], ["orbit_result", "Orbital natija yorlig'i"], ["orbit_tag_1", "Orbital teg 1"], ["orbit_tag_2", "Orbital teg 2"], ["orbit_tag_3", "Orbital teg 3"], ["orbit_tag_4", "Orbital teg 4"], ["overview_eyebrow", "Kirish bo'limi kichik sarlavhasi"], ["overview_title", "Kirish bo'limi sarlavhasi"], ["overview_accent", "Rangli sarlavha qismi"], ["overview_description", "Kirish bo'limi tavsifi"], ["pillar_1_title", "Afzallik 1 sarlavhasi"], ["pillar_1_description", "Afzallik 1 tavsifi"], ["pillar_2_title", "Afzallik 2 sarlavhasi"], ["pillar_2_description", "Afzallik 2 tavsifi"], ["pillar_3_title", "Afzallik 3 sarlavhasi"], ["pillar_3_description", "Afzallik 3 tavsifi"]] },
+      { id: "directions", title: "Yo'nalishlar va kurslar", fields: [["direction_heading", "Yo'nalishlar sarlavhasi"], ["direction_description", "Yo'nalishlar tavsifi"], ["direction_attestation_title", "Attestatsiya kartasi sarlavhasi"], ["direction_attestation_description", "Attestatsiya kartasi tavsifi"], ["direction_tkt_title", "TKT kartasi sarlavhasi"], ["direction_tkt_description", "TKT kartasi tavsifi"], ["direction_open", "Karta tugmasi"], ["course_section_eyebrow", "Kurslar kichik sarlavhasi"], ["course_section_title", "Kurslar bo'limi sarlavhasi"], ["course_section_description", "Kurslar bo'limi tavsifi"], ["course_section_button", "Kurslar tugmasi"]] },
+      { id: "features", title: "Biz haqimizda va imkoniyatlar", fields: [["about_eyebrow", "Biz haqimizda kichik sarlavha"], ["about_title", "Biz haqimizda sarlavhasi"], ["about_description", "Biz haqimizda tavsifi"], ["about_check_1", "Afzallik ro'yxati 1"], ["about_check_2", "Afzallik ro'yxati 2"], ["about_check_3", "Afzallik ro'yxati 3"], ["about_check_4", "Afzallik ro'yxati 4"], ["about_card_title", "Yon kartadagi sarlavha"], ["about_card_description", "Yon kartadagi izoh"], ["feature_eyebrow", "Imkoniyatlar kichik sarlavhasi"], ["feature_title", "Imkoniyatlar sarlavhasi"], ["feature_pdf_title", "PDF karta sarlavhasi"], ["feature_pdf_description", "PDF karta tavsifi"], ["feature_video_title", "Video karta sarlavhasi"], ["feature_video_description", "Video karta tavsifi"], ["feature_test_title", "Test karta sarlavhasi"], ["feature_test_description", "Test karta tavsifi"]] },
+      { id: "program", title: "O'quv dasturi", fields: [["program_eyebrow", "Bo'lim kichik sarlavhasi"], ["program_title", "Bo'lim sarlavhasi"], ["program_accent", "Rangli sarlavha qismi"], ["program_description", "Bo'lim tavsifi"], ["program_direction_suffix", "Yo'nalishlar soni qo'shimchasi"], ["program_lesson_suffix", "Darslar soni qo'shimchasi"], ["program_course_button", "Dastur tugmasi"], ["program_attestation_tag", "1-bosqich yorlig'i"], ["program_tkt_tag", "2-bosqich yorlig'i"], ["program_practice_tag", "3-bosqich yorlig'i"], ["program_step_1_title", "Bosqich 1 sarlavhasi"], ["program_step_1_description", "Bosqich 1 tavsifi"], ["program_step_2_title", "Bosqich 2 sarlavhasi"], ["program_step_2_description", "Bosqich 2 tavsifi"], ["program_step_3_title", "Bosqich 3 sarlavhasi"], ["program_step_3_description", "Bosqich 3 tavsifi"]] },
+      { id: "faq", title: "Tariflar va savol-javob", fields: [["pricing_eyebrow", "Tariflar kichik sarlavhasi"], ["pricing_title", "Tariflar sarlavhasi"], ["pricing_accent", "Rangli sarlavha qismi"], ["pricing_description", "Tariflar tavsifi"], ["pricing_all", "Barcha tariflar tugmasi"], ["pricing_button", "Tarif kartasi tugmasi"], ["faq_eyebrow", "Savol-javob kichik sarlavhasi"], ["faq_title", "Savol-javob sarlavhasi"], ["faq_accent", "Rangli sarlavha qismi"], ["faq_description", "Savol-javob tavsifi"], ["faq_contact", "Bog'lanish tugmasi"], ["faq_q1", "Savol 1"], ["faq_a1", "Javob 1"], ["faq_q2", "Savol 2"], ["faq_a2", "Javob 2"], ["faq_q3", "Savol 3"], ["faq_a3", "Javob 3"], ["faq_q4", "Savol 4"], ["faq_a4", "Javob 4"]] },
+      { id: "footer", title: "Yakuniy chaqiriq va footer", fields: [["final_eyebrow", "Yakuniy bo'lim kichik sarlavhasi"], ["final_title", "Yakuniy sarlavha"], ["final_accent", "Rangli sarlavha qismi"], ["final_description", "Yakuniy bo'lim tavsifi"], ["final_button", "Tugma"], ["final_button_logged", "Kirish qilganlar tugmasi"], ["footer_tagline", "Pastki qism tavsifi"], ["footer_about", "Footer biz haqimizda havolasi"], ["footer_credit", "Footer muallif va huquq yozuvi"]] }
     ];
     const isLong = (key) => /description|faq_a|footer_credit|orbit_kicker/.test(key);
-    const fields = groups.map((group, groupIndex) => `<details class="site-copy-group"${groupIndex === 0 ? " open" : ""}><summary>${h(group.title)}<span>${group.fields.length} ta matn</span></summary><div class="site-copy-grid">${group.fields.map(([key, label]) => `<div class="field"><label for="copy_${key}">${h(label)}</label>${isLong(key) ? `<textarea id="copy_${key}" name="${key}" maxlength="500" rows="3">${h(copy[key])}</textarea>` : `<input id="copy_${key}" name="${key}" value="${h(copy[key])}" maxlength="${key.startsWith("nav_") ? 32 : key === "site_name" ? 80 : 180}" required>`}</div>`).join("")}</div></details>`).join("");
+    const removedCopyKeys = new Set(siteCopyRemoved());
+    const copyExtras = siteCopyExtras();
+    const fields = groups.map((group, groupIndex) => {
+      const groupFields = group.fields.map(([key, label]) => {
+        const isRemoved = removedCopyKeys.has(key);
+        const control = isLong(key)
+          ? `<textarea id="copy_${key}" name="${key}" maxlength="500" rows="3">${h(copy[key])}</textarea>`
+          : `<input id="copy_${key}" name="${key}" value="${h(copy[key])}" maxlength="${key.startsWith("nav_") ? 32 : key === "site_name" ? 80 : 180}">`;
+        return `<div class="field site-copy-field" data-copy-row data-copy-key="${key}"${isRemoved ? " hidden" : ""}><div class="site-copy-field-top"><label for="copy_${key}">${h(label)}</label><button class="btn btn-sm btn-danger" type="button" data-copy-remove>Olib tashlash</button></div>${control}</div>`;
+      }).join("");
+      const restoreButtons = group.fields.filter(([key]) => removedCopyKeys.has(key)).map(([key, label]) => `<button class="btn btn-sm" type="button" data-copy-restore="${key}">${h(label)} — qaytarish</button>`).join("");
+      const extraRows = copyExtras.filter((row) => row.group === group.id).map((row) => `<div class="site-copy-extra-row" data-copy-extra data-copy-extra-id="${h(row.id)}"><label>Matn nomi<input data-copy-extra-label maxlength="100" value="${h(row.label)}"></label><label>Saytda ko'rinadigan matn<textarea data-copy-extra-text maxlength="1000" rows="2">${h(row.text)}</textarea></label><button class="btn btn-sm btn-danger" type="button" data-copy-extra-remove>Olib tashlash</button></div>`).join("");
+      return `<details class="site-copy-group" data-copy-group="${group.id}"${groupIndex === 0 ? " open" : ""}><summary>${h(group.title)}<span>${group.fields.length} ta matn</span></summary><div class="site-copy-grid">${groupFields}<div class="site-copy-restore" data-copy-restore-list>${restoreButtons}</div><div class="site-copy-extras" data-copy-extras>${extraRows}</div><button class="btn btn-ghost" type="button" data-copy-add>+ Matn qo'shish</button></div></details>`;
+    }).join("");
     const customByKey = new Map(customHomeSections.map((section) => [`custom_${section.id}`, section]));
     const sectionFields = sectionOrder.map((key) => {
       const custom = customByKey.get(key);
@@ -8102,27 +8148,49 @@ const server = http.createServer(async (req, res) => {
       ${url.searchParams.get("saved") === "1" ? alertBox("Sayt matnlari saqlandi.", "success") : ""}
       ${url.searchParams.get("err") === "length" ? alertBox("Qisqa yozuvlar 180, izohlar esa 500 belgigacha bo'lishi mumkin.", "error") : ""}
       <form method="post" action="/admin/site-settings" class="form site-copy-form">
+        <input type="hidden" name="site_copy_removed" id="siteCopyRemoved" value="${h(JSON.stringify([...removedCopyKeys]))}">
+        <input type="hidden" name="site_copy_extras" id="siteCopyExtras" value="${h(JSON.stringify(copyExtras))}">
         <button class="btn btn-primary" type="submit">Barcha matnlarni saqlash</button>
         <section class="home-section-settings"><div><h2>Bosh sahifa bo'limlari</h2><p class="muted">Bo'limlarni sudrab tartiblang, belgisini olib tashlab yashiring yoki yangi bo'lim qo'shing. Tartib saytga shu ko'rinishda chiqadi.</p></div><input type="hidden" name="home_section_order" id="homeSectionOrder" value="${sectionOrderJson}"><input type="hidden" name="home_custom_sections" id="homeCustomSections" value="${customSectionsJson}"><div class="home-order-list" id="homeSectionOrderList">${sectionFields}</div><button class="btn btn-ghost" id="addHomeSection" type="button">+ Yangi bo'lim qo'shish</button><small class="muted">Yangi bo'lim uchun sarlavha va tavsif kiriting. Ko'pi bilan 20 ta qo'shimcha bo'lim.</small></section>
         ${fields}
         <button class="btn btn-primary" type="submit">Barcha matnlarni saqlash</button>
       </form>`;
     const sectionScript = `<script>(function(){var list=document.getElementById('homeSectionOrderList');var form=list&&list.closest('form');var add=document.getElementById('addHomeSection');var orderInput=document.getElementById('homeSectionOrder');var customInput=document.getElementById('homeCustomSections');if(!list||!form||!orderInput||!customInput)return;function updateTitle(row){var input=row.querySelector('[data-custom-title]');var label=row.querySelector('.home-order-label span');if(input&&label)label.textContent=input.value||'Yangi bo\\'lim'}function makeCustom(){var id='custom_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);var row=document.createElement('div');row.className='home-order-item home-custom-item';row.draggable=true;row.dataset.homeOrderItem='';row.dataset.sectionKey=id;row.innerHTML='<div class="home-order-head"><span class="home-drag-handle" aria-hidden="true">⠿</span><label class="home-order-label"><input type="checkbox" data-custom-visible checked><span>Yangi bo\\'lim</span></label><div class="home-order-buttons"><button type="button" data-order-move="up" aria-label="Yuqoriga">↑</button><button type="button" data-order-move="down" aria-label="Pastga">↓</button></div></div><details class="home-custom-editor" open><summary>Bo\\'lim matnlarini tahrirlash</summary><div class="home-custom-fields"><label>Sarlavha<input data-custom-title maxlength="180" value=""></label><label>Tavsif<textarea data-custom-description maxlength="2000" rows="3"></textarea></label><label>Tugma yozuvi (ixtiyoriy)<input data-custom-button maxlength="80" value=""></label><label>Tugma havolasi (ixtiyoriy)<input data-custom-url maxlength="500" placeholder="/courses yoki https://..."></label><button class="btn btn-sm" type="button" data-remove-custom>Bo\\'limni o\\'chirish</button></div></details>';list.appendChild(row);row.querySelector('[data-custom-title]').focus()}if(add)add.addEventListener('click',function(){if(list.querySelectorAll('.home-custom-item').length>=20){alert('Ko\\'pi bilan 20 ta yangi bo\\'lim qo\\'shish mumkin.');return}makeCustom()});list.addEventListener('input',function(event){var row=event.target.closest('.home-custom-item');if(row&&event.target.matches('[data-custom-title]'))updateTitle(row)});list.addEventListener('click',function(event){var row=event.target.closest('[data-home-order-item]');if(!row)return;if(event.target.closest('[data-remove-custom]')){row.remove();return}var move=event.target.closest('[data-order-move]');if(!move)return;if(move.dataset.orderMove==='up'&&row.previousElementSibling)list.insertBefore(row,row.previousElementSibling);if(move.dataset.orderMove==='down'&&row.nextElementSibling)list.insertBefore(row.nextElementSibling,row)});var dragging=null;list.addEventListener('dragstart',function(event){dragging=event.target.closest('[data-home-order-item]');if(dragging){dragging.classList.add('is-dragging');event.dataTransfer.effectAllowed='move'}});list.addEventListener('dragend',function(){if(dragging)dragging.classList.remove('is-dragging');dragging=null});list.addEventListener('dragover',function(event){if(!dragging)return;event.preventDefault();var target=event.target.closest('[data-home-order-item]');if(!target||target===dragging)return;var rect=target.getBoundingClientRect();list.insertBefore(dragging,event.clientY<rect.top+rect.height/2?target:target.nextElementSibling)});form.addEventListener('submit',function(){var rows=Array.from(list.querySelectorAll('[data-home-order-item]'));orderInput.value=JSON.stringify(rows.map(function(row){return row.dataset.sectionKey}));customInput.value=JSON.stringify(rows.filter(function(row){return row.classList.contains('home-custom-item')}).map(function(row){var val=function(selector){var el=row.querySelector(selector);return el?el.value.trim():''};var visible=row.querySelector('[data-custom-visible]');return{id:row.dataset.sectionKey.replace(/^custom_/,'').slice(0,40),title:val('[data-custom-title]'),description:val('[data-custom-description]'),buttonLabel:val('[data-custom-button]'),buttonUrl:val('[data-custom-url]'),visible:!!(visible&&visible.checked)}}))})})();</script>`;
-    const fullBody = body + sectionScript;
+    const copyScript = `<script>(function(){var form=document.querySelector('.site-copy-form');var removed=document.getElementById('siteCopyRemoved');var extras=document.getElementById('siteCopyExtras');if(!form||!removed||!extras)return;function addExtra(group){var row=document.createElement('div');row.className='site-copy-extra-row';row.dataset.copyExtra='';row.dataset.copyExtraId='copy_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);var label=document.createElement('label');label.textContent='Matn nomi';var name=document.createElement('input');name.maxLength=100;name.dataset.copyExtraLabel='';label.appendChild(name);var textLabel=document.createElement('label');textLabel.textContent='Saytda ko\\'rinadigan matn';var text=document.createElement('textarea');text.maxLength=1000;text.rows=2;text.dataset.copyExtraText='';textLabel.appendChild(text);var remove=document.createElement('button');remove.type='button';remove.className='btn btn-sm btn-danger';remove.dataset.copyExtraRemove='';remove.textContent='Olib tashlash';row.append(label,textLabel,remove);group.querySelector('[data-copy-extras]').appendChild(row);name.focus()}form.addEventListener('click',function(event){var remove=event.target.closest('[data-copy-remove]');if(remove){var row=remove.closest('[data-copy-row]');if(row){row.hidden=true;var list=row.closest('.site-copy-grid').querySelector('[data-copy-restore-list]');var restore=document.createElement('button');restore.type='button';restore.className='btn btn-sm';restore.dataset.copyRestore=row.dataset.copyKey;restore.textContent=row.querySelector('label').textContent+' — qaytarish';list.appendChild(restore)}return}var restore=event.target.closest('[data-copy-restore]');if(restore){var key=restore.dataset.copyRestore;var row=form.querySelector('[data-copy-key="'+key+'"]');if(row)row.hidden=false;restore.remove();return}var deleteExtra=event.target.closest('[data-copy-extra-remove]');if(deleteExtra){deleteExtra.closest('[data-copy-extra]').remove();return}var add=event.target.closest('[data-copy-add]');if(add)addExtra(add.closest('[data-copy-group]'))});form.addEventListener('submit',function(){var removedKeys=Array.from(form.querySelectorAll('[data-copy-row][hidden]')).map(function(row){return row.dataset.copyKey});removed.value=JSON.stringify(removedKeys);var rows=Array.from(form.querySelectorAll('[data-copy-extra]')).map(function(row){return{id:row.dataset.copyExtraId,group:row.closest('[data-copy-group]').dataset.copyGroup,label:(row.querySelector('[data-copy-extra-label]').value||'').trim(),text:(row.querySelector('[data-copy-extra-text]').value||'').trim()}}).filter(function(row){return row.label&&row.text});extras.value=JSON.stringify(rows.slice(0,100))})})();</script>`;
+    const fullBody = body + sectionScript + copyScript;
     send(res, 200, layout({ title: "Sayt sozlamalari", body: fullBody, admin }));
     return;
   }
 
   if (p === "/admin/site-settings" && method === "POST") {
     if (!admin) return redirect(res, "/admin/login");
+    let removedCopyKeys = [];
+    try { removedCopyKeys = JSON.parse(String(fields.site_copy_removed || "[]")); } catch (e) {}
+    const validCopyKeys = new Set(Object.keys(SITE_TEXT_DEFAULTS));
+    removedCopyKeys = [...new Set((Array.isArray(removedCopyKeys) ? removedCopyKeys : []).filter((key) => validCopyKeys.has(key)))];
+    metaSet("site_copy_removed_json", JSON.stringify(removedCopyKeys));
+    let previousSiteTexts = {};
+    try { previousSiteTexts = JSON.parse(metaGet("site_texts_json", "{}")) || {}; } catch (e) {}
     const saved = {};
     for (const [key, fallback] of Object.entries(SITE_TEXT_DEFAULTS)) {
+      if (removedCopyKeys.includes(key)) { saved[key] = String(previousSiteTexts[key] ?? fallback); continue; }
       const value = String(fields[key] ?? fallback).trim().replace(/\s+/g, " ");
       const max = key.startsWith("nav_") ? 32 : key === "site_name" ? 80 : /description|faq_a|footer_credit|orbit_kicker/.test(key) ? 500 : 180;
       if (value.length > max) return redirect(res, "/admin/site-settings?err=length");
       saved[key] = value || fallback;
     }
     metaSet("site_texts_json", JSON.stringify(saved));
+    let submittedCopyExtras = [];
+    try { submittedCopyExtras = JSON.parse(String(fields.site_copy_extras || "[]")); } catch (e) {}
+    const allowedCopyGroups = new Set(["nav", "hero", "overview", "directions", "features", "program", "faq", "footer"]);
+    const copyExtraIds = new Set();
+    const normalizedCopyExtras = (Array.isArray(submittedCopyExtras) ? submittedCopyExtras : []).slice(0, 100).map((row, index) => {
+      const id = String(row.id || `copy_${index + 1}`).replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 40);
+      if (!id || copyExtraIds.has(id) || !allowedCopyGroups.has(row.group)) return null;
+      copyExtraIds.add(id);
+      return { id, group: row.group, label: String(row.label || "").trim().slice(0, 100), text: String(row.text || "").trim().slice(0, 1000) };
+    }).filter((row) => row && row.label && row.text);
+    metaSet("site_copy_extras_json", JSON.stringify(normalizedCopyExtras));
     metaSet("course_nav_label", saved.nav_courses);
     const sectionVisibility = Object.fromEntries(Object.keys(HOME_SECTION_LABELS).map((key) => [key, fields[`home_section_${key}`] === "1"]));
     metaSet("home_sections_json", JSON.stringify(sectionVisibility));
