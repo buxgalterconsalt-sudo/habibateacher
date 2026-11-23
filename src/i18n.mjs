@@ -7,6 +7,7 @@ const I18N = {
   "04 / YORDAM": "04 / HELP",
   AMALIYOT: "PRACTICE",
   ATTESTATSIYA: "ATTESTATION",
+  "Ustozlarimizga ko‘mak bo‘lsin deya, ushbu materiallar Habiba Mo'minjonovna tomonidan taqdim etildi.": "These materials are offered by Habiba Mo'minjonovna to support our teachers.",
   "Amaliy mashq": "Practical exercise",
   "Attestatsiya va TKT uchun testlar, video darslar hamda metodik materiallar. O'z maqsadingizga mos yo'nalishni tanlab, o'z sur'atingizda o'rganing.": "Attestation and TKT tests, video lessons, and teaching resources. Choose a learning path that fits your goals and study at your own pace.",
   "Attestatsiya yoki TKT — o'zingizga kerakli yo'nalishdan boshlang.": "Attestation or TKT — start with the path you need.",
