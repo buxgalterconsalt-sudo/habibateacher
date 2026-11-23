@@ -101,9 +101,41 @@ function metaSet(key, value) {
   ).run(key, String(value));
 }
 
+const SITE_TEXT_DEFAULTS = {
+  site_name: config.siteName || "Habiba teacher",
+  orbit_kicker: "HABIBA TEACHER · TA'LIM PLATFORMASI", orbit_test: "TEST", orbit_lesson: "DARS", orbit_result: "NATIJA", orbit_tag_1: "Attestatsiya", orbit_tag_2: "TKT", orbit_tag_3: "Metodika", orbit_tag_4: "Amaliy mashq",
+  nav_home: "Bosh sahifa", nav_attestation: "Attestatsiya", nav_tkt: "TKT", nav_duel: "Duel", nav_courses: "Kurslar", nav_plans: "Tariflar", nav_leaderboard: "Reyting",
+  hero_eyebrow: "O'QITUVCHILAR UCHUN ONLAYN TA'LIM", hero_title: "Bilimingizni", hero_accent: "mustahkamlang.", hero_title_end: "Imtihonga tayyor bo'ling.", hero_description: "Attestatsiya va TKT uchun testlar, video darslar hamda metodik materiallar. O'z maqsadingizga mos yo'nalishni tanlab, o'z sur'atingizda o'rganing.", hero_primary: "Bepul ro'yxatdan o'tish", hero_primary_logged: "O'qishni davom ettirish", hero_secondary: "Dastur bilan tanishish", hero_trust_1: "O'zbek tilida", hero_trust_2: "Istalgan qurilmada", hero_trust_3: "Natija va progress nazorati", hero_note: "Yangi darslar va sinovlar platformada muntazam yangilanadi", hero_image_caption: "Ustozlar uchun amaliy tayyorlov", hero_float_title: "TKT: 3 ta modul", hero_float_description: "Har bir modul bo'yicha alohida tayyorgarlik",
+  stat_directions: "O'quv yo'nalishi", stat_lessons: "Video va o'quv darslari", stat_tests: "Sinov testlari", stat_students: "O'quvchilar", stat_note_title: "Bir maqsad sari", stat_note_description: "Reja, mashq va natija — bir joyda", program_direction_suffix: "ta yo'nalish", program_lesson_suffix: "ta dars", program_course_button: "Kurslarni ko'rish", program_attestation_tag: "ATTESTATSIYA", program_tkt_tag: "TKT", program_practice_tag: "AMALIYOT", footer_about: "Biz haqimizda",
+  overview_eyebrow: "01 / MAQSADGA QADAM", overview_title: "O'rganing. Mashq qiling.", overview_accent: "O'sishni kuzating.", overview_description: "Tayyorgarlikni kichik, tushunarli bosqichlarga ajrating. Har bir mavzu sizni bilimni amalda qo'llashga yaqinlashtiradi.", pillar_1_title: "Bilimni yangilang", pillar_1_description: "Video dars va metodik qo'llanma bilan asosiy mavzularni takrorlang.", pillar_2_title: "O'zingizni sinang", pillar_2_description: "Test va mashqlar orqali tushunganingizni tekshirib boring.", pillar_3_title: "Natijani kuzating", pillar_3_description: "Shaxsiy kabinetda progress va yakunlangan darslarni ko'ring.",
+  direction_heading: "Yo'nalishni tanlang", direction_description: "Attestatsiya yoki TKT — o'zingizga kerakli yo'nalishdan boshlang.", direction_attestation_title: "Attestatsiya testlari", direction_attestation_description: "Ingliz tili fani o'qituvchilari uchun testlar, metodika va demo dars.", direction_tkt_title: "TKT testlari", direction_tkt_description: "Teaching Knowledge Test formatidagi metodika va sinf boshqaruvi testlari.", direction_open: "Ochish",
+  course_section_eyebrow: "Kurslar", course_section_title: "Barcha kurslar", course_section_description: "Attestatsiyaga tayyorlov, metodika, demo dars va testlar — barchasi bir joyda.", course_section_button: "Barcha kurslarni ko'rish",
+  about_eyebrow: "Biz haqimizda", about_title: "O'qituvchilar uchun amaliy tayyorlov", about_description: "Habiba teacher — ingliz tili fani o'qituvchilarini attestatsiyaga tayyorlaydigan onlayn platforma. Testlar, metodika, demo dars va portfolio bo'yicha tizimli materiallar.", about_check_1: "Haqiqiy formatdagi mock testlar", about_check_2: "PDF darslik va qo'llanmalar", about_check_3: "Video tushuntirishlar", about_check_4: "Progress va natijalar nazorati", about_card_title: "Bilim — amaliyotda kuch.", about_card_description: "Har bir dars sinfdagi haqiqiy vaziyatlarga moslashtirilgan.",
+  feature_eyebrow: "Nega biz", feature_title: "Natijaga olib boradigan tayyorlov", feature_pdf_title: "PDF materiallar", feature_pdf_description: "Darslik va qo'llanmalarni platformadan ochish yoki yuklab olish.", feature_video_title: "Video darslar", feature_video_description: "Trener tushuntirishlari va amaliy namunalar.", feature_test_title: "Mock testlar", feature_test_description: "Haqiqiy formatdagi testlar, natija va tahlil.",
+  program_eyebrow: "02 / O'QUV DASTURI", program_title: "Poydevordan", program_accent: "amaliyotgacha.", program_description: "Har bir mavzu bilimni mustahkamlash, sinab ko'rish va dars jarayonida qo'llashga yordam beradi.", program_step_1_title: "Toifa sinoviga tayyorlov", program_step_1_description: "Mutaxassislik, kasbiy standartlar va pedagogik mahorat bo'yicha mavzularni o'rganing va testlarda mashq qiling.", program_step_2_title: "Teaching Knowledge Test", program_step_2_description: "TKT modullarida til tizimi, dars rejalashtirish va o'quvchini qo'llab-quvvatlash mavzularini takrorlang.", program_step_3_title: "Bilimni darsda qo'llash", program_step_3_description: "Metodik materiallar va video tushuntirishlardan foydalanib, o'rganganlaringizni amaliy vaziyatlar bilan bog'lang.",
+  pricing_eyebrow: "03 / O'ZINGIZGA MOS TARIF", pricing_title: "O'qishni", pricing_accent: "bugun boshlang.", pricing_description: "Tarifni tanlang, o'quv rejangizga mos tarzda foydalaning.", pricing_all: "Barcha tariflar", pricing_button: "Tarifni ko'rish",
+  faq_eyebrow: "04 / YORDAM", faq_title: "Boshlashdan oldin", faq_accent: "bilishingiz kerak.", faq_description: "Platformadan foydalanish haqida qisqa javoblar.", faq_contact: "Telegram orqali bog'lanish", faq_q1: "Platformada qaysi yo'nalishlar bor?", faq_a1: "Attestatsiya, TKT va o'qituvchilar uchun amaliy o'quv materiallari.", faq_q2: "Darslarni telefondan ko'rsam bo'ladimi?", faq_a2: "Ha. Sayt telefon, planshet va kompyuter ekranlariga moslashadi.", faq_q3: "O'qish natijalarim saqlanadimi?", faq_a3: "Kabinetda tugatilgan darslar va test natijalaringizni ko'rishingiz mumkin.", faq_q4: "Qanday qilib kursga kiraman?", faq_a4: "Ro'yxatdan o'ting, kerakli yo'nalishni tanlang va tariflar sahifasidagi ko'rsatmalarga amal qiling.",
+  final_eyebrow: "KEYINGI QADAM — SIZDAN", final_title: "Kasbiy maqsadingizga", final_accent: "bugun yaqinlashing.", final_description: "Yo'nalishni tanlang va o'z rejangiz bo'yicha tayyorgarlikni boshlang.", final_button: "Ro'yxatdan o'tish", final_button_logged: "O'qishni boshlash", footer_tagline: "Ingliz tili o'qituvchilari uchun imtihonlarga tayyorlov platformasi.", footer_credit: "Avtor: Habiba Mo'minjonovna. Barcha huquqlar himoyalangan."
+};
+
+function siteTexts() {
+  let saved = {};
+  try { saved = JSON.parse(metaGet("site_texts_json", "{}")) || {}; } catch (e) {}
+  const result = {};
+  for (const [key, fallback] of Object.entries(SITE_TEXT_DEFAULTS)) {
+    const legacy = key === "nav_courses" ? metaGet("course_nav_label", "") : "";
+    result[key] = String(saved[key] ?? (legacy || fallback)).slice(0, 500);
+  }
+  return result;
+}
+
 function courseNavLabel() {
-  const value = String(metaGet("course_nav_label", "Kurslar") || "Kurslar").trim();
+  const value = String(siteTexts().nav_courses || "Kurslar").trim();
   return value.slice(0, 32) || "Kurslar";
+}
+
+function siteBrandName() {
+  return String(siteTexts().site_name || config.siteName || "Habiba teacher").trim().slice(0, 80);
 }
 
 const DEFAULT_PLANS = [
@@ -1595,6 +1627,7 @@ function clearFailures(ip) {
 
 /* ------------------------------------------------------------------ views */
 function navFor(user, admin, publicPage = false) {
+  const copy = siteTexts();
   if (admin && !publicPage) {
   return `<nav class="nav">
   <a href="/admin" class="active">Admin</a>
@@ -1607,25 +1640,25 @@ function navFor(user, admin, publicPage = false) {
   }
 
   const links = `
-  <a href="/">Bosh sahifa</a>
-  <a href="/attestation">Attestatsiya</a>
-  <a href="/tkt">TKT</a>
-  <a href="/duel">Duel</a>
-  <a href="/courses">${h(courseNavLabel())}</a>
-  <a href="/plans">Tariflar</a>
-  <a href="/leaderboard">Reyting</a>`;
+  <a href="/">${h(copy.nav_home)}</a>
+  <a href="/attestation">${h(copy.nav_attestation)}</a>
+  <a href="/tkt">${h(copy.nav_tkt)}</a>
+  <a href="/duel">${h(copy.nav_duel)}</a>
+  <a href="/courses">${h(copy.nav_courses)}</a>
+  <a href="/plans">${h(copy.nav_plans)}</a>
+  <a href="/leaderboard">${h(copy.nav_leaderboard)}</a>`;
 
   if (user) {
   return `<nav class="nav nav-student">
-  <a href="/">Bosh sahifa</a>
-  <a href="/attestation">Attestatsiya</a>
-  <a href="/tkt">TKT</a>
-  <a href="/duel">Duel</a>
-  <a href="/courses">${h(courseNavLabel())}</a>
+  <a href="/">${h(copy.nav_home)}</a>
+  <a href="/attestation">${h(copy.nav_attestation)}</a>
+  <a href="/tkt">${h(copy.nav_tkt)}</a>
+  <a href="/duel">${h(copy.nav_duel)}</a>
+  <a href="/courses">${h(copy.nav_courses)}</a>
   <a href="/dashboard">Kabinet</a>
   ${Number(user.is_author) ? `<a href="/author">Muallif paneli</a>` : ""}
-  <a href="/leaderboard">Reyting</a>
-  <a class="btn btn-sm student-plan" href="/plans">Tariflar</a>
+  <a href="/leaderboard">${h(copy.nav_leaderboard)}</a>
+  <a class="btn btn-sm student-plan" href="/plans">${h(copy.nav_plans)}</a>
   <span class="who">${h(user.name)}</span>
   <form method="post" action="/logout"><button class="link" type="submit">Chiqish</button></form>
   </nav>`;
@@ -1638,6 +1671,7 @@ function navFor(user, admin, publicPage = false) {
 
 function layout(opts) {
   const { title, body, admin = false } = opts;
+  const copy = siteTexts();
   const user = opts.user || null;
   const isStudentPage = Boolean(user) && !admin;
   const isDashboard = body.includes('class="dash-hero"');
@@ -1654,8 +1688,8 @@ function layout(opts) {
 ${seo.keywords ? `<meta name="keywords" content="${h(seo.keywords)}">` : ""}
 ${canonical ? `<link rel="canonical" href="${canonical}">` : ""}
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="Habiba teacher">
-<meta property="og:title" content="${h(seo.title || `${title} | Habiba teacher`)}">
+<meta property="og:site_name" content="${h(siteBrandName())}">
+<meta property="og:title" content="${h(seo.title || `${title} | ${siteBrandName()}`)}">
 <meta property="og:description" content="${h(description)}">
 ${canonical ? `<meta property="og:url" content="${canonical}">` : ""}
 ${canonical === "https://habibateacher.uz/" ? '<meta property="og:image" content="https://habibateacher.uz/img/habiba-stage.jpg">' : ""}
@@ -1668,19 +1702,19 @@ ${canonical === "https://habibateacher.uz/" ? '<meta property="og:image" content
 <meta name="theme-color" content="#080611">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="apple-touch-icon" href="/img/habiba-app-icon-192.png">
-<title>${h(title)}   ${h(config.siteName)}</title>
+<title>${h(title)}   ${h(siteBrandName())}</title>
 ${seoTags}
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%2312b5a6'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='18' font-weight='bold' text-anchor='middle' fill='%2303211d'%3EH%3C/text%3E%3C/svg%3E">
 <script async src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>try{document.documentElement.dataset.theme=localStorage.getItem('ht_theme')||'dark';}catch(e){document.documentElement.dataset.theme='dark';}</script>
-<link rel="stylesheet" href="/assets/platform.css?v=20261123home1">
+<link rel="stylesheet" href="/assets/platform.css?v=20261123home2">
 </head>
 <body${admin && !publicPage ? ` class="admin-page"` : isStudentPage ? ` class="student-page${isDashboard ? " is-dashboard" : ""}"` : ""}>
 <header class="topbar">
   <div class="wrap bar">
   <a class="brand" href="${admin ? "/admin": user ? "/courses": "/"}">
   <span class="mark">H</span>
-  <span>${h(config.siteName)}</span>
+  <span>${h(siteBrandName())}</span>
   <span class="tag">${admin ? "Admin": "Platforma"}</span>
   </a>
   <div class="bar-right">
@@ -1708,13 +1742,13 @@ ${seoTags}
   admin && !publicPage
   ? `<a href="/admin">Admin</a><a href="/admin/students">O'quvchilar</a><a href="/admin/site-settings">Sayt sozlamalari</a><a href="/leaderboard">Reyting</a><a href="/">Saytni ko'rish</a>
   <form method="post" action="/admin/logout"><button class="mobile-link-btn" type="submit">Chiqish</button></form>`
-: `<a href="/">Bosh sahifa</a>
-  <a href="/attestation">Attestatsiya</a>
-  <a href="/tkt">TKT</a>
-  <a href="/duel">Duel</a>
-  <a href="/courses">${h(courseNavLabel())}</a>
-  <a href="/plans">Tariflar</a>
-  <a href="/leaderboard">Reyting</a>
+  : `<a href="/">${h(copy.nav_home)}</a>
+  <a href="/attestation">${h(copy.nav_attestation)}</a>
+  <a href="/tkt">${h(copy.nav_tkt)}</a>
+  <a href="/duel">${h(copy.nav_duel)}</a>
+  <a href="/courses">${h(copy.nav_courses)}</a>
+  <a href="/plans">${h(copy.nav_plans)}</a>
+  <a href="/leaderboard">${h(copy.nav_leaderboard)}</a>
   ${
   user
   ? `<div class="mobile-user">${h(user.name)}</div>
@@ -1746,19 +1780,19 @@ ${body}
   <div class="footer-brand">
   <a class="brand" href="/">
   <span class="mark">H</span>
-  <span>${h(config.siteName)}</span>
+  <span>${h(siteBrandName())}</span>
   </a>
-  <p>Ingliz tili o'qituvchilari uchun imtihonlarga tayyorlov platformasi.</p>
+  <p>${h(copy.footer_tagline)}</p>
   </div>
   <nav class="footer-links">
-  <a href="/">Bosh sahifa</a>
-  <a href="/attestation">Attestatsiya</a>
-  <a href="/tkt">TKT</a>
-  <a href="/duel">Duel</a>
-  <a href="/courses">${h(courseNavLabel())}</a>
-  <a href="/plans">Tariflar</a>
-  <a href="/leaderboard">Reyting</a>
-  <a href="/#about">Biz haqimizda</a>
+  <a href="/">${h(copy.nav_home)}</a>
+  <a href="/attestation">${h(copy.nav_attestation)}</a>
+  <a href="/tkt">${h(copy.nav_tkt)}</a>
+  <a href="/duel">${h(copy.nav_duel)}</a>
+  <a href="/courses">${h(copy.nav_courses)}</a>
+  <a href="/plans">${h(copy.nav_plans)}</a>
+  <a href="/leaderboard">${h(copy.nav_leaderboard)}</a>
+  <a href="/#about">${h(copy.footer_about)}</a>
   </nav>
   <div class="footer-contact">
   <a href="${h(config.telegram || "#")}" target="_blank" rel="noopener">Telegram</a>
@@ -1766,7 +1800,7 @@ ${body}
   </div>
   </div>
   <div class="wrap footer-bottom">
-  ${new Date().getFullYear()} ${h(config.siteName)}. Avtor: Habiba Mo'minjonovna. Barcha huquqlar himoyalangan.
+  ${new Date().getFullYear()} ${h(siteBrandName())}. ${h(copy.footer_credit)}
   </div>
 </footer>
 ${
@@ -5249,11 +5283,13 @@ const server = http.createServer(async (req, res) => {
 .prepare(
   `SELECT
   (SELECT COUNT(*) FROM users) AS users,
-  (SELECT COUNT(*) FROM courses WHERE is_published = 1 AND is_test_group = 0) AS courses,
-  (SELECT COUNT(*) FROM lessons) AS lessons,
+  (SELECT COUNT(DISTINCT category) FROM courses WHERE is_published = 1 AND is_test_group = 0) AS courses,
+  (SELECT COUNT(*) FROM lessons l JOIN courses c ON c.id = l.course_id WHERE l.type = 'video' AND c.is_published = 1 AND c.is_test_group = 0) AS lessons,
+  (SELECT COUNT(*) FROM lessons l JOIN courses c ON c.id = l.course_id WHERE l.type = 'test' AND c.is_published = 1 AND c.is_test_group = 0) AS tests,
   (SELECT COUNT(*) FROM progress) AS done`
   )
 .get();
+  const copy = siteTexts();
 
   const courses = db
 .prepare(
@@ -5270,7 +5306,7 @@ const server = http.createServer(async (req, res) => {
     <span class="home-kicker">${index === 0 ? "BOSHLASH" : index === 1 ? "MASHHUR TANLOV" : "UZLUKSIZ RIVOJLANISH"}</span>
     <h3>${h(plan.title)}</h3><p>${h(plan.description)}</p>
     <div class="home-plan-price">${formatSum(plan.price)} <small>so'm</small></div>
-    <a class="btn ${index === 1 ? "btn-primary" : "btn-ghost"}" href="/plans">Tarifni ko'rish <span aria-hidden="true">↗</span></a>
+    <a class="btn ${index === 1 ? "btn-primary" : "btn-ghost"}" href="/plans">${h(copy.pricing_button)} <span aria-hidden="true">↗</span></a>
   </article>`).join("");
 
   let body = `
@@ -5278,48 +5314,48 @@ const server = http.createServer(async (req, res) => {
   <section class="home-hero">
   <div class="wrap landing-hero-grid">
   <div class="landing-hero-copy">
-  <span class="eyebrow">O'QITUVCHILAR UCHUN ONLAYN TA'LIM</span>
-  <h1>Bilimingizni <span class="accent">mustahkamlang.</span> Imtihonga tayyor bo'ling.</h1>
-  <p class="lead">Attestatsiya va TKT uchun testlar, video darslar hamda metodik materiallar. O'z maqsadingizga mos yo'nalishni tanlab, o'z sur'atingizda o'rganing.</p>
+  <span class="eyebrow">${h(copy.hero_eyebrow)}</span>
+  <h1>${h(copy.hero_title)} <span class="accent">${h(copy.hero_accent)}</span> ${h(copy.hero_title_end)}</h1>
+  <p class="lead">${h(copy.hero_description)}</p>
   <div class="landing-actions">
-  <a class="btn btn-primary" href="${user ? "/courses": "/register"}">${user ? "O'qishni davom ettirish" : "Bepul ro'yxatdan o'tish"} <span aria-hidden="true">↗</span></a>
-  <a class="btn btn-ghost" href="#program">Dastur bilan tanishish <span aria-hidden="true">↓</span></a>
+  <a class="btn btn-primary" href="${user ? "/courses": "/register"}">${h(user ? copy.hero_primary_logged : copy.hero_primary)} <span aria-hidden="true">↗</span></a>
+  <a class="btn btn-ghost" href="#program">${h(copy.hero_secondary)} <span aria-hidden="true">↓</span></a>
   </div>
-  <div class="hero-trust"><span>O'zbek tilida</span><span>Istalgan qurilmada</span><span>Natija va progress nazorati</span></div>
-  <div class="home-hero-note"><span class="home-note-dot"></span> Yangi darslar va sinovlar platformada muntazam yangilanadi
+  <div class="hero-trust"><span>${h(copy.hero_trust_1)}</span><span>${h(copy.hero_trust_2)}</span><span>${h(copy.hero_trust_3)}</span></div>
+  <div class="home-hero-note"><span class="home-note-dot"></span> ${h(copy.hero_note)}
   </div>
   </div>
   <div class="landing-hero-art" aria-label="Habiba teacher va o'qituvchilar">
   <div class="hero-photo-frame">
   <img src="/img/habiba-stage.jpg" alt="Habiba teacher ingliz tili o'qituvchilari bilan mashg'ulotda">
-  <div class="hero-photo-caption"><small>HABIBA TEACHER</small><b>Ustozlar uchun amaliy tayyorlov</b></div>
+  <div class="hero-photo-caption"><small>HABIBA TEACHER</small><b>${h(copy.hero_image_caption)}</b></div>
   </div>
-  <div class="hero-float-card one"><span class="hero-float-mark">TKT</span><span><strong>TKT: 3 ta modul</strong><small>Har bir modul bo'yicha alohida tayyorgarlik</small></span></div>
+  <div class="hero-float-card one"><span class="hero-float-mark">TKT</span><span><strong>${h(copy.hero_float_title)}</strong><small>${h(copy.hero_float_description)}</small></span></div>
   </div>
   </div>
   <div class="wrap home-statbar">
-    <div><b>${stats.courses}</b><span>O'quv yo'nalishi</span></div>
-    <div><b>${stats.lessons}+</b><span>Video va o'quv darslari</span></div>
-    <div><b>24/7</b><span>Istalgan vaqtda o'rganish</span></div>
-    <div class="home-stat-message"><span aria-hidden="true">✦</span><span><b>Bir maqsad sari</b><small>Reja, mashq va natija — bir joyda</small></span></div>
+    <div><b>${stats.courses}</b><span>${h(copy.stat_directions)}</span></div>
+    <div><b>${stats.lessons}+</b><span>${h(copy.stat_lessons)}</span></div>
+    <div><b>${stats.tests}</b><span>${h(copy.stat_tests)}</span></div>
+    <div class="home-stat-message"><span aria-hidden="true">✦</span><span><b>${h(copy.stat_note_title)}</b><small>${h(copy.stat_note_description)}</small></span></div>
   </div>
   </section>
 
   <section class="section home-overview" id="program">
     <div class="wrap home-overview-grid">
       <div class="home-orbit-card" aria-label="O'rganishdan natijagacha bo'lgan bosqichlar">
-        <span class="home-kicker">HABIBA TEACHER · TA'LIM PLATFORMASI</span>
-        <div class="home-orbit"><i></i><i></i><i></i><b>H</b><span>TEST</span><span>DARS</span><span>NATIJA</span></div>
-        <div class="home-orbit-tags"><span>Attestatsiya</span><span>TKT</span><span>Metodika</span><span>Amaliy mashq</span></div>
+        <span class="home-kicker">${h(copy.orbit_kicker)}</span>
+  <div class="home-orbit" data-scroll-orbit><i></i><i></i><i></i><b>H</b><span>${h(copy.orbit_test)}</span><span>${h(copy.orbit_lesson)}</span><span>${h(copy.orbit_result)}</span></div>
+        <div class="home-orbit-tags"><span>${h(copy.orbit_tag_1)}</span><span>${h(copy.orbit_tag_2)}</span><span>${h(copy.orbit_tag_3)}</span><span>${h(copy.orbit_tag_4)}</span></div>
       </div>
       <div class="home-overview-copy">
-        <span class="eyebrow">01 / MAQSADGA QADAM</span>
-        <h2>O'rganing. Mashq qiling. <span class="accent">O'sishni kuzating.</span></h2>
-        <p class="muted">Tayyorgarlikni kichik, tushunarli bosqichlarga ajrating. Har bir mavzu sizni bilimni amalda qo'llashga yaqinlashtiradi.</p>
+        <span class="eyebrow">${h(copy.overview_eyebrow)}</span>
+        <h2>${h(copy.overview_title)} <span class="accent">${h(copy.overview_accent)}</span></h2>
+        <p class="muted">${h(copy.overview_description)}</p>
         <div class="home-pillar-list">
-          <article><span>01</span><div><b>Bilimni yangilang</b><p>Video dars va metodik qo'llanma bilan asosiy mavzularni takrorlang.</p></div></article>
-          <article><span>02</span><div><b>O'zingizni sinang</b><p>Test va mashqlar orqali tushunganingizni tekshirib boring.</p></div></article>
-          <article><span>03</span><div><b>Natijani kuzating</b><p>Shaxsiy kabinetda progress va yakunlangan darslarni ko'ring.</p></div></article>
+          <article><span>01</span><div><b>${h(copy.pillar_1_title)}</b><p>${h(copy.pillar_1_description)}</p></div></article>
+          <article><span>02</span><div><b>${h(copy.pillar_2_title)}</b><p>${h(copy.pillar_2_description)}</p></div></article>
+          <article><span>03</span><div><b>${h(copy.pillar_3_title)}</b><p>${h(copy.pillar_3_description)}</p></div></article>
         </div>
       </div>
     </div>
@@ -5328,19 +5364,19 @@ const server = http.createServer(async (req, res) => {
   <section class="section tight">
   <div class="wrap">
   <div class="section-head center">
-  <h2>Yo'nalishni tanlang</h2>
-  <p class="muted">Attestatsiya yoki TKT   o'zingizga kerakli yo'nalishdan boshlang.</p>
+  <h2>${h(copy.direction_heading)}</h2>
+  <p class="muted">${h(copy.direction_description)}</p>
   </div>
   <div class="grid two directions">
   <a class="direction-card" href="/attestation">
-  <h3>Attestatsiya testlari</h3>
-  <p class="muted">Ingliz tili fani o'qituvchilari uchun testlar, metodika va demo dars.</p>
-  <span class="card-link">Ochish   </span>
+  <h3>${h(copy.direction_attestation_title)}</h3>
+  <p class="muted">${h(copy.direction_attestation_description)}</p>
+  <span class="card-link">${h(copy.direction_open)}</span>
   </a>
   <a class="direction-card" href="/tkt">
-  <h3>TKT testlari</h3>
-  <p class="muted">Teaching Knowledge Test formatidagi metodika va sinf boshqaruvi testlari.</p>
-  <span class="card-link">Ochish   </span>
+  <h3>${h(copy.direction_tkt_title)}</h3>
+  <p class="muted">${h(copy.direction_tkt_description)}</p>
+  <span class="card-link">${h(copy.direction_open)}</span>
   </a>
   </div>
   </div>
@@ -5349,55 +5385,55 @@ const server = http.createServer(async (req, res) => {
   <section class="section" id="courses">
   <div class="wrap">
   <div class="section-head center">
-  <span class="eyebrow">${h(courseNavLabel())}</span>
-  <h2>${h(courseNavLabel())} bo'limi</h2>
-  <p class="muted">Atestatsiyaga tayyorlov, metodika, demo dars va testlar   barchasi bir joyda.</p>
+  <span class="eyebrow">${h(copy.course_section_eyebrow || courseNavLabel())}</span>
+  <h2>${h(copy.course_section_title)}</h2>
+  <p class="muted">${h(copy.course_section_description)}</p>
   </div>
   <div class="grid three">${courseCards}</div>
-  <div class="center-actions"><a class="btn btn-ghost" href="/courses">${h(courseNavLabel())} bo'limini ochish</a></div>
+  <div class="center-actions"><a class="btn btn-ghost" href="/courses">${h(copy.course_section_button)}</a></div>
   </div>
   </section>
 
   <section class="section about" id="about">
   <div class="wrap about-grid">
   <div>
-  <span class="eyebrow">Biz haqimizda</span>
-  <h2>O'qituvchilar uchun amaliy tayyorlov</h2>
-  <p class="muted">Habiba teacher   ingliz tili fani o'qituvchilarini atestatsiyaga tayyorlaydigan onlayn platforma. Testlar, metodika, demo dars va portfolio bo'yicha tizimli materiallar.</p>
+  <span class="eyebrow">${h(copy.about_eyebrow)}</span>
+  <h2>${h(copy.about_title)}</h2>
+  <p class="muted">${h(copy.about_description)}</p>
   <ul class="check-list">
-  <li>Haqiqiy formatdagi mock testlar</li>
-  <li>PDF darslik va qo'llanmalar</li>
-  <li>Video tushuntirishlar</li>
-  <li>Progress va natijalar nazorati</li>
+  <li>${h(copy.about_check_1)}</li>
+  <li>${h(copy.about_check_2)}</li>
+  <li>${h(copy.about_check_3)}</li>
+  <li>${h(copy.about_check_4)}</li>
   </ul>
   </div>
   <div class="about-art">
   <div class="about-mark">H</div>
-  <b>Bilim   amaliyotda kuch.</b>
-  <p>Har bir dars sinfdagi haqiqiy vaziyatlarga moslashtirilgan.</p>
+  <b>${h(copy.about_card_title)}</b>
+  <p>${h(copy.about_card_description)}</p>
   </div>
   </div>
   </section>
 
   <section class="stats-band">
   <div class="wrap stats">
-  <div class="stat"><b>${stats.users}</b><span>O'quvchilar</span></div>
+  <div class="stat"><b>${stats.users}</b><span>${h(copy.stat_students)}</span></div>
   <div class="stat"><b>${stats.courses}</b><span>${h(courseNavLabel())}</span></div>
-  <div class="stat"><b>${stats.lessons}</b><span>Darslar</span></div>
-  <div class="stat"><b>${stats.done}</b><span>Tugatilgan darslar</span></div>
+  <div class="stat"><b>${stats.lessons}</b><span>${h(copy.stat_lessons)}</span></div>
+  <div class="stat"><b>${stats.tests}</b><span>${h(copy.stat_tests)}</span></div>
   </div>
   </section>
 
   <section class="section home-features">
   <div class="wrap">
   <div class="section-head center">
-  <span class="eyebrow">Nega biz</span>
-  <h2>Natijaga olib boradigan tayyorlov</h2>
+  <span class="eyebrow">${h(copy.feature_eyebrow)}</span>
+  <h2>${h(copy.feature_title)}</h2>
   </div>
   <div class="grid three">
-  <div class="card"><div class="ico">${icon("book")}</div><h3>PDF materiallar</h3><p class="muted">Darslik va qo'llanmalarni platformadan ochish yoki yuklab olish.</p></div>
-  <div class="card"><div class="ico">${icon("play")}</div><h3>Video darslar</h3><p class="muted">Trener tushuntirishlari va amaliy namunalar.</p></div>
-  <div class="card"><div class="ico">${icon("quiz")}</div><h3>Mock testlar</h3><p class="muted">Haqiqiy formatdagi testlar, natija va tahlil.</p></div>
+  <div class="card"><div class="ico">${icon("book")}</div><h3>${h(copy.feature_pdf_title)}</h3><p class="muted">${h(copy.feature_pdf_description)}</p></div>
+  <div class="card"><div class="ico">${icon("play")}</div><h3>${h(copy.feature_video_title)}</h3><p class="muted">${h(copy.feature_video_description)}</p></div>
+  <div class="card"><div class="ico">${icon("quiz")}</div><h3>${h(copy.feature_test_title)}</h3><p class="muted">${h(copy.feature_test_description)}</p></div>
   </div>
   </div>
   </section>`;
@@ -5405,37 +5441,38 @@ const server = http.createServer(async (req, res) => {
   const additions = `
   <section class="section home-journey">
     <div class="wrap home-journey-grid">
-      <div><span class="eyebrow">02 / O'QUV DASTURI</span><h2>Poydevordan <span class="accent">amaliyotgacha.</span></h2>
-        <p class="muted">Har bir mavzu bilimni mustahkamlash, sinab ko'rish va dars jarayonida qo'llashga yordam beradi.</p>
-        <div class="home-program-meta"><b>${stats.courses} ta yo'nalish</b><span></span><b>${stats.lessons} ta dars</b></div>
-        <a class="btn btn-ghost" href="/courses">${h(courseNavLabel())}ni ko'rish <span aria-hidden="true">↗</span></a>
+      <div><span class="eyebrow">${h(copy.program_eyebrow)}</span><h2>${h(copy.program_title)} <span class="accent">${h(copy.program_accent)}</span></h2>
+        <p class="muted">${h(copy.program_description)}</p>
+        <div class="home-program-meta"><b>${stats.courses} ${h(copy.program_direction_suffix)}</b><span></span><b>${stats.lessons} ${h(copy.program_lesson_suffix)}</b></div>
+        <a class="btn btn-ghost" href="/courses">${h(copy.program_course_button)} <span aria-hidden="true">↗</span></a>
       </div>
       <div class="home-steps">
-        <details open><summary><span>01</span><span><small>ATTESTATSIYA</small><b>Toifa sinoviga tayyorlov</b></span><i>⌄</i></summary><p>Mutaxassislik, kasbiy standartlar va pedagogik mahorat bo'yicha mavzularni o'rganing va testlarda mashq qiling.</p></details>
-        <details><summary><span>02</span><span><small>TKT</small><b>Teaching Knowledge Test</b></span><i>⌄</i></summary><p>TKT modullarida til tizimi, dars rejalashtirish va o'quvchini qo'llab-quvvatlash mavzularini takrorlang.</p></details>
-        <details><summary><span>03</span><span><small>AMALIYOT</small><b>Bilimni darsda qo'llash</b></span><i>⌄</i></summary><p>Metodik materiallar va video tushuntirishlardan foydalanib, o'rganganlaringizni amaliy vaziyatlar bilan bog'lang.</p></details>
+        <details open><summary><span>01</span><span><small>${h(copy.program_attestation_tag)}</small><b>${h(copy.program_step_1_title)}</b></span><i>⌄</i></summary><p>${h(copy.program_step_1_description)}</p></details>
+        <details><summary><span>02</span><span><small>${h(copy.program_tkt_tag)}</small><b>${h(copy.program_step_2_title)}</b></span><i>⌄</i></summary><p>${h(copy.program_step_2_description)}</p></details>
+        <details><summary><span>03</span><span><small>${h(copy.program_practice_tag)}</small><b>${h(copy.program_step_3_title)}</b></span><i>⌄</i></summary><p>${h(copy.program_step_3_description)}</p></details>
       </div>
     </div>
   </section>
   <section class="section home-pricing">
-    <div class="wrap"><div class="section-head home-section-head"><div><span class="eyebrow">03 / O'ZINGIZGA MOS TARIF</span><h2>O'qishni <span class="accent">bugun boshlang.</span></h2><p class="muted">Tarifni tanlang, o'quv rejangizga mos tarzda foydalaning.</p></div><a class="btn btn-ghost" href="/plans">Barcha tariflar <span aria-hidden="true">↗</span></a></div>
+    <div class="wrap"><div class="section-head home-section-head"><div><span class="eyebrow">${h(copy.pricing_eyebrow)}</span><h2>${h(copy.pricing_title)} <span class="accent">${h(copy.pricing_accent)}</span></h2><p class="muted">${h(copy.pricing_description)}</p></div><a class="btn btn-ghost" href="/plans">${h(copy.pricing_all)} <span aria-hidden="true">↗</span></a></div>
       <div class="home-plan-grid">${planCards}</div>
     </div>
   </section>
   <section class="section home-faq">
-    <div class="wrap home-faq-grid"><div><span class="eyebrow">04 / YORDAM</span><h2>Boshlashdan oldin <span class="accent">bilishingiz kerak.</span></h2><p class="muted">Platformadan foydalanish haqida qisqa javoblar.</p><a class="home-contact-link" href="${h(config.telegram || "#")}" target="_blank" rel="noopener">Telegram orqali bog'lanish ↗</a></div>
+    <div class="wrap home-faq-grid"><div><span class="eyebrow">${h(copy.faq_eyebrow)}</span><h2>${h(copy.faq_title)} <span class="accent">${h(copy.faq_accent)}</span></h2><p class="muted">${h(copy.faq_description)}</p><a class="home-contact-link" href="${h(config.telegram || "#")}" target="_blank" rel="noopener">${h(copy.faq_contact)} ↗</a></div>
       <div class="home-faq-list">
-        <details><summary>Platformada qaysi yo'nalishlar bor?<span>+</span></summary><p>Attestatsiya, TKT va o'qituvchilar uchun amaliy o'quv materiallari.</p></details>
-        <details><summary>Darslarni telefondan ko'rsam bo'ladimi?<span>+</span></summary><p>Ha. Sayt telefon, planshet va kompyuter ekranlariga moslashadi.</p></details>
-        <details><summary>O'qish natijalarim saqlanadimi?<span>+</span></summary><p>Kabinetda tugatilgan darslar va test natijalaringizni ko'rishingiz mumkin.</p></details>
-        <details><summary>Qanday qilib kursga kiraman?<span>+</span></summary><p>Ro'yxatdan o'ting, kerakli yo'nalishni tanlang va tariflar sahifasidagi ko'rsatmalarga amal qiling.</p></details>
+        <details><summary>${h(copy.faq_q1)}<span>+</span></summary><p>${h(copy.faq_a1)}</p></details>
+        <details><summary>${h(copy.faq_q2)}<span>+</span></summary><p>${h(copy.faq_a2)}</p></details>
+        <details><summary>${h(copy.faq_q3)}<span>+</span></summary><p>${h(copy.faq_a3)}</p></details>
+        <details><summary>${h(copy.faq_q4)}<span>+</span></summary><p>${h(copy.faq_a4)}</p></details>
       </div>
     </div>
   </section>
-  <section class="section home-final-cta"><div class="wrap home-final-card"><div><span class="eyebrow">KEYINGI QADAM — SIZDAN</span><h2>Kasbiy maqsadingizga <span class="accent">bugun yaqinlashing.</span></h2><p class="muted">Yo'nalishni tanlang va o'z rejangiz bo'yicha tayyorgarlikni boshlang.</p></div><a class="btn btn-primary" href="${user ? "/courses" : "/register"}">${user ? "O'qishni boshlash" : "Ro'yxatdan o'tish"} <span aria-hidden="true">↗</span></a></div></section>
+  <section class="section home-final-cta"><div class="wrap home-final-card"><div><span class="eyebrow">${h(copy.final_eyebrow)}</span><h2>${h(copy.final_title)} <span class="accent">${h(copy.final_accent)}</span></h2><p class="muted">${h(copy.final_description)}</p></div><a class="btn btn-primary" href="${user ? "/courses" : "/register"}">${h(user ? copy.final_button_logged : copy.final_button)} <span aria-hidden="true">↗</span></a></div></section>
   </div>`;
 
   body += additions;
+  body += `<script>(function(){var orbit=document.querySelector('[data-scroll-orbit]');if(!orbit||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;var card=orbit.closest('.home-orbit-card');var rings=[].slice.call(orbit.querySelectorAll('i'));var base=[-26,40,-55];var pending=false;function draw(){pending=false;var r=card.getBoundingClientRect();var p=Math.max(-1,Math.min(1,(window.innerHeight*.52-(r.top+r.height/2))/(window.innerHeight*.78)));rings.forEach(function(el,i){var direction=i===1?1:-1;var angle=base[i]+p*24*direction;var scales=[.73,.68,.75];el.style.transform='translateY('+(-p*9*(i+1))+'px) rotate('+angle+'deg) scaleX('+scales[i]+')'});orbit.style.transform='translateY('+(-p*7)+'px) rotate('+(p*2.5)+'deg)'}function schedule(){if(pending)return;pending=true;window.requestAnimationFrame(draw)}window.addEventListener('scroll',schedule,{passive:true});window.addEventListener('resize',schedule,{passive:true});schedule()})();</script>`;
 
   send(res, 200, layout({ title: "Ingliz tili attestatsiya testlari va TKT", body, user, admin, seo: { path: "/", title: "Ingliz tili attestatsiya testlari va TKT | Habiba teacher", description: "Ingliz tili o'qituvchilari uchun attestatsiya testlari, TKT modullari, onlayn mock testlar va metodika. Toifa sinoviga amaliy tayyorgarlikni boshlang.", keywords: "ingliz tili attestatsiya testlari, pedagog attestatsiya testlari, o'qituvchi toifa testi, imtihonlarga tayyorlov, TKT testlari, TKT 1-modul, TKT 2-modul, TKT 3-modul" } }));
   return;
@@ -7948,23 +7985,43 @@ const server = http.createServer(async (req, res) => {
 
   if (p === "/admin/site-settings" && method === "GET") {
     if (!admin) return redirect(res, "/admin/login");
+    const copy = siteTexts();
+    const groups = [
+      { title: "Menyu va sayt nomi", fields: [["site_name", "Sayt nomi"], ["nav_home", "Bosh sahifa"], ["nav_attestation", "Attestatsiya"], ["nav_tkt", "TKT"], ["nav_duel", "Duel"], ["nav_courses", "Kurslar / yo'nalishlar"], ["nav_plans", "Tariflar"], ["nav_leaderboard", "Reyting"]] },
+      { title: "Bosh sahifa — asosiy qism", fields: [["hero_eyebrow", "Yuqori kichik yozuv"], ["hero_title", "Sarlavhaning birinchi qismi"], ["hero_accent", "Rangli sarlavha qismi"], ["hero_title_end", "Sarlavhaning oxirgi qismi"], ["hero_description", "Tavsif"], ["hero_primary", "Asosiy tugma"], ["hero_primary_logged", "Kirish qilganlar tugmasi"], ["hero_secondary", "Ikkinchi tugma"], ["hero_trust_1", "Afzallik 1"], ["hero_trust_2", "Afzallik 2"], ["hero_trust_3", "Afzallik 3"], ["hero_note", "Yangilik xabari"], ["hero_image_caption", "Rasm osti yozuvi"], ["hero_float_title", "TKT kartasi sarlavhasi"], ["hero_float_description", "TKT kartasi tavsifi"]] },
+      { title: "Hisoblagich, kirish qismi va orbitalar", fields: [["stat_directions", "Yo'nalishlar hisoblagichi"], ["stat_lessons", "Video darslar hisoblagichi"], ["stat_tests", "Testlar hisoblagichi"], ["stat_students", "O'quvchilar hisoblagichi"], ["stat_note_title", "Hisoblagich yonidagi sarlavha"], ["stat_note_description", "Hisoblagich yonidagi izoh"], ["orbit_kicker", "Orbital karta yuqori yozuvi"], ["orbit_test", "Orbital test yorlig'i"], ["orbit_lesson", "Orbital dars yorlig'i"], ["orbit_result", "Orbital natija yorlig'i"], ["orbit_tag_1", "Orbital teg 1"], ["orbit_tag_2", "Orbital teg 2"], ["orbit_tag_3", "Orbital teg 3"], ["orbit_tag_4", "Orbital teg 4"], ["overview_eyebrow", "Kirish bo'limi kichik sarlavhasi"], ["overview_title", "Kirish bo'limi sarlavhasi"], ["overview_accent", "Rangli sarlavha qismi"], ["overview_description", "Kirish bo'limi tavsifi"], ["pillar_1_title", "Afzallik 1 sarlavhasi"], ["pillar_1_description", "Afzallik 1 tavsifi"], ["pillar_2_title", "Afzallik 2 sarlavhasi"], ["pillar_2_description", "Afzallik 2 tavsifi"], ["pillar_3_title", "Afzallik 3 sarlavhasi"], ["pillar_3_description", "Afzallik 3 tavsifi"]] },
+      { title: "Yo'nalishlar va kurslar", fields: [["direction_heading", "Yo'nalishlar sarlavhasi"], ["direction_description", "Yo'nalishlar tavsifi"], ["direction_attestation_title", "Attestatsiya kartasi sarlavhasi"], ["direction_attestation_description", "Attestatsiya kartasi tavsifi"], ["direction_tkt_title", "TKT kartasi sarlavhasi"], ["direction_tkt_description", "TKT kartasi tavsifi"], ["direction_open", "Karta tugmasi"], ["course_section_eyebrow", "Kurslar kichik sarlavhasi"], ["course_section_title", "Kurslar bo'limi sarlavhasi"], ["course_section_description", "Kurslar bo'limi tavsifi"], ["course_section_button", "Kurslar tugmasi"]] },
+      { title: "Biz haqimizda va imkoniyatlar", fields: [["about_eyebrow", "Biz haqimizda kichik sarlavha"], ["about_title", "Biz haqimizda sarlavhasi"], ["about_description", "Biz haqimizda tavsifi"], ["about_check_1", "Afzallik ro'yxati 1"], ["about_check_2", "Afzallik ro'yxati 2"], ["about_check_3", "Afzallik ro'yxati 3"], ["about_check_4", "Afzallik ro'yxati 4"], ["about_card_title", "Yon kartadagi sarlavha"], ["about_card_description", "Yon kartadagi izoh"], ["feature_eyebrow", "Imkoniyatlar kichik sarlavhasi"], ["feature_title", "Imkoniyatlar sarlavhasi"], ["feature_pdf_title", "PDF karta sarlavhasi"], ["feature_pdf_description", "PDF karta tavsifi"], ["feature_video_title", "Video karta sarlavhasi"], ["feature_video_description", "Video karta tavsifi"], ["feature_test_title", "Test karta sarlavhasi"], ["feature_test_description", "Test karta tavsifi"]] },
+      { title: "O'quv dasturi", fields: [["program_eyebrow", "Bo'lim kichik sarlavhasi"], ["program_title", "Bo'lim sarlavhasi"], ["program_accent", "Rangli sarlavha qismi"], ["program_description", "Bo'lim tavsifi"], ["program_direction_suffix", "Yo'nalishlar soni qo'shimchasi"], ["program_lesson_suffix", "Darslar soni qo'shimchasi"], ["program_course_button", "Dastur tugmasi"], ["program_attestation_tag", "1-bosqich yorlig'i"], ["program_tkt_tag", "2-bosqich yorlig'i"], ["program_practice_tag", "3-bosqich yorlig'i"], ["program_step_1_title", "Bosqich 1 sarlavhasi"], ["program_step_1_description", "Bosqich 1 tavsifi"], ["program_step_2_title", "Bosqich 2 sarlavhasi"], ["program_step_2_description", "Bosqich 2 tavsifi"], ["program_step_3_title", "Bosqich 3 sarlavhasi"], ["program_step_3_description", "Bosqich 3 tavsifi"]] },
+      { title: "Tariflar va savol-javob", fields: [["pricing_eyebrow", "Tariflar kichik sarlavhasi"], ["pricing_title", "Tariflar sarlavhasi"], ["pricing_accent", "Rangli sarlavha qismi"], ["pricing_description", "Tariflar tavsifi"], ["pricing_all", "Barcha tariflar tugmasi"], ["pricing_button", "Tarif kartasi tugmasi"], ["faq_eyebrow", "Savol-javob kichik sarlavhasi"], ["faq_title", "Savol-javob sarlavhasi"], ["faq_accent", "Rangli sarlavha qismi"], ["faq_description", "Savol-javob tavsifi"], ["faq_contact", "Bog'lanish tugmasi"], ["faq_q1", "Savol 1"], ["faq_a1", "Javob 1"], ["faq_q2", "Savol 2"], ["faq_a2", "Javob 2"], ["faq_q3", "Savol 3"], ["faq_a3", "Javob 3"], ["faq_q4", "Savol 4"], ["faq_a4", "Javob 4"]] },
+      { title: "Yakuniy chaqiriq va footer", fields: [["final_eyebrow", "Yakuniy bo'lim kichik sarlavhasi"], ["final_title", "Yakuniy sarlavha"], ["final_accent", "Rangli sarlavha qismi"], ["final_description", "Yakuniy bo'lim tavsifi"], ["final_button", "Tugma"], ["final_button_logged", "Kirish qilganlar tugmasi"], ["footer_tagline", "Pastki qism tavsifi"], ["footer_about", "Footer biz haqimizda havolasi"], ["footer_credit", "Footer muallif va huquq yozuvi"]] }
+    ];
+    const isLong = (key) => /description|faq_a|footer_credit|orbit_kicker/.test(key);
+    const fields = groups.map((group, groupIndex) => `<details class="site-copy-group"${groupIndex === 0 ? " open" : ""}><summary>${h(group.title)}<span>${group.fields.length} ta matn</span></summary><div class="site-copy-grid">${group.fields.map(([key, label]) => `<div class="field"><label for="copy_${key}">${h(label)}</label>${isLong(key) ? `<textarea id="copy_${key}" name="${key}" maxlength="500" rows="3">${h(copy[key])}</textarea>` : `<input id="copy_${key}" name="${key}" value="${h(copy[key])}" maxlength="${key.startsWith("nav_") ? 32 : key === "site_name" ? 80 : 180}" required>`}</div>`).join("")}</div></details>`).join("");
     const body = `<a class="back" href="/admin">&larr; Admin panel</a>
-      <div class="page-head"><div><h1>Sayt sozlamalari</h1><p class="muted">Navigatsiyada ko'rinadigan kurs bo'limi nomini o'zgartiring.</p></div></div>
-      ${url.searchParams.get("saved") === "1" ? alertBox("Menyu nomi saqlandi.", "success") : ""}
-      ${url.searchParams.get("err") === "name" ? alertBox("Nom 1–32 belgi oralig'ida bo'lishi kerak.", "error") : ""}
-      <div class="card"><form method="post" action="/admin/site-settings" class="form">
-        <div class="field"><label>Menyudagi kurslar nomi</label><input name="course_nav_label" value="${h(courseNavLabel())}" maxlength="32" required placeholder="Masalan: Kurslar"></div>
-        <button class="btn btn-primary" type="submit">Nomni saqlash</button>
-      </form></div>`;
+      <div class="page-head"><div><h1>Sayt sozlamalari</h1><p class="muted">Menyu va bosh sahifadagi asosiy matnlarni shu yerdan tahrirlang. O'zgarishlar saqlangandan so'ng darhol ko'rinadi.</p></div></div>
+      ${url.searchParams.get("saved") === "1" ? alertBox("Sayt matnlari saqlandi.", "success") : ""}
+      ${url.searchParams.get("err") === "length" ? alertBox("Qisqa yozuvlar 180, izohlar esa 500 belgigacha bo'lishi mumkin.", "error") : ""}
+      <form method="post" action="/admin/site-settings" class="form site-copy-form">
+        <button class="btn btn-primary" type="submit">Barcha matnlarni saqlash</button>
+        ${fields}
+        <button class="btn btn-primary" type="submit">Barcha matnlarni saqlash</button>
+      </form>`;
     send(res, 200, layout({ title: "Sayt sozlamalari", body, admin }));
     return;
   }
 
   if (p === "/admin/site-settings" && method === "POST") {
     if (!admin) return redirect(res, "/admin/login");
-    const label = String(fields.course_nav_label || "").trim().replace(/\s+/g, " ");
-    if (!label || label.length > 32) return redirect(res, "/admin/site-settings?err=name");
-    metaSet("course_nav_label", label);
+    const saved = {};
+    for (const [key, fallback] of Object.entries(SITE_TEXT_DEFAULTS)) {
+      const value = String(fields[key] ?? fallback).trim().replace(/\s+/g, " ");
+      const max = key.startsWith("nav_") ? 32 : key === "site_name" ? 80 : /description|faq_a|footer_credit|orbit_kicker/.test(key) ? 500 : 180;
+      if (value.length > max) return redirect(res, "/admin/site-settings?err=length");
+      saved[key] = value || fallback;
+    }
+    metaSet("site_texts_json", JSON.stringify(saved));
+    metaSet("course_nav_label", saved.nav_courses);
     return redirect(res, "/admin/site-settings?saved=1");
   }
 
