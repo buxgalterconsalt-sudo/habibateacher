@@ -6465,9 +6465,9 @@ body:not(.is-dashboard):not(.admin-page) .hero-trust span::before { background: 
 .home-kicker { color: #9585c7; font-size: .62rem; font-weight: 800; letter-spacing: .16em; }
 .home-orbit { position: relative; display: grid; width: 230px; height: 230px; place-items: center; align-self: center; }
 .home-orbit[data-scroll-orbit], .home-orbit[data-scroll-orbit] i { will-change: transform; }
-.home-orbit i { position: absolute; inset: 22px; border: 1px solid rgba(149, 115, 255, .55); border-radius: 50%; transform: rotate(-26deg) scaleX(.73); }
-.home-orbit i:nth-child(2) { inset: 4px 32px; border-color: rgba(74, 212, 212, .62); transform: rotate(40deg) scaleX(.68); }
-.home-orbit i:nth-child(3) { inset: 45px -4px; border-color: rgba(119, 89, 243, .55); transform: rotate(-55deg) scaleX(.75); }
+.home-orbit i { position: absolute; inset: 22px; border: 2.5px solid rgba(149, 115, 255, .78); border-radius: 50%; transform: rotate(-26deg) scaleX(.73); }
+.home-orbit i:nth-child(2) { inset: 4px 32px; border-color: rgba(74, 212, 212, .82); transform: rotate(40deg) scaleX(.68); }
+.home-orbit i:nth-child(3) { inset: 45px -4px; border-color: rgba(119, 89, 243, .78); transform: rotate(-55deg) scaleX(.75); }
 .home-orbit b { z-index: 1; display: grid; width: 74px; height: 74px; place-items: center; border: 1px solid rgba(192, 168, 255, .5); border-radius: 25px; background: linear-gradient(145deg, #7c4df2, #1694bd); color: #fff; font-size: 2rem; box-shadow: 0 0 42px rgba(120, 76, 242, .6); }
 .home-orbit span { position: absolute; color: #b8b0d4; font-size: .62rem; letter-spacing: .13em; }
 .home-orbit span:nth-of-type(1) { top: 20px; right: -18px; }
