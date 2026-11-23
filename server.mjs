@@ -1806,7 +1806,7 @@ ${seoTags}
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%2312b5a6'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='18' font-weight='bold' text-anchor='middle' fill='%2303211d'%3EH%3C/text%3E%3C/svg%3E">
 <script async src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>try{document.documentElement.dataset.theme=localStorage.getItem('ht_theme')||'dark';}catch(e){document.documentElement.dataset.theme='dark';}</script>
-<link rel="stylesheet" href="/assets/platform.css?v=20261123home12">
+<link rel="stylesheet" href="/assets/platform.css?v=20261123home13">
 </head>
 <body${admin && !publicPage ? ` class="admin-page"` : isStudentPage ? ` class="student-page${isDashboard ? " is-dashboard" : ""}"` : ""}>
 <header class="topbar">
@@ -1829,7 +1829,7 @@ ${seoTags}
   </button>
   </div>
   ${isDashboard ? "" : `<button class="app-refresh" type="button" data-app-refresh aria-label="Ilovani serverdan yangilash" title="Serverdagi so'nggi o'zgarishlarni yuklash"><span aria-hidden="true">⟳</span><b>Yangilash</b></button>`}
-  ${!user && !admin ? `<a class="mobile-header-login" href="/login">Kirish</a>` : ""}
+  ${!admin ? `<a class="mobile-header-login" href="${user ? "/dashboard" : "/login"}">${user ? h(siteTexts().dashboard_page_title || "Kabinet") : "Kirish"}</a>` : ""}
   <button class="menu-toggle" type="button" id="menuToggle" aria-label="Menyu" aria-expanded="false">
   <span></span><span></span><span></span>
   </button>
@@ -2097,7 +2097,7 @@ c.addEventListener('change', function () { b.disabled = !c.checked; });
 })();
 </script>
 <script>
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=11').then(function (registration) { registration.update().catch(function () {}); }).catch(function () {});
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=12').then(function (registration) { registration.update().catch(function () {}); }).catch(function () {});
 document.querySelectorAll('[data-app-refresh]').forEach(function (button) {
   button.addEventListener('click', async function () {
     if (button.disabled) return;
@@ -4282,7 +4282,7 @@ function dashboardPage(user) {
           uz: { installed: ${JSON.stringify(copy.dashboard_install_ready)}, help: ${JSON.stringify(copy.dashboard_install_help)} },
           en: { installed: "The app is already installed.", help: "Open your browser menu and choose Install app or Add to Home screen." }
         };
-        if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=11').catch(function () {});
+        if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=12').catch(function () {});
         window.addEventListener('beforeinstallprompt', function (event) {
           event.preventDefault();
           installPrompt = event;
@@ -4628,7 +4628,7 @@ function testDocument({ title, body }) {  return `<!DOCTYPE html>
 <body class="test-body student-page">
 ${body}
 <footer class="test-author-footer">${new Date().getFullYear()} ${h(config.siteName)} · Avtor: Habiba Mo'minjonovna</footer>
-<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=11').then(function (registration) { registration.update().catch(function () {}); }).catch(function () {});</script>
+<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=12').then(function (registration) { registration.update().catch(function () {}); }).catch(function () {});</script>
 </body>
 </html>`;
 }
@@ -5457,7 +5457,10 @@ const server = http.createServer(async (req, res) => {
   <p class="lead">${h(copy.hero_description)}</p>
   <div class="landing-actions">
   <a class="btn btn-primary" href="${user ? "/courses": "/register"}">${h(user ? copy.hero_primary_logged : copy.hero_primary)} <span aria-hidden="true">↗</span></a>
-  <a class="btn btn-ghost" href="#directions">${h(copy.hero_secondary)} <span aria-hidden="true">↓</span></a>
+  <button class="btn btn-ghost home-direction-toggle" type="button" data-direction-toggle aria-expanded="false" aria-controls="directions">${h(copy.hero_secondary)} <span aria-hidden="true">⌄</span></button>
+  </div>
+  <div class="home-direction-picker" id="directions" data-home-section="directions" hidden>
+    <div class="grid home-direction-grid">${directionCards}</div>
   </div>
   <div class="hero-trust"><span>${h(copy.hero_trust_1)}</span><span>${h(copy.hero_trust_2)}</span><span>${h(copy.hero_trust_3)}</span></div>
   <div class="home-hero-note"><span class="home-note-dot"></span> ${h(copy.hero_note)}
@@ -5497,16 +5500,6 @@ const server = http.createServer(async (req, res) => {
         </div>
       </div>
     </div>
-  </section>
-
-  <section class="section tight" id="directions" data-home-section="directions">
-  <div class="wrap">
-  <div class="section-head center">
-  <h2>${h(copy.direction_heading)}</h2>
-  <p class="muted">${h(copy.direction_description)}</p>
-  </div>
-  <div class="grid home-direction-grid">${directionCards}</div>
-  </div>
   </section>
 
   <section class="section" id="courses" data-home-section="courses">
@@ -5633,6 +5626,7 @@ const server = http.createServer(async (req, res) => {
     ...customHomeSections.filter((section) => !section.visible).map((section) => `[data-home-section="custom_${section.id}"]`)
   ].join(",");
   if (hiddenSections) body += `<style>${hiddenSections}{display:none!important}</style>`;
+  body += `<script>(function(){var button=document.querySelector('[data-direction-toggle]');var picker=document.getElementById('directions');if(!button||!picker)return;function setOpen(open,scroll){button.setAttribute('aria-expanded',String(open));picker.hidden=!open;if(open&&scroll)picker.scrollIntoView({behavior:'smooth',block:'nearest'});}button.addEventListener('click',function(){setOpen(button.getAttribute('aria-expanded')!=='true',true);});document.addEventListener('keydown',function(event){if(event.key==='Escape'&&!picker.hidden){setOpen(false,false);button.focus();}});if(location.hash==='#directions')setOpen(true,true);})();</script>`;
   body += `<script>(function(){var home=document.querySelector('.landing-home');if(!home||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;var selectors=['.home-hero .landing-hero-copy > *','.home-hero .landing-hero-art > *','.home-statbar > *','.home-overview-grid > *','.home-overview-copy > *','.home-orbit-tags > *','.home-pillar-list > *','.landing-home .section-head > *','.landing-home .direction-card','.landing-home .course-card','.landing-home .about-grid > *','.landing-home .check-list > *','.landing-home .home-features .grid > *','.landing-home .home-journey-grid > *','.landing-home .home-steps > *','.landing-home .home-plan-card','.landing-home .home-faq-grid > *','.landing-home .home-faq-list > *','.landing-home .home-final-card > *','.landing-home [data-home-section^="custom_"] .home-custom-copy > *','.landing-home img'];var rows=new Set();selectors.forEach(function(selector){home.querySelectorAll(selector).forEach(function(row){if(row.textContent.trim()||row.matches('img'))rows.add(row)})});var items=Array.from(rows);items.forEach(function(row){var index=Array.prototype.indexOf.call(row.parentElement.children,row);row.classList.add('scroll-row');row.style.setProperty('--scroll-in-x',index%2?'34px':'-34px');row.style.setProperty('--scroll-delay',(index%4)*65+'ms')});if(!('IntersectionObserver' in window)){items.forEach(function(row){row.classList.add('is-in-view')});return}var observer=new IntersectionObserver(function(entries){entries.forEach(function(entry){if(entry.isIntersecting){entry.target.classList.add('is-in-view');observer.unobserve(entry.target)}})},{threshold:.08,rootMargin:'0px 0px -4% 0px'});items.forEach(function(row){observer.observe(row)})})();</script>`;
   body += `<script>(function(){var orbit=document.querySelector('[data-scroll-orbit]');if(!orbit||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;var card=orbit.closest('.home-orbit-card');var rings=[].slice.call(orbit.querySelectorAll('i'));var base=[-26,40,-55];var pending=false;function draw(){pending=false;var r=card.getBoundingClientRect();var p=Math.max(-1,Math.min(1,(window.innerHeight*.52-(r.top+r.height/2))/(window.innerHeight*.78)));rings.forEach(function(el,i){var direction=i===1?1:-1;var angle=base[i]+p*56*direction;var scales=[.73,.68,.75];el.style.transform='translate3d('+(p*(i-1)*20)+'px,'+(-p*30*(i+1))+'px,0) rotate('+angle+'deg) scaleX('+scales[i]+')'});orbit.style.transform='translate3d('+(p*24)+'px,'+(-p*48)+'px,0) rotate('+(p*18)+'deg)'}function schedule(){if(pending)return;pending=true;window.requestAnimationFrame(draw)}window.addEventListener('scroll',schedule,{passive:true});window.addEventListener('resize',schedule,{passive:true});schedule()})();</script>`;
 
