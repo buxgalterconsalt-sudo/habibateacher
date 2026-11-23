@@ -1315,10 +1315,22 @@ function adminBulkSaveBar(itemLabel, count) {
   return `<div class="admin-test-savebar"><button class="btn btn-primary" id="saveAllTestEdits" type="button">O'zgarishlarni saqlash</button><span class="muted small" id="testSaveStatus" aria-live="polite"></span></div>
   <script>(function(){var button=document.getElementById('saveAllTestEdits');if(!button)return;var status=document.getElementById('testSaveStatus');var saveLabel=${JSON.stringify(itemLabel)};button.addEventListener('click',async function(){var forms=Array.from(document.querySelectorAll('form[data-bulk-save]'));if(!forms.length)return;button.disabled=true;button.textContent='Saqlanmoqda...';if(status)status.textContent='';try{for(var form of forms){var values=new URLSearchParams(new FormData(form));var response=await fetch(form.action,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},body:values.toString()});if(!response.ok)throw new Error('save');}button.textContent='Saqlandi';if(status)status.textContent="Barcha "+saveLabel+" o'zgarishlari saqlandi.";setTimeout(function(){location.reload();},500);}catch(e){button.disabled=false;button.textContent='Qayta saqlash';if(status)status.textContent='Saqlashda xatolik yuz berdi. Qayta urinib ko'ring.';}});})();</script>`;
 }
-const CAT_LABEL = { attestation: "Attestatsiya", tkt: "TKT", other: "Boshqa" };
+const DIRECTIONS = [
+  { id: "attestation", title: "Attestatsiya", description: "Ingliz tili o'qituvchilari uchun toifa attestatsiyasiga tayyorgarlik." },
+  { id: "tkt", title: "TKT", description: "Teaching Knowledge Test modullari va metodika bo'yicha sinovlar." },
+  { id: "cpd", title: "CPD", description: "Uzluksiz kasbiy rivojlanish uchun test va materiallar." },
+  { id: "bsb", title: "BSB", description: "BSB bo'yicha sinovlar va tayyorlov materiallari." },
+  { id: "chsb", title: "CHSB", description: "CHSB bo'yicha sinovlar va tayyorlov materiallari." }
+];
+const DIRECTION_IDS = DIRECTIONS.map((direction) => direction.id);
+const CAT_LABEL = { attestation: "Attestatsiya", tkt: "TKT", cpd: "CPD", bsb: "BSB", chsb: "CHSB", other: "CPD" };
 function categoryLabel(category) {
-  if (category === "other") return metaGet("other_category_label", "Boshqa") || "Boshqa";
+  if (category === "other" || category === "cpd") return metaGet("other_category_label", "CPD") || "CPD";
   return CAT_LABEL[category] || "Attestatsiya";
+}
+
+function directionCategories(category) {
+  return category === "cpd" ? ["cpd", "other"] : [category];
 }
 
 function icon(name) {
@@ -1724,6 +1736,7 @@ function navFor(user, admin, publicPage = false) {
 
   const links = `
   <a href="/">${h(copy.nav_home)}</a>
+  <a href="/#directions">Yo'nalishlar</a>
   <a href="/attestation">${h(copy.nav_attestation)}</a>
   <a href="/tkt">${h(copy.nav_tkt)}</a>
   <a href="/duel">${h(copy.nav_duel)}</a>
@@ -1734,6 +1747,7 @@ function navFor(user, admin, publicPage = false) {
   if (user) {
   return `<nav class="nav nav-student">
   <a href="/">${h(copy.nav_home)}</a>
+  <a href="/#directions">Yo'nalishlar</a>
   <a href="/attestation">${h(copy.nav_attestation)}</a>
   <a href="/tkt">${h(copy.nav_tkt)}</a>
   <a href="/duel">${h(copy.nav_duel)}</a>
@@ -1825,7 +1839,8 @@ ${seoTags}
   admin && !publicPage
   ? `<a href="/admin">Admin</a><a href="/admin/students">O'quvchilar</a><a href="/admin/site-settings">Sayt sozlamalari</a><a href="/leaderboard">Reyting</a><a href="/">Saytni ko'rish</a>
   <form method="post" action="/admin/logout"><button class="mobile-link-btn" type="submit">Chiqish</button></form>`
-  : `<a href="/">${h(copy.nav_home)}</a>
+   : `<a href="/">${h(copy.nav_home)}</a>
+   <a href="/#directions">Yo'nalishlar</a>
   <a href="/attestation">${h(copy.nav_attestation)}</a>
   <a href="/tkt">${h(copy.nav_tkt)}</a>
   <a href="/duel">${h(copy.nav_duel)}</a>
@@ -1869,6 +1884,7 @@ ${body}
   </div>
   <nav class="footer-links">
   <a href="/">${h(copy.nav_home)}</a>
+  <a href="/#directions">Yo'nalishlar</a>
   <a href="/attestation">${h(copy.nav_attestation)}</a>
   <a href="/tkt">${h(copy.nav_tkt)}</a>
   <a href="/duel">${h(copy.nav_duel)}</a>
@@ -2242,7 +2258,8 @@ function testOwned(userId, lessonId) {
 
 function moduleHref(lesson) {
   const course = db.prepare("SELECT category FROM courses WHERE id = ?").get(lesson.course_id);
-  return course && course.category === "tkt" ? "/tkt": "/attestation";
+  const category = course && course.category === "other" ? "cpd" : course && DIRECTION_IDS.includes(course.category) ? course.category : "attestation";
+  return `/${category}`;
 }
 
 function testCard(test, owned = false) {
@@ -5030,7 +5047,7 @@ const server = http.createServer(async (req, res) => {
     return;
   }
   if (method === "GET" && p === "/sitemap.xml") {
-    const urls = ["/", "/attestation", "/tkt", "/courses", "/plans"];
+    const urls = ["/", ...DIRECTION_IDS.map((id) => `/${id}`), "/courses", "/plans"];
     const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls.map((route) => `<url><loc>https://habibateacher.uz${route}</loc></url>`).join("")}</urlset>`;
     res.writeHead(200, { "Content-Type": "application/xml; charset=utf-8", "Cache-Control": "public, max-age=3600" });
     res.end(xml);
@@ -5386,11 +5403,32 @@ const server = http.createServer(async (req, res) => {
   (SELECT COUNT(*) FROM lessons l JOIN courses c ON c.id = l.course_id WHERE l.type = 'test' AND c.is_published = 1) AS tests,
   (SELECT COUNT(*) FROM lessons l JOIN courses c ON c.id = l.course_id WHERE l.type = 'test' AND c.is_published = 1 AND c.category = 'attestation') AS tests_attestation,
   (SELECT COUNT(*) FROM lessons l JOIN courses c ON c.id = l.course_id WHERE l.type = 'test' AND c.is_published = 1 AND c.category = 'tkt') AS tests_tkt,
-  (SELECT COUNT(*) FROM lessons l JOIN courses c ON c.id = l.course_id WHERE l.type = 'test' AND c.is_published = 1 AND c.category = 'other') AS tests_cpd,
+  (SELECT COUNT(*) FROM lessons l JOIN courses c ON c.id = l.course_id WHERE l.type = 'test' AND c.is_published = 1 AND c.category IN ('cpd', 'other')) AS tests_cpd,
+  (SELECT COUNT(*) FROM lessons l JOIN courses c ON c.id = l.course_id WHERE l.type = 'test' AND c.is_published = 1 AND c.category = 'bsb') AS tests_bsb,
+  (SELECT COUNT(*) FROM lessons l JOIN courses c ON c.id = l.course_id WHERE l.type = 'test' AND c.is_published = 1 AND c.category = 'chsb') AS tests_chsb,
   (SELECT COUNT(*) FROM progress) AS done`
   )
 .get();
+  stats.courses = DIRECTIONS.length;
+  const directionCourseRows = db.prepare(`SELECT c.category, COUNT(DISTINCT c.id) AS courses, COUNT(l.id) AS tests
+    FROM courses c LEFT JOIN lessons l ON l.course_id = c.id AND l.type = 'test'
+    WHERE c.is_published = 1 AND c.category IN ('attestation','tkt','cpd','other','bsb','chsb')
+    GROUP BY c.category`).all();
+  const directionStats = Object.fromEntries(DIRECTIONS.map((direction) => [direction.id, { courses: 0, tests: 0 }]));
+  for (const row of directionCourseRows) {
+    const directionId = row.category === "other" ? "cpd" : row.category;
+    if (directionStats[directionId]) {
+      directionStats[directionId].courses += Number(row.courses) || 0;
+      directionStats[directionId].tests += Number(row.tests) || 0;
+    }
+  }
+  const directionPills = DIRECTIONS.map((direction) => `<a class="home-direction-pill" href="/${direction.id}"><b>${h(categoryLabel(direction.id))}</b><span>${directionStats[direction.id].tests} ta test</span></a>`).join("");
   const copy = siteTexts();
+  const directionCards = DIRECTIONS.map((direction) => {
+    const counts = directionStats[direction.id];
+    const detail = counts.tests ? `${counts.tests} ta test · ${counts.courses} ta kurs` : "Testlar tez orada qo'shiladi";
+    return `<a class="direction-card" href="/${direction.id}"><span class="home-direction-count">${counts.tests || "→"}</span><h3>${h(categoryLabel(direction.id))}</h3><p class="muted">${h(direction.description)}</p><small>${h(detail)}</small><span class="card-link">${h(copy.direction_open)}</span></a>`;
+  }).join("");
   const homeSections = homeSectionVisibility();
   const customHomeSections = homeCustomSections();
   const savedHomeSectionOrder = homeSectionOrder(customHomeSections);
@@ -5428,6 +5466,7 @@ const server = http.createServer(async (req, res) => {
   <div class="hero-trust"><span>${h(copy.hero_trust_1)}</span><span>${h(copy.hero_trust_2)}</span><span>${h(copy.hero_trust_3)}</span></div>
   <div class="home-hero-note"><span class="home-note-dot"></span> ${h(copy.hero_note)}
   </div>
+  <div class="home-direction-picks" data-home-direction-picks aria-label="O'quv yo'nalishlari">${directionPills}</div>
   </div>
   <div class="landing-hero-art" aria-label="Habiba teacher va o'qituvchilar">
   <div class="hero-photo-frame">
@@ -5465,24 +5504,13 @@ const server = http.createServer(async (req, res) => {
     </div>
   </section>
 
-  <section class="section tight" data-home-section="directions">
+  <section class="section tight" id="directions" data-home-section="directions">
   <div class="wrap">
   <div class="section-head center">
   <h2>${h(copy.direction_heading)}</h2>
   <p class="muted">${h(copy.direction_description)}</p>
   </div>
-  <div class="grid two directions">
-  <a class="direction-card" href="/attestation">
-  <h3>${h(copy.direction_attestation_title)}</h3>
-  <p class="muted">${h(copy.direction_attestation_description)}</p>
-  <span class="card-link">${h(copy.direction_open)}</span>
-  </a>
-  <a class="direction-card" href="/tkt">
-  <h3>${h(copy.direction_tkt_title)}</h3>
-  <p class="muted">${h(copy.direction_tkt_description)}</p>
-  <span class="card-link">${h(copy.direction_open)}</span>
-  </a>
-  </div>
+  <div class="grid home-direction-grid">${directionCards}</div>
   </div>
   </section>
 
@@ -5527,6 +5555,8 @@ const server = http.createServer(async (req, res) => {
   <div class="stat"><b>${stats.tests_attestation}</b><span>${h(copy.stat_test_attestation)}</span></div>
   <div class="stat"><b>${stats.tests_tkt}</b><span>${h(copy.stat_test_tkt)}</span></div>
   <div class="stat"><b>${stats.tests_cpd}</b><span>${h(copy.stat_test_cpd)}</span></div>
+  <div class="stat"><b>${stats.tests_bsb}</b><span>BSB testlari</span></div>
+  <div class="stat"><b>${stats.tests_chsb}</b><span>CHSB testlari</span></div>
   </div>
   </section>
 
@@ -5606,6 +5636,7 @@ const server = http.createServer(async (req, res) => {
   }
   const hiddenSections = [
     ...Object.entries(homeSections).filter(([, visible]) => !visible).map(([key]) => `[data-home-section="${key}"]`),
+    ...(!homeSections.directions ? ["[data-home-direction-picks]"] : []),
     ...customHomeSections.filter((section) => !section.visible).map((section) => `[data-home-section="custom_${section.id}"]`)
   ].join(",");
   if (hiddenSections) body += `<style>${hiddenSections}{display:none!important}</style>`;
@@ -6293,38 +6324,35 @@ const server = http.createServer(async (req, res) => {
   }
 
   /* ---------------------------------------------------------- categories */
-  if ((p === "/attestation" || p === "/tkt") && method === "GET") {
+  if (["/attestation", ...DIRECTION_IDS.filter((id) => id !== "attestation").map((id) => `/${id}`)].includes(p) && method === "GET") {
   const cat = p.slice(1);
-  const meta =
-  cat === "attestation"
-  ? {
-  h1: "Ingliz tili attestatsiya testlari",
-  title: "Attestatsiya testlari",
-  lead: "Ingliz tili o'qituvchilari uchun toifa attestatsiyasiga tayyorgarlik: onlayn sinov testlari, natijalar va javoblar."
-  }
-: {
-  h1: "TKT",
-  title: "TKT testlari",
-  lead: "Teaching Knowledge Test (TKT) uchun tayyorgarlik   imtihon uslubidagi modul sinov testlari."
-  };
+  const direction = DIRECTIONS.find((item) => item.id === cat) || DIRECTIONS[0];
+  const directionTitle = categoryLabel(cat);
+  const meta = cat === "attestation"
+    ? { h1: "Ingliz tili attestatsiya testlari", title: "Attestatsiya testlari", lead: direction.description }
+    : cat === "tkt"
+      ? { h1: "TKT", title: "TKT testlari", lead: "Teaching Knowledge Test (TKT) uchun tayyorgarlik: imtihon uslubidagi modul sinov testlari." }
+      : { h1: `${directionTitle} testlari`, title: `${directionTitle} testlari`, lead: direction.description };
+  const queryCategories = directionCategories(cat);
+  const categoryMarks = queryCategories.map(() => "?").join(", ");
 
   const courses = db
 .prepare(
   `SELECT c.*, (SELECT COUNT(*) FROM lessons l WHERE l.course_id = c.id) AS lesson_count
-  FROM courses c WHERE c.category = ? AND c.is_published = 1 ORDER BY c.id`
+  FROM courses c WHERE c.category IN (${categoryMarks}) AND c.is_published = 1 ORDER BY c.id`
   )
-.all(cat);
+.all(...queryCategories);
 
   const tests = db
 .prepare(
   `SELECT l.*, c.title AS course_title,
   (SELECT COUNT(*) FROM questions q WHERE q.lesson_id = l.id) AS qcount
   FROM lessons l JOIN courses c ON c.id = l.course_id
-  WHERE l.type = 'test' AND c.category = ? AND c.is_published = 1
+  WHERE l.type = 'test' AND c.category IN (${categoryMarks}) AND c.is_published = 1
     AND (c.category <> 'tkt' OR EXISTS (SELECT 1 FROM questions q WHERE q.lesson_id = l.id))
   ORDER BY l.course_id, l.position, l.id`
   )
-.all(cat);
+  .all(...queryCategories);
 
   const userHasPlan = !!user && hasPlanAccess(user.id);
 
@@ -6337,7 +6365,7 @@ const server = http.createServer(async (req, res) => {
   const sections = courses
 .map((course) => {
   const list = byCourse.get(course.id) || [];
-  if (!list.length) return "";
+  if (!list.length && !admin) return "";
   const hasPaid = list.some((t) => Number(t.price) > 0);
   const addCard = admin
   ? `<a class="test-card test-add" href="/admin/course/${course.id}#new-lesson">
@@ -6384,7 +6412,7 @@ const server = http.createServer(async (req, res) => {
   ${sections || `<div class="card empty">Bu yo'nalishda testlar tez orada qo'shiladi.</div>`}
   </div>
   </section>`;
-  send(res, 200, layout({ title: meta.title, body, user, admin, seo: { path: p, title: `${meta.title} | Habiba teacher`, description: cat === "attestation" ? "Ingliz tili fani o'qituvchilari attestatsiyasi uchun onlayn testlar, mock imtihonlar, javoblar va tayyorlov kurslari." : "TKT (Teaching Knowledge Test) imtihoniga tayyorlanish: 1, 2 va 3-modul bo'yicha testlar, metodika va onlayn kurslar.", keywords: cat === "attestation" ? "ingliz tili attestatsiya testlari, pedagog attestatsiya testi, toifa olish testi, imtihonlarga tayyorlov, ingliz tili o'qituvchisi testi" : "TKT testlari, Teaching Knowledge Test, TKT 1-modul, TKT 2-modul, TKT 3-modul, TKT imtihoniga tayyorlov" } }));
+  send(res, 200, layout({ title: meta.title, body, user, admin, seo: { path: p, title: `${meta.title} | Habiba teacher`, description: `${directionTitle} yo'nalishi bo'yicha onlayn testlar va tayyorlov kurslari.`, keywords: `${directionTitle} testlari, ${directionTitle} kursi, o'qituvchilar uchun tayyorlov` } }));
   return;
   }
 
@@ -8029,7 +8057,7 @@ const server = http.createServer(async (req, res) => {
     const body = `<div class="page-head"><div><h1>Muallif paneli</h1><p class="muted">Kurslar, darslar va test materiallarini boshqaring.</p></div></div>
       <div class="grid three">${courseRows}</div>
       <div class="card" style="margin-top:22px"><h2>Yangi kurs</h2><form method="post" action="/admin/course" class="form">
-      <div class="field"><label>Yo'nalish</label><select name="category"><option value="attestation">Attestatsiya</option><option value="tkt">TKT</option><option value="other">${h(categoryLabel("other"))}</option></select></div>
+      <div class="field"><label>Yo'nalish</label><select name="category"><option value="attestation">Attestatsiya</option><option value="tkt">TKT</option><option value="cpd">${h(categoryLabel("cpd"))}</option><option value="bsb">BSB</option><option value="chsb">CHSB</option></select></div>
       <div class="field"><label>Kurs nomi</label><input name="title" required maxlength="160"></div><div class="field"><label>Tavsif</label><textarea name="description" rows="2"></textarea></div>
       <button class="btn btn-primary" type="submit">Kurs yaratish</button></form></div>`;
     send(res, 200, layout({ title: "Muallif paneli", body, user, admin }));
@@ -8088,7 +8116,7 @@ const server = http.createServer(async (req, res) => {
   <div class="card">
   <h2>Yo'nalish nomini boshqarish</h2>
   <form method="post" action="/admin/category-label" class="form">
-  <div class="field"><label>“Boshqa” yo'nalishining ko'rinadigan nomi</label><input name="label" value="${h(categoryLabel("other"))}" maxlength="40" required placeholder="Masalan: Metodika"></div>
+  <div class="field"><label>CPD yo'nalishining ko'rinadigan nomi</label><input name="label" value="${h(categoryLabel("cpd"))}" maxlength="40" required placeholder="CPD"></div>
   <button class="btn btn-primary" type="submit">Nomni saqlash</button>
   </form>
   </div>
@@ -8111,7 +8139,9 @@ const server = http.createServer(async (req, res) => {
   <select name="category">
   <option value="attestation">Attestatsiya</option>
   <option value="tkt">TKT</option>
-  <option value="other">${h(categoryLabel("other"))}</option>
+  <option value="cpd">${h(categoryLabel("cpd"))}</option>
+  <option value="bsb">BSB</option>
+  <option value="chsb">CHSB</option>
   </select>
   </div>
   <div class="field"><label>Kurs nomi</label><input name="title" required placeholder="Masalan: Atestatsiya testlariga tayyorlov"></div>
@@ -8402,7 +8432,7 @@ const server = http.createServer(async (req, res) => {
   if (!contentManager) return redirect(res, "/admin/login");
   const title = String(fields.title || "").trim();
   const description = String(fields.description || "").trim();
-  const category = ["attestation", "tkt", "other"].includes(fields.category)
+  const category = [...DIRECTION_IDS, "other"].includes(fields.category)
   ? fields.category
 : "attestation";
   if (!title) return redirect(res, "/admin");
@@ -8450,7 +8480,7 @@ const server = http.createServer(async (req, res) => {
   if (!adminCourseMatch[2] && method === "POST") {
   const title = String(fields.title || "").trim();
   const description = String(fields.description || "").trim();
-  const category = ["attestation", "tkt", "other"].includes(fields.category)
+  const category = [...DIRECTION_IDS, "other"].includes(fields.category)
   ? fields.category
 : course.category || "attestation";
   if (title) {
@@ -8544,13 +8574,15 @@ const server = http.createServer(async (req, res) => {
   <label>Yo'nalish</label>
   <select name="category">
   ${[
-  ["attestation", "Attestatsiya"],
-  ["tkt", "TKT"],
-  ["other", categoryLabel("other")]
+   ["attestation", "Attestatsiya"],
+   ["tkt", "TKT"],
+   ["cpd", categoryLabel("cpd")],
+   ["bsb", "BSB"],
+   ["chsb", "CHSB"]
   ]
 .map(
   ([value, label]) =>
-  `<option value="${value}"${(course.category || "attestation") === value ? " selected": ""}>${h(label)}</option>`
+   `<option value="${value}"${((course.category === "other" ? "cpd" : course.category) || "attestation") === value ? " selected": ""}>${h(label)}</option>`
   )
 .join("")}
   </select>
