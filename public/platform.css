@@ -6575,4 +6575,12 @@ html[data-theme="light"] .home-final-card { background: linear-gradient(120deg, 
 .site-copy-group > summary span { color: var(--muted); font-size: .75rem; font-weight: 500; }
 .site-copy-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 18px; padding: 0 20px 20px; border-top: 1px solid var(--line); }
 .site-copy-grid .field { margin-top: 14px; }
+.home-section-settings { display: grid; gap: 16px; padding: 20px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); }
+.home-section-settings h2 { margin: 0 0 6px; font-size: 1.12rem; }
+.home-section-settings p { margin: 0; }
+.home-section-toggle-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.home-section-toggle { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 11px; cursor: pointer; }
+.home-section-toggle input { width: 18px; height: 18px; flex: 0 0 auto; accent-color: var(--primary); }
+.home-section-toggle span { color: var(--text); font-size: .9rem; }
 @media (max-width: 640px) { .site-copy-grid { grid-template-columns: 1fr; } }
+@media (max-width: 640px) { .home-section-toggle-grid { grid-template-columns: 1fr; } }

@@ -118,6 +118,26 @@ const SITE_TEXT_DEFAULTS = {
   final_eyebrow: "KEYINGI QADAM — SIZDAN", final_title: "Kasbiy maqsadingizga", final_accent: "bugun yaqinlashing.", final_description: "Yo'nalishni tanlang va o'z rejangiz bo'yicha tayyorgarlikni boshlang.", final_button: "Ro'yxatdan o'tish", final_button_logged: "O'qishni boshlash", footer_tagline: "Ingliz tili o'qituvchilari uchun imtihonlarga tayyorlov platformasi.", footer_credit: "Avtor: Habiba Mo'minjonovna. Barcha huquqlar himoyalangan."
 };
 
+const HOME_SECTION_LABELS = {
+  hero: "Bosh sahifa yuqori qismi",
+  overview: "Orbita va afzalliklar",
+  directions: "Yo'nalish kartalari",
+  courses: "Barcha kurslar",
+  about: "Biz haqimizda",
+  stats: "O'quvchilar va darslar hisoblagichi",
+  features: "Platforma imkoniyatlari",
+  program: "O'quv dasturi",
+  pricing: "Tariflar",
+  faq: "Savol-javob",
+  final: "Yakuniy chaqiriq"
+};
+
+function homeSectionVisibility() {
+  let saved = {};
+  try { saved = JSON.parse(metaGet("home_sections_json", "{}")) || {}; } catch (e) {}
+  return Object.fromEntries(Object.keys(HOME_SECTION_LABELS).map((key) => [key, saved[key] !== false]));
+}
+
 function siteTexts() {
   let saved = {};
   try { saved = JSON.parse(metaGet("site_texts_json", "{}")) || {}; } catch (e) {}
@@ -5290,6 +5310,7 @@ const server = http.createServer(async (req, res) => {
   )
 .get();
   const copy = siteTexts();
+  const homeSections = homeSectionVisibility();
 
   const courses = db
 .prepare(
@@ -5311,7 +5332,7 @@ const server = http.createServer(async (req, res) => {
 
   let body = `
   <div class="landing-home">
-  <section class="home-hero">
+  <section class="home-hero" data-home-section="hero">
   <div class="wrap landing-hero-grid">
   <div class="landing-hero-copy">
   <span class="eyebrow">${h(copy.hero_eyebrow)}</span>
@@ -5341,7 +5362,7 @@ const server = http.createServer(async (req, res) => {
   </div>
   </section>
 
-  <section class="section home-overview" id="program">
+  <section class="section home-overview" id="program" data-home-section="overview">
     <div class="wrap home-overview-grid">
       <div class="home-orbit-card" aria-label="O'rganishdan natijagacha bo'lgan bosqichlar">
         <span class="home-kicker">${h(copy.orbit_kicker)}</span>
@@ -5361,7 +5382,7 @@ const server = http.createServer(async (req, res) => {
     </div>
   </section>
 
-  <section class="section tight">
+  <section class="section tight" data-home-section="directions">
   <div class="wrap">
   <div class="section-head center">
   <h2>${h(copy.direction_heading)}</h2>
@@ -5382,7 +5403,7 @@ const server = http.createServer(async (req, res) => {
   </div>
   </section>
 
-  <section class="section" id="courses">
+  <section class="section" id="courses" data-home-section="courses">
   <div class="wrap">
   <div class="section-head center">
   <span class="eyebrow">${h(copy.course_section_eyebrow || courseNavLabel())}</span>
@@ -5394,7 +5415,7 @@ const server = http.createServer(async (req, res) => {
   </div>
   </section>
 
-  <section class="section about" id="about">
+  <section class="section about" id="about" data-home-section="about">
   <div class="wrap about-grid">
   <div>
   <span class="eyebrow">${h(copy.about_eyebrow)}</span>
@@ -5415,7 +5436,7 @@ const server = http.createServer(async (req, res) => {
   </div>
   </section>
 
-  <section class="stats-band">
+  <section class="stats-band" data-home-section="stats">
   <div class="wrap stats">
   <div class="stat"><b>${stats.users}</b><span>${h(copy.stat_students)}</span></div>
   <div class="stat"><b>${stats.courses}</b><span>${h(courseNavLabel())}</span></div>
@@ -5424,7 +5445,7 @@ const server = http.createServer(async (req, res) => {
   </div>
   </section>
 
-  <section class="section home-features">
+  <section class="section home-features" data-home-section="features">
   <div class="wrap">
   <div class="section-head center">
   <span class="eyebrow">${h(copy.feature_eyebrow)}</span>
@@ -5439,7 +5460,7 @@ const server = http.createServer(async (req, res) => {
   </section>`;
 
   const additions = `
-  <section class="section home-journey">
+  <section class="section home-journey" data-home-section="program">
     <div class="wrap home-journey-grid">
       <div><span class="eyebrow">${h(copy.program_eyebrow)}</span><h2>${h(copy.program_title)} <span class="accent">${h(copy.program_accent)}</span></h2>
         <p class="muted">${h(copy.program_description)}</p>
@@ -5453,12 +5474,12 @@ const server = http.createServer(async (req, res) => {
       </div>
     </div>
   </section>
-  <section class="section home-pricing">
+  <section class="section home-pricing" data-home-section="pricing">
     <div class="wrap"><div class="section-head home-section-head"><div><span class="eyebrow">${h(copy.pricing_eyebrow)}</span><h2>${h(copy.pricing_title)} <span class="accent">${h(copy.pricing_accent)}</span></h2><p class="muted">${h(copy.pricing_description)}</p></div><a class="btn btn-ghost" href="/plans">${h(copy.pricing_all)} <span aria-hidden="true">↗</span></a></div>
       <div class="home-plan-grid">${planCards}</div>
     </div>
   </section>
-  <section class="section home-faq">
+  <section class="section home-faq" data-home-section="faq">
     <div class="wrap home-faq-grid"><div><span class="eyebrow">${h(copy.faq_eyebrow)}</span><h2>${h(copy.faq_title)} <span class="accent">${h(copy.faq_accent)}</span></h2><p class="muted">${h(copy.faq_description)}</p><a class="home-contact-link" href="${h(config.telegram || "#")}" target="_blank" rel="noopener">${h(copy.faq_contact)} ↗</a></div>
       <div class="home-faq-list">
         <details><summary>${h(copy.faq_q1)}<span>+</span></summary><p>${h(copy.faq_a1)}</p></details>
@@ -5468,10 +5489,12 @@ const server = http.createServer(async (req, res) => {
       </div>
     </div>
   </section>
-  <section class="section home-final-cta"><div class="wrap home-final-card"><div><span class="eyebrow">${h(copy.final_eyebrow)}</span><h2>${h(copy.final_title)} <span class="accent">${h(copy.final_accent)}</span></h2><p class="muted">${h(copy.final_description)}</p></div><a class="btn btn-primary" href="${user ? "/courses" : "/register"}">${h(user ? copy.final_button_logged : copy.final_button)} <span aria-hidden="true">↗</span></a></div></section>
+  <section class="section home-final-cta" data-home-section="final"><div class="wrap home-final-card"><div><span class="eyebrow">${h(copy.final_eyebrow)}</span><h2>${h(copy.final_title)} <span class="accent">${h(copy.final_accent)}</span></h2><p class="muted">${h(copy.final_description)}</p></div><a class="btn btn-primary" href="${user ? "/courses" : "/register"}">${h(user ? copy.final_button_logged : copy.final_button)} <span aria-hidden="true">↗</span></a></div></section>
   </div>`;
 
   body += additions;
+  const hiddenSections = Object.entries(homeSections).filter(([key, visible]) => !visible).map(([key]) => `[data-home-section="${key}"]`).join(",");
+  if (hiddenSections) body += `<style>${hiddenSections}{display:none!important}</style>`;
   body += `<script>(function(){var orbit=document.querySelector('[data-scroll-orbit]');if(!orbit||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;var card=orbit.closest('.home-orbit-card');var rings=[].slice.call(orbit.querySelectorAll('i'));var base=[-26,40,-55];var pending=false;function draw(){pending=false;var r=card.getBoundingClientRect();var p=Math.max(-1,Math.min(1,(window.innerHeight*.52-(r.top+r.height/2))/(window.innerHeight*.78)));rings.forEach(function(el,i){var direction=i===1?1:-1;var angle=base[i]+p*56*direction;var scales=[.73,.68,.75];el.style.transform='translate3d('+(p*(i-1)*20)+'px,'+(-p*30*(i+1))+'px,0) rotate('+angle+'deg) scaleX('+scales[i]+')'});orbit.style.transform='translate3d('+(p*24)+'px,'+(-p*48)+'px,0) rotate('+(p*18)+'deg)'}function schedule(){if(pending)return;pending=true;window.requestAnimationFrame(draw)}window.addEventListener('scroll',schedule,{passive:true});window.addEventListener('resize',schedule,{passive:true});schedule()})();</script>`;
 
   send(res, 200, layout({ title: "Ingliz tili attestatsiya testlari va TKT", body, user, admin, seo: { path: "/", title: "Ingliz tili attestatsiya testlari va TKT | Habiba teacher", description: "Ingliz tili o'qituvchilari uchun attestatsiya testlari, TKT modullari, onlayn mock testlar va metodika. Toifa sinoviga amaliy tayyorgarlikni boshlang.", keywords: "ingliz tili attestatsiya testlari, pedagog attestatsiya testlari, o'qituvchi toifa testi, imtihonlarga tayyorlov, TKT testlari, TKT 1-modul, TKT 2-modul, TKT 3-modul" } }));
@@ -7986,6 +8009,7 @@ const server = http.createServer(async (req, res) => {
   if (p === "/admin/site-settings" && method === "GET") {
     if (!admin) return redirect(res, "/admin/login");
     const copy = siteTexts();
+    const homeSections = homeSectionVisibility();
     const groups = [
       { title: "Menyu va sayt nomi", fields: [["site_name", "Sayt nomi"], ["nav_home", "Bosh sahifa"], ["nav_attestation", "Attestatsiya"], ["nav_tkt", "TKT"], ["nav_duel", "Duel"], ["nav_courses", "Kurslar / yo'nalishlar"], ["nav_plans", "Tariflar"], ["nav_leaderboard", "Reyting"]] },
       { title: "Bosh sahifa — asosiy qism", fields: [["hero_eyebrow", "Yuqori kichik yozuv"], ["hero_title", "Sarlavhaning birinchi qismi"], ["hero_accent", "Rangli sarlavha qismi"], ["hero_title_end", "Sarlavhaning oxirgi qismi"], ["hero_description", "Tavsif"], ["hero_primary", "Asosiy tugma"], ["hero_primary_logged", "Kirish qilganlar tugmasi"], ["hero_secondary", "Ikkinchi tugma"], ["hero_trust_1", "Afzallik 1"], ["hero_trust_2", "Afzallik 2"], ["hero_trust_3", "Afzallik 3"], ["hero_note", "Yangilik xabari"], ["hero_image_caption", "Rasm osti yozuvi"], ["hero_float_title", "TKT kartasi sarlavhasi"], ["hero_float_description", "TKT kartasi tavsifi"]] },
@@ -7998,12 +8022,14 @@ const server = http.createServer(async (req, res) => {
     ];
     const isLong = (key) => /description|faq_a|footer_credit|orbit_kicker/.test(key);
     const fields = groups.map((group, groupIndex) => `<details class="site-copy-group"${groupIndex === 0 ? " open" : ""}><summary>${h(group.title)}<span>${group.fields.length} ta matn</span></summary><div class="site-copy-grid">${group.fields.map(([key, label]) => `<div class="field"><label for="copy_${key}">${h(label)}</label>${isLong(key) ? `<textarea id="copy_${key}" name="${key}" maxlength="500" rows="3">${h(copy[key])}</textarea>` : `<input id="copy_${key}" name="${key}" value="${h(copy[key])}" maxlength="${key.startsWith("nav_") ? 32 : key === "site_name" ? 80 : 180}" required>`}</div>`).join("")}</div></details>`).join("");
+    const sectionFields = Object.entries(HOME_SECTION_LABELS).map(([key, label]) => `<label class="home-section-toggle"><input type="checkbox" name="home_section_${key}" value="1"${homeSections[key] ? " checked" : ""}><span>${h(label)}</span></label>`).join("");
     const body = `<a class="back" href="/admin">&larr; Admin panel</a>
       <div class="page-head"><div><h1>Sayt sozlamalari</h1><p class="muted">Menyu va bosh sahifadagi asosiy matnlarni shu yerdan tahrirlang. O'zgarishlar saqlangandan so'ng darhol ko'rinadi.</p></div></div>
       ${url.searchParams.get("saved") === "1" ? alertBox("Sayt matnlari saqlandi.", "success") : ""}
       ${url.searchParams.get("err") === "length" ? alertBox("Qisqa yozuvlar 180, izohlar esa 500 belgigacha bo'lishi mumkin.", "error") : ""}
       <form method="post" action="/admin/site-settings" class="form site-copy-form">
         <button class="btn btn-primary" type="submit">Barcha matnlarni saqlash</button>
+        <section class="home-section-settings"><div><h2>Bosh sahifa bo'limlarini ko'rsatish</h2><p class="muted">Belgilangan bo'limlar saytda ko'rinadi. Masalan, “Barcha kurslar”ni yashirish uchun belgisini olib tashlang.</p></div><div class="home-section-toggle-grid">${sectionFields}</div></section>
         ${fields}
         <button class="btn btn-primary" type="submit">Barcha matnlarni saqlash</button>
       </form>`;
@@ -8022,6 +8048,8 @@ const server = http.createServer(async (req, res) => {
     }
     metaSet("site_texts_json", JSON.stringify(saved));
     metaSet("course_nav_label", saved.nav_courses);
+    const sectionVisibility = Object.fromEntries(Object.keys(HOME_SECTION_LABELS).map((key) => [key, fields[`home_section_${key}`] === "1"]));
+    metaSet("home_sections_json", JSON.stringify(sectionVisibility));
     return redirect(res, "/admin/site-settings?saved=1");
   }
 
