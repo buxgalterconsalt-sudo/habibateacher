@@ -5520,7 +5520,7 @@ const server = http.createServer(async (req, res) => {
   <div class="field"><label>Tug'ilgan kun.oy.yil</label><input name="birth_date" data-birth-date required inputmode="numeric" maxlength="10" autocomplete="off" pattern="[0-9]{2}\\.[0-9]{2}\\.[0-9]{4}" placeholder="kun.oy.yil, masalan 05.09.1995"></div>
   <div class="field"><label>Telefon raqamingiz</label><input name="phone" data-phone required inputmode="tel" autocomplete="username" placeholder="+998 93 568 00 91"></div>
   <div class="field"><label>Parol</label><input name="password" type="password" required minlength="8" maxlength="64" autocomplete="new-password">${passwordRequirementsMarkup()}</div>
-  <div class="field"><label>Parolni qayta tasdiqlang</label><input name="password_confirm" type="password" required minlength="8" maxlength="64" autocomplete="new-password" placeholder="Parolni yana kiriting"></div>
+  <div class="field"><label>Parolni qayta tasdiqlang</label><input name="password_confirm" type="password" required minlength="8" maxlength="64" autocomplete="new-password" placeholder="Parolni qayta kiriting"></div>
   <button class="btn btn-primary" type="submit">Ro'yxatdan o'tish</button>
   </form>`,
   `<p class="alt">Akkountingiz bormi? <a href="/login${next ? `?next=${encodeURIComponent(next)}`: ""}">Kirish</a></p>`,
