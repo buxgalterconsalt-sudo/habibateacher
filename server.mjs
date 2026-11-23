@@ -106,7 +106,7 @@ const SITE_TEXT_DEFAULTS = {
   orbit_kicker: "HABIBA TEACHER · TA'LIM PLATFORMASI", orbit_test: "TEST", orbit_lesson: "DARS", orbit_result: "NATIJA", orbit_tag_1: "Attestatsiya", orbit_tag_2: "TKT", orbit_tag_3: "Metodika", orbit_tag_4: "Amaliy mashq",
   nav_home: "Bosh sahifa", nav_attestation: "Attestatsiya", nav_tkt: "TKT", nav_duel: "Duel", nav_courses: "Kurslar", nav_plans: "Tariflar", nav_leaderboard: "Reyting",
   hero_eyebrow: "O'QITUVCHILAR UCHUN ONLAYN TA'LIM", hero_title: "Bilimingizni", hero_accent: "mustahkamlang.", hero_title_end: "Imtihonga tayyor bo'ling.", hero_description: "Attestatsiya va TKT uchun testlar, video darslar hamda metodik materiallar. O'z maqsadingizga mos yo'nalishni tanlab, o'z sur'atingizda o'rganing.", hero_primary: "Bepul ro'yxatdan o'tish", hero_primary_logged: "O'qishni davom ettirish", hero_secondary: "Dastur bilan tanishish", hero_trust_1: "O'zbek tilida", hero_trust_2: "Istalgan qurilmada", hero_trust_3: "Natija va progress nazorati", hero_note: "Yangi darslar va sinovlar platformada muntazam yangilanadi", hero_image_caption: "Ustozlar uchun amaliy tayyorlov", hero_float_title: "TKT: 3 ta modul", hero_float_description: "Har bir modul bo'yicha alohida tayyorgarlik",
-  stat_directions: "O'quv yo'nalishi", stat_lessons: "Video va o'quv darslari", stat_tests: "Sinov testlari", stat_students: "O'quvchilar", stat_note_title: "Bir maqsad sari", stat_note_description: "Reja, mashq va natija — bir joyda", program_direction_suffix: "ta yo'nalish", program_lesson_suffix: "ta dars", program_course_button: "Kurslarni ko'rish", program_attestation_tag: "ATTESTATSIYA", program_tkt_tag: "TKT", program_practice_tag: "AMALIYOT", footer_about: "Biz haqimizda",
+  stat_directions: "O'quv yo'nalishi", stat_lessons: "Video va o'quv darslari", stat_tests: "Sinov testlari", stat_test_attestation: "Attestatsiya testlari", stat_test_tkt: "TKT testlari", stat_test_cpd: "CPD testlari", stat_students: "O'quvchilar", stat_note_title: "Bir maqsad sari", stat_note_description: "Reja, mashq va natija — bir joyda", program_direction_suffix: "ta yo'nalish", program_lesson_suffix: "ta dars", program_course_button: "Kurslarni ko'rish", program_attestation_tag: "ATTESTATSIYA", program_tkt_tag: "TKT", program_practice_tag: "AMALIYOT", footer_about: "Biz haqimizda",
   overview_eyebrow: "01 / MAQSADGA QADAM", overview_title: "O'rganing. Mashq qiling.", overview_accent: "O'sishni kuzating.", overview_description: "Tayyorgarlikni kichik, tushunarli bosqichlarga ajrating. Har bir mavzu sizni bilimni amalda qo'llashga yaqinlashtiradi.", pillar_1_title: "Bilimni yangilang", pillar_1_description: "Video dars va metodik qo'llanma bilan asosiy mavzularni takrorlang.", pillar_2_title: "O'zingizni sinang", pillar_2_description: "Test va mashqlar orqali tushunganingizni tekshirib boring.", pillar_3_title: "Natijani kuzating", pillar_3_description: "Shaxsiy kabinetda progress va yakunlangan darslarni ko'ring.",
   direction_heading: "Yo'nalishni tanlang", direction_description: "Attestatsiya yoki TKT — o'zingizga kerakli yo'nalishdan boshlang.", direction_attestation_title: "Attestatsiya testlari", direction_attestation_description: "Ingliz tili fani o'qituvchilari uchun testlar, metodika va demo dars.", direction_tkt_title: "TKT testlari", direction_tkt_description: "Teaching Knowledge Test formatidagi metodika va sinf boshqaruvi testlari.", direction_open: "Ochish",
   course_section_eyebrow: "Kurslar", course_section_title: "Barcha kurslar", course_section_description: "Attestatsiyaga tayyorlov, metodika, demo dars va testlar — barchasi bir joyda.", course_section_button: "Barcha kurslarni ko'rish",
@@ -136,6 +136,30 @@ function homeSectionVisibility() {
   let saved = {};
   try { saved = JSON.parse(metaGet("home_sections_json", "{}")) || {}; } catch (e) {}
   return Object.fromEntries(Object.keys(HOME_SECTION_LABELS).map((key) => [key, saved[key] !== false]));
+}
+
+function homeCustomSections() {
+  try {
+    const rows = JSON.parse(metaGet("home_custom_sections_json", "[]"));
+    if (!Array.isArray(rows)) return [];
+    return rows.slice(0, 20).map((row, index) => ({
+      id: String(row.id || `section_${index + 1}`).replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 40) || `section_${index + 1}`,
+      title: String(row.title || "").slice(0, 180),
+      description: String(row.description || "").slice(0, 2000),
+      buttonLabel: String(row.buttonLabel || "").slice(0, 80),
+      buttonUrl: String(row.buttonUrl || "").slice(0, 500),
+      visible: row.visible !== false
+    })).filter((row) => row.title || row.description);
+  } catch (e) { return []; }
+}
+
+function homeSectionOrder(customSections = homeCustomSections()) {
+  const allKeys = [...Object.keys(HOME_SECTION_LABELS), ...customSections.map((row) => `custom_${row.id}`)];
+  let saved = [];
+  try { saved = JSON.parse(metaGet("home_section_order_json", "[]")); } catch (e) {}
+  const order = Array.isArray(saved) ? saved.filter((key) => allKeys.includes(key)) : [];
+  for (const key of allKeys) if (!order.includes(key)) order.push(key);
+  return order;
 }
 
 function siteTexts() {
@@ -1727,7 +1751,7 @@ ${seoTags}
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%2312b5a6'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='18' font-weight='bold' text-anchor='middle' fill='%2303211d'%3EH%3C/text%3E%3C/svg%3E">
 <script async src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>try{document.documentElement.dataset.theme=localStorage.getItem('ht_theme')||'dark';}catch(e){document.documentElement.dataset.theme='dark';}</script>
-<link rel="stylesheet" href="/assets/platform.css?v=20261123home5">
+<link rel="stylesheet" href="/assets/platform.css?v=20261123home6">
 </head>
 <body${admin && !publicPage ? ` class="admin-page"` : isStudentPage ? ` class="student-page${isDashboard ? " is-dashboard" : ""}"` : ""}>
 <header class="topbar">
@@ -5316,12 +5340,17 @@ const server = http.createServer(async (req, res) => {
   (SELECT COUNT(*) FROM users) AS users,
   (SELECT COUNT(DISTINCT category) FROM courses WHERE is_published = 1 AND is_test_group = 0) AS courses,
   (SELECT COUNT(*) FROM lessons l JOIN courses c ON c.id = l.course_id WHERE l.type = 'video' AND c.is_published = 1 AND c.is_test_group = 0) AS lessons,
-  (SELECT COUNT(*) FROM lessons l JOIN courses c ON c.id = l.course_id WHERE l.type = 'test' AND c.is_published = 1 AND c.is_test_group = 0) AS tests,
+  (SELECT COUNT(*) FROM lessons l JOIN courses c ON c.id = l.course_id WHERE l.type = 'test' AND c.is_published = 1) AS tests,
+  (SELECT COUNT(*) FROM lessons l JOIN courses c ON c.id = l.course_id WHERE l.type = 'test' AND c.is_published = 1 AND c.category = 'attestation') AS tests_attestation,
+  (SELECT COUNT(*) FROM lessons l JOIN courses c ON c.id = l.course_id WHERE l.type = 'test' AND c.is_published = 1 AND c.category = 'tkt') AS tests_tkt,
+  (SELECT COUNT(*) FROM lessons l JOIN courses c ON c.id = l.course_id WHERE l.type = 'test' AND c.is_published = 1 AND c.category = 'other') AS tests_cpd,
   (SELECT COUNT(*) FROM progress) AS done`
   )
 .get();
   const copy = siteTexts();
   const homeSections = homeSectionVisibility();
+  const customHomeSections = homeCustomSections();
+  const savedHomeSectionOrder = homeSectionOrder(customHomeSections);
 
   const courses = db
 .prepare(
@@ -5448,11 +5477,13 @@ const server = http.createServer(async (req, res) => {
   </section>
 
   <section class="stats-band" data-home-section="stats">
-  <div class="wrap stats">
+  <div class="wrap stats home-count-stats">
   <div class="stat"><b>${stats.users}</b><span>${h(copy.stat_students)}</span></div>
   <div class="stat"><b>${stats.courses}</b><span>${h(courseNavLabel())}</span></div>
   <div class="stat"><b>${stats.lessons}</b><span>${h(copy.stat_lessons)}</span></div>
-  <div class="stat"><b>${stats.tests}</b><span>${h(copy.stat_tests)}</span></div>
+  <div class="stat"><b>${stats.tests_attestation}</b><span>${h(copy.stat_test_attestation)}</span></div>
+  <div class="stat"><b>${stats.tests_tkt}</b><span>${h(copy.stat_test_tkt)}</span></div>
+  <div class="stat"><b>${stats.tests_cpd}</b><span>${h(copy.stat_test_cpd)}</span></div>
   </div>
   </section>
 
@@ -5504,7 +5535,29 @@ const server = http.createServer(async (req, res) => {
   </div>`;
 
   body += additions;
-  const hiddenSections = Object.entries(homeSections).filter(([key, visible]) => !visible).map(([key]) => `[data-home-section="${key}"]`).join(",");
+  const sectionBlocks = new Map();
+  body = body.replace(/<section\b(?=[^>]*data-home-section="([^"]+)")[^>]*>[\s\S]*?<\/section>/g, (block, key) => {
+    sectionBlocks.set(key, block);
+    return "";
+  });
+  for (const section of customHomeSections) {
+    const key = `custom_${section.id}`;
+    const rawUrl = section.buttonUrl.trim();
+    const safeUrl = (rawUrl.startsWith("/") && !rawUrl.startsWith("//")) || /^https:\/\//i.test(rawUrl) ? rawUrl : "";
+    sectionBlocks.set(key, `<section class="section home-custom-section" data-home-section="${key}"><div class="wrap"><div class="home-custom-copy"><span class="eyebrow">${h(copy.site_name)}</span><h2>${h(section.title)}</h2>${section.description ? `<p class="muted">${nl2br(section.description)}</p>` : ""}${safeUrl && section.buttonLabel ? `<a class="btn btn-ghost" href="${h(safeUrl)}">${h(section.buttonLabel)} <span aria-hidden="true">↗</span></a>` : ""}</div></div></section>`);
+  }
+  const orderedBlocks = [...savedHomeSectionOrder, ...[...sectionBlocks.keys()].filter((key) => !savedHomeSectionOrder.includes(key))]
+    .map((key) => sectionBlocks.get(key)).filter(Boolean).join("\n");
+  const landingOpen = '<div class="landing-home">';
+  const landingPosition = body.indexOf(landingOpen);
+  if (landingPosition >= 0) {
+    const insertAt = landingPosition + landingOpen.length;
+    body = body.slice(0, insertAt) + orderedBlocks + body.slice(insertAt);
+  }
+  const hiddenSections = [
+    ...Object.entries(homeSections).filter(([, visible]) => !visible).map(([key]) => `[data-home-section="${key}"]`),
+    ...customHomeSections.filter((section) => !section.visible).map((section) => `[data-home-section="custom_${section.id}"]`)
+  ].join(",");
   if (hiddenSections) body += `<style>${hiddenSections}{display:none!important}</style>`;
   body += `<script>(function(){var orbit=document.querySelector('[data-scroll-orbit]');if(!orbit||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;var card=orbit.closest('.home-orbit-card');var rings=[].slice.call(orbit.querySelectorAll('i'));var base=[-26,40,-55];var pending=false;function draw(){pending=false;var r=card.getBoundingClientRect();var p=Math.max(-1,Math.min(1,(window.innerHeight*.52-(r.top+r.height/2))/(window.innerHeight*.78)));rings.forEach(function(el,i){var direction=i===1?1:-1;var angle=base[i]+p*56*direction;var scales=[.73,.68,.75];el.style.transform='translate3d('+(p*(i-1)*20)+'px,'+(-p*30*(i+1))+'px,0) rotate('+angle+'deg) scaleX('+scales[i]+')'});orbit.style.transform='translate3d('+(p*24)+'px,'+(-p*48)+'px,0) rotate('+(p*18)+'deg)'}function schedule(){if(pending)return;pending=true;window.requestAnimationFrame(draw)}window.addEventListener('scroll',schedule,{passive:true});window.addEventListener('resize',schedule,{passive:true});schedule()})();</script>`;
 
@@ -8021,10 +8074,12 @@ const server = http.createServer(async (req, res) => {
     if (!admin) return redirect(res, "/admin/login");
     const copy = siteTexts();
     const homeSections = homeSectionVisibility();
+    const customHomeSections = homeCustomSections();
+    const sectionOrder = homeSectionOrder(customHomeSections);
     const groups = [
       { title: "Menyu va sayt nomi", fields: [["site_name", "Sayt nomi"], ["nav_home", "Bosh sahifa"], ["nav_attestation", "Attestatsiya"], ["nav_tkt", "TKT"], ["nav_duel", "Duel"], ["nav_courses", "Kurslar / yo'nalishlar"], ["nav_plans", "Tariflar"], ["nav_leaderboard", "Reyting"]] },
       { title: "Bosh sahifa — asosiy qism", fields: [["hero_eyebrow", "Yuqori kichik yozuv"], ["hero_title", "Sarlavhaning birinchi qismi"], ["hero_accent", "Rangli sarlavha qismi"], ["hero_title_end", "Sarlavhaning oxirgi qismi"], ["hero_description", "Tavsif"], ["hero_primary", "Asosiy tugma"], ["hero_primary_logged", "Kirish qilganlar tugmasi"], ["hero_secondary", "Ikkinchi tugma"], ["hero_trust_1", "Afzallik 1"], ["hero_trust_2", "Afzallik 2"], ["hero_trust_3", "Afzallik 3"], ["hero_note", "Yangilik xabari"], ["hero_image_caption", "Rasm osti yozuvi"], ["hero_float_title", "TKT kartasi sarlavhasi"], ["hero_float_description", "TKT kartasi tavsifi"]] },
-      { title: "Hisoblagich, kirish qismi va orbitalar", fields: [["stat_directions", "Yo'nalishlar hisoblagichi"], ["stat_lessons", "Video darslar hisoblagichi"], ["stat_tests", "Testlar hisoblagichi"], ["stat_students", "O'quvchilar hisoblagichi"], ["stat_note_title", "Hisoblagich yonidagi sarlavha"], ["stat_note_description", "Hisoblagich yonidagi izoh"], ["orbit_kicker", "Orbital karta yuqori yozuvi"], ["orbit_test", "Orbital test yorlig'i"], ["orbit_lesson", "Orbital dars yorlig'i"], ["orbit_result", "Orbital natija yorlig'i"], ["orbit_tag_1", "Orbital teg 1"], ["orbit_tag_2", "Orbital teg 2"], ["orbit_tag_3", "Orbital teg 3"], ["orbit_tag_4", "Orbital teg 4"], ["overview_eyebrow", "Kirish bo'limi kichik sarlavhasi"], ["overview_title", "Kirish bo'limi sarlavhasi"], ["overview_accent", "Rangli sarlavha qismi"], ["overview_description", "Kirish bo'limi tavsifi"], ["pillar_1_title", "Afzallik 1 sarlavhasi"], ["pillar_1_description", "Afzallik 1 tavsifi"], ["pillar_2_title", "Afzallik 2 sarlavhasi"], ["pillar_2_description", "Afzallik 2 tavsifi"], ["pillar_3_title", "Afzallik 3 sarlavhasi"], ["pillar_3_description", "Afzallik 3 tavsifi"]] },
+      { title: "Hisoblagich, kirish qismi va orbitalar", fields: [["stat_directions", "Yo'nalishlar hisoblagichi"], ["stat_lessons", "Video darslar hisoblagichi"], ["stat_tests", "Barcha testlar hisoblagichi"], ["stat_test_attestation", "Attestatsiya testlari nomi"], ["stat_test_tkt", "TKT testlari nomi"], ["stat_test_cpd", "CPD testlari nomi"], ["stat_students", "O'quvchilar hisoblagichi"], ["stat_note_title", "Hisoblagich yonidagi sarlavha"], ["stat_note_description", "Hisoblagich yonidagi izoh"], ["orbit_kicker", "Orbital karta yuqori yozuvi"], ["orbit_test", "Orbital test yorlig'i"], ["orbit_lesson", "Orbital dars yorlig'i"], ["orbit_result", "Orbital natija yorlig'i"], ["orbit_tag_1", "Orbital teg 1"], ["orbit_tag_2", "Orbital teg 2"], ["orbit_tag_3", "Orbital teg 3"], ["orbit_tag_4", "Orbital teg 4"], ["overview_eyebrow", "Kirish bo'limi kichik sarlavhasi"], ["overview_title", "Kirish bo'limi sarlavhasi"], ["overview_accent", "Rangli sarlavha qismi"], ["overview_description", "Kirish bo'limi tavsifi"], ["pillar_1_title", "Afzallik 1 sarlavhasi"], ["pillar_1_description", "Afzallik 1 tavsifi"], ["pillar_2_title", "Afzallik 2 sarlavhasi"], ["pillar_2_description", "Afzallik 2 tavsifi"], ["pillar_3_title", "Afzallik 3 sarlavhasi"], ["pillar_3_description", "Afzallik 3 tavsifi"]] },
       { title: "Yo'nalishlar va kurslar", fields: [["direction_heading", "Yo'nalishlar sarlavhasi"], ["direction_description", "Yo'nalishlar tavsifi"], ["direction_attestation_title", "Attestatsiya kartasi sarlavhasi"], ["direction_attestation_description", "Attestatsiya kartasi tavsifi"], ["direction_tkt_title", "TKT kartasi sarlavhasi"], ["direction_tkt_description", "TKT kartasi tavsifi"], ["direction_open", "Karta tugmasi"], ["course_section_eyebrow", "Kurslar kichik sarlavhasi"], ["course_section_title", "Kurslar bo'limi sarlavhasi"], ["course_section_description", "Kurslar bo'limi tavsifi"], ["course_section_button", "Kurslar tugmasi"]] },
       { title: "Biz haqimizda va imkoniyatlar", fields: [["about_eyebrow", "Biz haqimizda kichik sarlavha"], ["about_title", "Biz haqimizda sarlavhasi"], ["about_description", "Biz haqimizda tavsifi"], ["about_check_1", "Afzallik ro'yxati 1"], ["about_check_2", "Afzallik ro'yxati 2"], ["about_check_3", "Afzallik ro'yxati 3"], ["about_check_4", "Afzallik ro'yxati 4"], ["about_card_title", "Yon kartadagi sarlavha"], ["about_card_description", "Yon kartadagi izoh"], ["feature_eyebrow", "Imkoniyatlar kichik sarlavhasi"], ["feature_title", "Imkoniyatlar sarlavhasi"], ["feature_pdf_title", "PDF karta sarlavhasi"], ["feature_pdf_description", "PDF karta tavsifi"], ["feature_video_title", "Video karta sarlavhasi"], ["feature_video_description", "Video karta tavsifi"], ["feature_test_title", "Test karta sarlavhasi"], ["feature_test_description", "Test karta tavsifi"]] },
       { title: "O'quv dasturi", fields: [["program_eyebrow", "Bo'lim kichik sarlavhasi"], ["program_title", "Bo'lim sarlavhasi"], ["program_accent", "Rangli sarlavha qismi"], ["program_description", "Bo'lim tavsifi"], ["program_direction_suffix", "Yo'nalishlar soni qo'shimchasi"], ["program_lesson_suffix", "Darslar soni qo'shimchasi"], ["program_course_button", "Dastur tugmasi"], ["program_attestation_tag", "1-bosqich yorlig'i"], ["program_tkt_tag", "2-bosqich yorlig'i"], ["program_practice_tag", "3-bosqich yorlig'i"], ["program_step_1_title", "Bosqich 1 sarlavhasi"], ["program_step_1_description", "Bosqich 1 tavsifi"], ["program_step_2_title", "Bosqich 2 sarlavhasi"], ["program_step_2_description", "Bosqich 2 tavsifi"], ["program_step_3_title", "Bosqich 3 sarlavhasi"], ["program_step_3_description", "Bosqich 3 tavsifi"]] },
@@ -8033,18 +8088,28 @@ const server = http.createServer(async (req, res) => {
     ];
     const isLong = (key) => /description|faq_a|footer_credit|orbit_kicker/.test(key);
     const fields = groups.map((group, groupIndex) => `<details class="site-copy-group"${groupIndex === 0 ? " open" : ""}><summary>${h(group.title)}<span>${group.fields.length} ta matn</span></summary><div class="site-copy-grid">${group.fields.map(([key, label]) => `<div class="field"><label for="copy_${key}">${h(label)}</label>${isLong(key) ? `<textarea id="copy_${key}" name="${key}" maxlength="500" rows="3">${h(copy[key])}</textarea>` : `<input id="copy_${key}" name="${key}" value="${h(copy[key])}" maxlength="${key.startsWith("nav_") ? 32 : key === "site_name" ? 80 : 180}" required>`}</div>`).join("")}</div></details>`).join("");
-    const sectionFields = Object.entries(HOME_SECTION_LABELS).map(([key, label]) => `<label class="home-section-toggle"><input type="checkbox" name="home_section_${key}" value="1"${homeSections[key] ? " checked" : ""}><span>${h(label)}</span></label>`).join("");
+    const customByKey = new Map(customHomeSections.map((section) => [`custom_${section.id}`, section]));
+    const sectionFields = sectionOrder.map((key) => {
+      const custom = customByKey.get(key);
+      if (custom) return `<div class="home-order-item home-custom-item" draggable="true" data-home-order-item data-section-key="${h(key)}"><div class="home-order-head"><span class="home-drag-handle" aria-hidden="true">⠿</span><label class="home-order-label"><input type="checkbox" data-custom-visible${custom.visible ? " checked" : ""}><span>${h(custom.title)}</span></label><div class="home-order-buttons"><button type="button" data-order-move="up" aria-label="Yuqoriga">↑</button><button type="button" data-order-move="down" aria-label="Pastga">↓</button></div></div><details class="home-custom-editor"><summary>Bo'lim matnlarini tahrirlash</summary><div class="home-custom-fields"><label>Sarlavha<input data-custom-title maxlength="180" value="${h(custom.title)}"></label><label>Tavsif<textarea data-custom-description maxlength="2000" rows="3">${h(custom.description)}</textarea></label><label>Tugma yozuvi (ixtiyoriy)<input data-custom-button maxlength="80" value="${h(custom.buttonLabel)}"></label><label>Tugma havolasi (ixtiyoriy)<input data-custom-url maxlength="500" value="${h(custom.buttonUrl)}" placeholder="/courses yoki https://..."></label><button class="btn btn-sm" type="button" data-remove-custom>Bo'limni o'chirish</button></div></details></div>`;
+      const label = HOME_SECTION_LABELS[key];
+      return `<div class="home-order-item" draggable="true" data-home-order-item data-section-key="${h(key)}"><div class="home-order-head"><span class="home-drag-handle" aria-hidden="true">⠿</span><label class="home-order-label"><input type="checkbox" name="home_section_${h(key)}" value="1"${homeSections[key] ? " checked" : ""}><span>${h(label)}</span></label><div class="home-order-buttons"><button type="button" data-order-move="up" aria-label="Yuqoriga">↑</button><button type="button" data-order-move="down" aria-label="Pastga">↓</button></div></div></div>`;
+    }).join("");
+    const sectionOrderJson = h(JSON.stringify(sectionOrder));
+    const customSectionsJson = h(JSON.stringify(customHomeSections));
     const body = `<a class="back" href="/admin">&larr; Admin panel</a>
       <div class="page-head"><div><h1>Sayt sozlamalari</h1><p class="muted">Menyu va bosh sahifadagi asosiy matnlarni shu yerdan tahrirlang. O'zgarishlar saqlangandan so'ng darhol ko'rinadi.</p></div></div>
       ${url.searchParams.get("saved") === "1" ? alertBox("Sayt matnlari saqlandi.", "success") : ""}
       ${url.searchParams.get("err") === "length" ? alertBox("Qisqa yozuvlar 180, izohlar esa 500 belgigacha bo'lishi mumkin.", "error") : ""}
       <form method="post" action="/admin/site-settings" class="form site-copy-form">
         <button class="btn btn-primary" type="submit">Barcha matnlarni saqlash</button>
-        <section class="home-section-settings"><div><h2>Bosh sahifa bo'limlarini ko'rsatish</h2><p class="muted">Belgilangan bo'limlar saytda ko'rinadi. Masalan, “Barcha kurslar”ni yashirish uchun belgisini olib tashlang.</p></div><div class="home-section-toggle-grid">${sectionFields}</div></section>
+        <section class="home-section-settings"><div><h2>Bosh sahifa bo'limlari</h2><p class="muted">Bo'limlarni sudrab tartiblang, belgisini olib tashlab yashiring yoki yangi bo'lim qo'shing. Tartib saytga shu ko'rinishda chiqadi.</p></div><input type="hidden" name="home_section_order" id="homeSectionOrder" value="${sectionOrderJson}"><input type="hidden" name="home_custom_sections" id="homeCustomSections" value="${customSectionsJson}"><div class="home-order-list" id="homeSectionOrderList">${sectionFields}</div><button class="btn btn-ghost" id="addHomeSection" type="button">+ Yangi bo'lim qo'shish</button><small class="muted">Yangi bo'lim uchun sarlavha va tavsif kiriting. Ko'pi bilan 20 ta qo'shimcha bo'lim.</small></section>
         ${fields}
         <button class="btn btn-primary" type="submit">Barcha matnlarni saqlash</button>
       </form>`;
-    send(res, 200, layout({ title: "Sayt sozlamalari", body, admin }));
+    const sectionScript = `<script>(function(){var list=document.getElementById('homeSectionOrderList');var form=list&&list.closest('form');var add=document.getElementById('addHomeSection');var orderInput=document.getElementById('homeSectionOrder');var customInput=document.getElementById('homeCustomSections');if(!list||!form||!orderInput||!customInput)return;function updateTitle(row){var input=row.querySelector('[data-custom-title]');var label=row.querySelector('.home-order-label span');if(input&&label)label.textContent=input.value||'Yangi bo\'lim'}function makeCustom(){var id='custom_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);var row=document.createElement('div');row.className='home-order-item home-custom-item';row.draggable=true;row.dataset.homeOrderItem='';row.dataset.sectionKey=id;row.innerHTML='<div class="home-order-head"><span class="home-drag-handle" aria-hidden="true">⠿</span><label class="home-order-label"><input type="checkbox" data-custom-visible checked><span>Yangi bo\'lim</span></label><div class="home-order-buttons"><button type="button" data-order-move="up" aria-label="Yuqoriga">↑</button><button type="button" data-order-move="down" aria-label="Pastga">↓</button></div></div><details class="home-custom-editor" open><summary>Bo\'lim matnlarini tahrirlash</summary><div class="home-custom-fields"><label>Sarlavha<input data-custom-title maxlength="180" value=""></label><label>Tavsif<textarea data-custom-description maxlength="2000" rows="3"></textarea></label><label>Tugma yozuvi (ixtiyoriy)<input data-custom-button maxlength="80" value=""></label><label>Tugma havolasi (ixtiyoriy)<input data-custom-url maxlength="500" placeholder="/courses yoki https://..."></label><button class="btn btn-sm" type="button" data-remove-custom>Bo\'limni o\'chirish</button></div></details>';list.appendChild(row);row.querySelector('[data-custom-title]').focus()}if(add)add.addEventListener('click',function(){if(list.querySelectorAll('.home-custom-item').length>=20){alert('Ko\'pi bilan 20 ta yangi bo\'lim qo\'shish mumkin.');return}makeCustom()});list.addEventListener('input',function(event){var row=event.target.closest('.home-custom-item');if(row&&event.target.matches('[data-custom-title]'))updateTitle(row)});list.addEventListener('click',function(event){var row=event.target.closest('[data-home-order-item]');if(!row)return;if(event.target.closest('[data-remove-custom]')){row.remove();return}var move=event.target.closest('[data-order-move]');if(!move)return;if(move.dataset.orderMove==='up'&&row.previousElementSibling)list.insertBefore(row,row.previousElementSibling);if(move.dataset.orderMove==='down'&&row.nextElementSibling)list.insertBefore(row.nextElementSibling,row)});var dragging=null;list.addEventListener('dragstart',function(event){dragging=event.target.closest('[data-home-order-item]');if(dragging){dragging.classList.add('is-dragging');event.dataTransfer.effectAllowed='move'}});list.addEventListener('dragend',function(){if(dragging)dragging.classList.remove('is-dragging');dragging=null});list.addEventListener('dragover',function(event){if(!dragging)return;event.preventDefault();var target=event.target.closest('[data-home-order-item]');if(!target||target===dragging)return;var rect=target.getBoundingClientRect();list.insertBefore(dragging,event.clientY<rect.top+rect.height/2?target:target.nextElementSibling)});form.addEventListener('submit',function(){var rows=Array.from(list.querySelectorAll('[data-home-order-item]'));orderInput.value=JSON.stringify(rows.map(function(row){return row.dataset.sectionKey}));customInput.value=JSON.stringify(rows.filter(function(row){return row.classList.contains('home-custom-item')}).map(function(row){var val=function(selector){var el=row.querySelector(selector);return el?el.value.trim():''};var visible=row.querySelector('[data-custom-visible]');return{id:row.dataset.sectionKey.replace(/^custom_/,'').slice(0,40),title:val('[data-custom-title]'),description:val('[data-custom-description]'),buttonLabel:val('[data-custom-button]'),buttonUrl:val('[data-custom-url]'),visible:!!(visible&&visible.checked)}}))})})();</script>`;
+    const fullBody = body + sectionScript;
+    send(res, 200, layout({ title: "Sayt sozlamalari", body: fullBody, admin }));
     return;
   }
 
@@ -8061,6 +8126,32 @@ const server = http.createServer(async (req, res) => {
     metaSet("course_nav_label", saved.nav_courses);
     const sectionVisibility = Object.fromEntries(Object.keys(HOME_SECTION_LABELS).map((key) => [key, fields[`home_section_${key}`] === "1"]));
     metaSet("home_sections_json", JSON.stringify(sectionVisibility));
+    let submittedCustom = [];
+    try { submittedCustom = JSON.parse(String(fields.home_custom_sections || "[]")); } catch (e) {}
+    const customIds = new Set();
+    const normalizedCustom = (Array.isArray(submittedCustom) ? submittedCustom : []).slice(0, 20).map((section, index) => {
+      const id = String(section.id || `section_${index + 1}`).replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 40);
+      if (!id || customIds.has(id)) return null;
+      customIds.add(id);
+      return {
+        id,
+        title: String(section.title || "").trim().slice(0, 180),
+        description: String(section.description || "").replace(/\r\n/g, "\n").trim().slice(0, 2000),
+        buttonLabel: String(section.buttonLabel || "").trim().slice(0, 80),
+        buttonUrl: String(section.buttonUrl || "").trim().slice(0, 500),
+        visible: section.visible !== false
+      };
+    }).filter((section) => section && section.title);
+    metaSet("home_custom_sections_json", JSON.stringify(normalizedCustom));
+    const validKeys = new Set([...Object.keys(HOME_SECTION_LABELS), ...normalizedCustom.map((section) => `custom_${section.id}`)]);
+    let submittedOrder = [];
+    try { submittedOrder = JSON.parse(String(fields.home_section_order || "[]")); } catch (e) {}
+    const normalizedOrder = [];
+    for (const key of Array.isArray(submittedOrder) ? submittedOrder : []) {
+      if (validKeys.has(key) && !normalizedOrder.includes(key)) normalizedOrder.push(key);
+    }
+    for (const key of validKeys) if (!normalizedOrder.includes(key)) normalizedOrder.push(key);
+    metaSet("home_section_order_json", JSON.stringify(normalizedOrder));
     return redirect(res, "/admin/site-settings?saved=1");
   }
 
