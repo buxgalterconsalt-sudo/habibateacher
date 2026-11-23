@@ -101,6 +101,11 @@ function metaSet(key, value) {
   ).run(key, String(value));
 }
 
+function courseNavLabel() {
+  const value = String(metaGet("course_nav_label", "Kurslar") || "Kurslar").trim();
+  return value.slice(0, 32) || "Kurslar";
+}
+
 const DEFAULT_PLANS = [
   { id: "month", title: "1 oy", days: 30, price: 99000, description: "Barcha kurs va testlarga 1 oy kirish." },
   { id: "quarter", title: "3 oy", days: 90, price: 299000, description: "Barcha kurs va testlarga 3 oy kirish." },
@@ -138,20 +143,20 @@ function isIntroVideoLesson(lessonId) {
   return Number(priorVideos && priorVideos.n) < 1;
 }
 
-function hasOtherActiveDevice(userId, req) {
+function hasDeviceLimitReached(userId, req) {
   const now = Date.now();
   const cutoff = new Date(now - 3 * 24 * 60 * 60 * 1000).toISOString();
-  db.prepare("DELETE FROM device_sessions WHERE created_at <= ?").run(cutoff);
+  db.prepare("DELETE FROM device_sessions WHERE last_seen <= ?").run(cutoff);
   const currentToken = parseCookies(req).ht_device || "";
   const current = currentToken
     ? db.prepare("SELECT user_id FROM device_sessions WHERE token = ?").get(currentToken)
     : null;
   if (current && Number(current.user_id) === Number(userId)) {
-    db.prepare("DELETE FROM device_sessions WHERE user_id = ? AND token != ?").run(userId, currentToken);
     db.prepare("UPDATE device_sessions SET last_seen = ? WHERE token = ?").run(nowISO(), currentToken);
     return false;
   }
-  return !!db.prepare("SELECT 1 FROM device_sessions WHERE user_id = ? LIMIT 1").get(userId);
+  const activeDevices = Number(db.prepare("SELECT COUNT(*) AS n FROM device_sessions WHERE user_id = ?").get(userId)?.n || 0);
+  return activeDevices >= 2;
 }
 
 function firstVideoTasksGate(userId, courseId) {
@@ -1594,6 +1599,7 @@ function navFor(user, admin, publicPage = false) {
   return `<nav class="nav">
   <a href="/admin" class="active">Admin</a>
   <a href="/admin/students">O'quvchilar</a>
+  <a href="/admin/site-settings">Sayt sozlamalari</a>
   <a href="/leaderboard">Reyting</a>
   <a href="/">Saytni ko'rish</a>
   <form method="post" action="/admin/logout"><button class="link" type="submit">Chiqish</button></form>
@@ -1605,7 +1611,7 @@ function navFor(user, admin, publicPage = false) {
   <a href="/attestation">Attestatsiya</a>
   <a href="/tkt">TKT</a>
   <a href="/duel">Duel</a>
-  <a href="/courses">Kurslar</a>
+  <a href="/courses">${h(courseNavLabel())}</a>
   <a href="/plans">Tariflar</a>
   <a href="/leaderboard">Reyting</a>`;
 
@@ -1615,7 +1621,7 @@ function navFor(user, admin, publicPage = false) {
   <a href="/attestation">Attestatsiya</a>
   <a href="/tkt">TKT</a>
   <a href="/duel">Duel</a>
-  <a href="/courses">Kurslar</a>
+  <a href="/courses">${h(courseNavLabel())}</a>
   <a href="/dashboard">Kabinet</a>
   ${Number(user.is_author) ? `<a href="/author">Muallif paneli</a>` : ""}
   <a href="/leaderboard">Reyting</a>
@@ -1667,7 +1673,7 @@ ${seoTags}
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%2312b5a6'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='18' font-weight='bold' text-anchor='middle' fill='%2303211d'%3EH%3C/text%3E%3C/svg%3E">
 <script async src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>try{document.documentElement.dataset.theme=localStorage.getItem('ht_theme')||'dark';}catch(e){document.documentElement.dataset.theme='dark';}</script>
-<link rel="stylesheet" href="/assets/platform.css?v=20261122q">
+<link rel="stylesheet" href="/assets/platform.css?v=20261123home1">
 </head>
 <body${admin && !publicPage ? ` class="admin-page"` : isStudentPage ? ` class="student-page${isDashboard ? " is-dashboard" : ""}"` : ""}>
 <header class="topbar">
@@ -1700,13 +1706,13 @@ ${seoTags}
   <nav class="mobile-links">
   ${
   admin && !publicPage
-  ? `<a href="/admin">Admin</a><a href="/admin/students">O'quvchilar</a><a href="/leaderboard">Reyting</a><a href="/">Saytni ko'rish</a>
+  ? `<a href="/admin">Admin</a><a href="/admin/students">O'quvchilar</a><a href="/admin/site-settings">Sayt sozlamalari</a><a href="/leaderboard">Reyting</a><a href="/">Saytni ko'rish</a>
   <form method="post" action="/admin/logout"><button class="mobile-link-btn" type="submit">Chiqish</button></form>`
 : `<a href="/">Bosh sahifa</a>
   <a href="/attestation">Attestatsiya</a>
   <a href="/tkt">TKT</a>
   <a href="/duel">Duel</a>
-  <a href="/courses">Kurslar</a>
+  <a href="/courses">${h(courseNavLabel())}</a>
   <a href="/plans">Tariflar</a>
   <a href="/leaderboard">Reyting</a>
   ${
@@ -1731,7 +1737,7 @@ ${seoTags}
   </div>
   </div>
 </header>
-<main class="wrap page">
+<main class="wrap page${body.includes('class="landing-home"') ? " page-home" : ""}">
 ${body.includes("home-hero") ? "" : `<a class="page-back" href="/" onclick="if(history.length>1){history.back();return false;}">&larr; Orqaga</a>`}
 ${body}
 </main>
@@ -1749,7 +1755,7 @@ ${body}
   <a href="/attestation">Attestatsiya</a>
   <a href="/tkt">TKT</a>
   <a href="/duel">Duel</a>
-  <a href="/courses">Kurslar</a>
+  <a href="/courses">${h(courseNavLabel())}</a>
   <a href="/plans">Tariflar</a>
   <a href="/leaderboard">Reyting</a>
   <a href="/#about">Biz haqimizda</a>
@@ -4911,7 +4917,6 @@ const server = http.createServer(async (req, res) => {
       clearCookie(res, "ht_session");
       user = null;
     } else {
-      db.prepare("DELETE FROM device_sessions WHERE user_id = ? AND token != ?").run(user.id, deviceToken);
       db.prepare("UPDATE device_sessions SET last_seen = ? WHERE token = ?").run(nowISO(), deviceToken);
     }
   }
@@ -5259,23 +5264,29 @@ const server = http.createServer(async (req, res) => {
 
   const courseCards = courses.length
   ? courses.map((c) => publicCourseCard(c, user)).join("")
-: `<div class="card empty" style="grid-column:1/-1">Kurslar tez orada qo'shiladi.</div>`;
+: `<div class="card empty" style="grid-column:1/-1">${h(courseNavLabel())} tez orada qo'shiladi.</div>`;
 
-  const body = `
+  const planCards = getPlans().map((plan, index) => `<article class="home-plan-card${index === 1 ? " featured" : ""}">
+    <span class="home-kicker">${index === 0 ? "BOSHLASH" : index === 1 ? "MASHHUR TANLOV" : "UZLUKSIZ RIVOJLANISH"}</span>
+    <h3>${h(plan.title)}</h3><p>${h(plan.description)}</p>
+    <div class="home-plan-price">${formatSum(plan.price)} <small>so'm</small></div>
+    <a class="btn ${index === 1 ? "btn-primary" : "btn-ghost"}" href="/plans">Tarifni ko'rish <span aria-hidden="true">↗</span></a>
+  </article>`).join("");
+
+  let body = `
+  <div class="landing-home">
   <section class="home-hero">
   <div class="wrap landing-hero-grid">
   <div class="landing-hero-copy">
-  <span class="eyebrow">Ingliz tili ustozlari uchun platforma</span>
-  <h1>Ingliz tili imtihonlariga <span class="accent">ishonch bilan</span> tayyorlaning</h1>
-  <p class="lead">Ingliz tili o'qituvchilari uchun attestatsiya testlari, TKT modullari, metodika va amaliy tayyorlov — barchasi bir platformada.</p>
+  <span class="eyebrow">O'QITUVCHILAR UCHUN ONLAYN TA'LIM</span>
+  <h1>Bilimingizni <span class="accent">mustahkamlang.</span> Imtihonga tayyor bo'ling.</h1>
+  <p class="lead">Attestatsiya va TKT uchun testlar, video darslar hamda metodik materiallar. O'z maqsadingizga mos yo'nalishni tanlab, o'z sur'atingizda o'rganing.</p>
   <div class="landing-actions">
-  <a class="btn btn-primary" href="${user ? "/courses": "/register"}">Tayyorgarlikni boshlash</a>
-  <a class="btn btn-ghost" href="/attestation">Attestatsiya testlari <span aria-hidden="true">↗</span></a>
+  <a class="btn btn-primary" href="${user ? "/courses": "/register"}">${user ? "O'qishni davom ettirish" : "Bepul ro'yxatdan o'tish"} <span aria-hidden="true">↗</span></a>
+  <a class="btn btn-ghost" href="#program">Dastur bilan tanishish <span aria-hidden="true">↓</span></a>
   </div>
-  <div class="hero-trust"><span>O'zbek tilida darslar</span><span>Natijalarni kuzatish</span><span>TKT 1, 2 va 3-modul</span></div>
-  <div class="socials">
-  <a href="${h(config.telegram || "#")}" target="_blank" rel="noopener">Telegram</a>
-  <a href="tel:${h(String(config.phone || "").replace(/[^\d+]/g, ""))}">${h(config.phone || "")}</a>
+  <div class="hero-trust"><span>O'zbek tilida</span><span>Istalgan qurilmada</span><span>Natija va progress nazorati</span></div>
+  <div class="home-hero-note"><span class="home-note-dot"></span> Yangi darslar va sinovlar platformada muntazam yangilanadi
   </div>
   </div>
   <div class="landing-hero-art" aria-label="Habiba teacher va o'qituvchilar">
@@ -5286,6 +5297,32 @@ const server = http.createServer(async (req, res) => {
   <div class="hero-float-card one"><span class="hero-float-mark">TKT</span><span><strong>TKT: 3 ta modul</strong><small>Har bir modul bo'yicha alohida tayyorgarlik</small></span></div>
   </div>
   </div>
+  <div class="wrap home-statbar">
+    <div><b>${stats.courses}</b><span>O'quv yo'nalishi</span></div>
+    <div><b>${stats.lessons}+</b><span>Video va o'quv darslari</span></div>
+    <div><b>24/7</b><span>Istalgan vaqtda o'rganish</span></div>
+    <div class="home-stat-message"><span aria-hidden="true">✦</span><span><b>Bir maqsad sari</b><small>Reja, mashq va natija — bir joyda</small></span></div>
+  </div>
+  </section>
+
+  <section class="section home-overview" id="program">
+    <div class="wrap home-overview-grid">
+      <div class="home-orbit-card" aria-label="O'rganishdan natijagacha bo'lgan bosqichlar">
+        <span class="home-kicker">HABIBA TEACHER · TA'LIM PLATFORMASI</span>
+        <div class="home-orbit"><i></i><i></i><i></i><b>H</b><span>TEST</span><span>DARS</span><span>NATIJA</span></div>
+        <div class="home-orbit-tags"><span>Attestatsiya</span><span>TKT</span><span>Metodika</span><span>Amaliy mashq</span></div>
+      </div>
+      <div class="home-overview-copy">
+        <span class="eyebrow">01 / MAQSADGA QADAM</span>
+        <h2>O'rganing. Mashq qiling. <span class="accent">O'sishni kuzating.</span></h2>
+        <p class="muted">Tayyorgarlikni kichik, tushunarli bosqichlarga ajrating. Har bir mavzu sizni bilimni amalda qo'llashga yaqinlashtiradi.</p>
+        <div class="home-pillar-list">
+          <article><span>01</span><div><b>Bilimni yangilang</b><p>Video dars va metodik qo'llanma bilan asosiy mavzularni takrorlang.</p></div></article>
+          <article><span>02</span><div><b>O'zingizni sinang</b><p>Test va mashqlar orqali tushunganingizni tekshirib boring.</p></div></article>
+          <article><span>03</span><div><b>Natijani kuzating</b><p>Shaxsiy kabinetda progress va yakunlangan darslarni ko'ring.</p></div></article>
+        </div>
+      </div>
+    </div>
   </section>
 
   <section class="section tight">
@@ -5312,12 +5349,12 @@ const server = http.createServer(async (req, res) => {
   <section class="section" id="courses">
   <div class="wrap">
   <div class="section-head center">
-  <span class="eyebrow">Kurslar</span>
-  <h2>Barcha kurslar</h2>
+  <span class="eyebrow">${h(courseNavLabel())}</span>
+  <h2>${h(courseNavLabel())} bo'limi</h2>
   <p class="muted">Atestatsiyaga tayyorlov, metodika, demo dars va testlar   barchasi bir joyda.</p>
   </div>
   <div class="grid three">${courseCards}</div>
-  <div class="center-actions"><a class="btn btn-ghost" href="/courses">Barcha kurslar</a></div>
+  <div class="center-actions"><a class="btn btn-ghost" href="/courses">${h(courseNavLabel())} bo'limini ochish</a></div>
   </div>
   </section>
 
@@ -5345,7 +5382,7 @@ const server = http.createServer(async (req, res) => {
   <section class="stats-band">
   <div class="wrap stats">
   <div class="stat"><b>${stats.users}</b><span>O'quvchilar</span></div>
-  <div class="stat"><b>${stats.courses}</b><span>Kurslar</span></div>
+  <div class="stat"><b>${stats.courses}</b><span>${h(courseNavLabel())}</span></div>
   <div class="stat"><b>${stats.lessons}</b><span>Darslar</span></div>
   <div class="stat"><b>${stats.done}</b><span>Tugatilgan darslar</span></div>
   </div>
@@ -5364,6 +5401,41 @@ const server = http.createServer(async (req, res) => {
   </div>
   </div>
   </section>`;
+
+  const additions = `
+  <section class="section home-journey">
+    <div class="wrap home-journey-grid">
+      <div><span class="eyebrow">02 / O'QUV DASTURI</span><h2>Poydevordan <span class="accent">amaliyotgacha.</span></h2>
+        <p class="muted">Har bir mavzu bilimni mustahkamlash, sinab ko'rish va dars jarayonida qo'llashga yordam beradi.</p>
+        <div class="home-program-meta"><b>${stats.courses} ta yo'nalish</b><span></span><b>${stats.lessons} ta dars</b></div>
+        <a class="btn btn-ghost" href="/courses">${h(courseNavLabel())}ni ko'rish <span aria-hidden="true">↗</span></a>
+      </div>
+      <div class="home-steps">
+        <details open><summary><span>01</span><span><small>ATTESTATSIYA</small><b>Toifa sinoviga tayyorlov</b></span><i>⌄</i></summary><p>Mutaxassislik, kasbiy standartlar va pedagogik mahorat bo'yicha mavzularni o'rganing va testlarda mashq qiling.</p></details>
+        <details><summary><span>02</span><span><small>TKT</small><b>Teaching Knowledge Test</b></span><i>⌄</i></summary><p>TKT modullarida til tizimi, dars rejalashtirish va o'quvchini qo'llab-quvvatlash mavzularini takrorlang.</p></details>
+        <details><summary><span>03</span><span><small>AMALIYOT</small><b>Bilimni darsda qo'llash</b></span><i>⌄</i></summary><p>Metodik materiallar va video tushuntirishlardan foydalanib, o'rganganlaringizni amaliy vaziyatlar bilan bog'lang.</p></details>
+      </div>
+    </div>
+  </section>
+  <section class="section home-pricing">
+    <div class="wrap"><div class="section-head home-section-head"><div><span class="eyebrow">03 / O'ZINGIZGA MOS TARIF</span><h2>O'qishni <span class="accent">bugun boshlang.</span></h2><p class="muted">Tarifni tanlang, o'quv rejangizga mos tarzda foydalaning.</p></div><a class="btn btn-ghost" href="/plans">Barcha tariflar <span aria-hidden="true">↗</span></a></div>
+      <div class="home-plan-grid">${planCards}</div>
+    </div>
+  </section>
+  <section class="section home-faq">
+    <div class="wrap home-faq-grid"><div><span class="eyebrow">04 / YORDAM</span><h2>Boshlashdan oldin <span class="accent">bilishingiz kerak.</span></h2><p class="muted">Platformadan foydalanish haqida qisqa javoblar.</p><a class="home-contact-link" href="${h(config.telegram || "#")}" target="_blank" rel="noopener">Telegram orqali bog'lanish ↗</a></div>
+      <div class="home-faq-list">
+        <details><summary>Platformada qaysi yo'nalishlar bor?<span>+</span></summary><p>Attestatsiya, TKT va o'qituvchilar uchun amaliy o'quv materiallari.</p></details>
+        <details><summary>Darslarni telefondan ko'rsam bo'ladimi?<span>+</span></summary><p>Ha. Sayt telefon, planshet va kompyuter ekranlariga moslashadi.</p></details>
+        <details><summary>O'qish natijalarim saqlanadimi?<span>+</span></summary><p>Kabinetda tugatilgan darslar va test natijalaringizni ko'rishingiz mumkin.</p></details>
+        <details><summary>Qanday qilib kursga kiraman?<span>+</span></summary><p>Ro'yxatdan o'ting, kerakli yo'nalishni tanlang va tariflar sahifasidagi ko'rsatmalarga amal qiling.</p></details>
+      </div>
+    </div>
+  </section>
+  <section class="section home-final-cta"><div class="wrap home-final-card"><div><span class="eyebrow">KEYINGI QADAM — SIZDAN</span><h2>Kasbiy maqsadingizga <span class="accent">bugun yaqinlashing.</span></h2><p class="muted">Yo'nalishni tanlang va o'z rejangiz bo'yicha tayyorgarlikni boshlang.</p></div><a class="btn btn-primary" href="${user ? "/courses" : "/register"}">${user ? "O'qishni boshlash" : "Ro'yxatdan o'tish"} <span aria-hidden="true">↗</span></a></div></section>
+  </div>`;
+
+  body += additions;
 
   send(res, 200, layout({ title: "Ingliz tili attestatsiya testlari va TKT", body, user, admin, seo: { path: "/", title: "Ingliz tili attestatsiya testlari va TKT | Habiba teacher", description: "Ingliz tili o'qituvchilari uchun attestatsiya testlari, TKT modullari, onlayn mock testlar va metodika. Toifa sinoviga amaliy tayyorgarlikni boshlang.", keywords: "ingliz tili attestatsiya testlari, pedagog attestatsiya testlari, o'qituvchi toifa testi, imtihonlarga tayyorlov, TKT testlari, TKT 1-modul, TKT 2-modul, TKT 3-modul" } }));
   return;
@@ -5625,7 +5697,7 @@ const server = http.createServer(async (req, res) => {
   const userRow = findUserByPhone(phone, "id, is_blocked");
   if (!userRow) return redirect(res, "/login?err=notfound");
   if (Number(userRow.is_blocked)) return redirect(res, "/login?err=blocked");
-  if (hasOtherActiveDevice(userRow.id, req)) return redirect(res, `${back}&err=device`);
+  if (hasDeviceLimitReached(userRow.id, req)) return redirect(res, `${back}&err=device`);
   clearFailures(clientIp(req));
   createUserSession(res, userRow.id, req);
   createDeviceSession(res, userRow.id, req);
@@ -5696,7 +5768,7 @@ const server = http.createServer(async (req, res) => {
   ${err === "phone" ? alertBox("+998 dan keyin telefon raqamining 9 ta raqamini kiriting.", "error") : ""}
   ${err === "notfound" ? alertBox("Bu raqam ro'yxatdan o'tmagan.", "error") : ""}
   ${err === "blocked" ? alertBox("Akkauntga kirish vaqtincha cheklangan. Administrator bilan bog'laning.", "error") : ""}
-  ${err === "device" ? alertBox("Bu akkaunt boshqa qurilmada faol. Bir akkauntdan faqat bitta qurilmada foydalanish mumkin. Avval faol qurilmadan chiqing.", "error") : ""}
+  ${err === "device" ? alertBox("Bu akkaunt ikki qurilmada faol. Uchinchi qurilmada kirish uchun avval qurilmalardan biridan chiqing.", "error") : ""}
   ${err === "notelegram" ? alertBox("Bu akkauntga Telegram bog'lanmagan. Parol bilan kiring.", "error") : ""}
   ${err === "startbot" ? alertBox("Avval Telegram botga /start yozing. Shundan keyin kirish kodi shu botga keladi.", "error") : ""}
   ${err === "sendcode" ? alertBox("Telegram bot kirish kodini yubora olmadi. Telegram akkauntingizda botni ochib /start bosing yoki parol bilan kiring.", "error") : ""}
@@ -5795,7 +5867,7 @@ const server = http.createServer(async (req, res) => {
   ${err === "wrong" ? alertBox("Kod noto'g'ri. Qayta urinib ko'ring.", "error") : ""}
   ${err === "expired" ? alertBox("Kod muddati tugagan. Qayta yuboring.", "error") : ""}
   ${err === "blocked" ? alertBox("Juda ko'p urinish. Yangi kod oling.", "error") : ""}
-  ${err === "device" ? alertBox("Bu akkaunt boshqa qurilmada faol. Bir akkauntdan faqat bitta qurilmada foydalanish mumkin. Avval faol qurilmadan chiqing.", "error") : ""}
+  ${err === "device" ? alertBox("Bu akkaunt ikki qurilmada faol. Uchinchi qurilmada kirish uchun avval qurilmalardan biridan chiqing.", "error") : ""}
   <form method="post" action="/login/verify" class="login-form">
   <input type="hidden" name="phone" value="${h(phoneRaw)}">
   ${nextHidden}
@@ -5868,7 +5940,7 @@ const server = http.createServer(async (req, res) => {
   return;
   }
 
-  if (hasOtherActiveDevice(row.id, req)) {
+  if (hasDeviceLimitReached(row.id, req)) {
     return redirect(res, `/login?pw=1&err=device&phone=${encodeURIComponent(formatLocalPhone(fields.phone))}${next ? `&next=${encodeURIComponent(next)}` : ""}`);
   }
 
@@ -5942,11 +6014,11 @@ const server = http.createServer(async (req, res) => {
 .all();
   const cards = courses.length
   ? courses.map((c) => publicCourseCard(c, null)).join("")
-: `<div class="card empty" style="grid-column:1/-1">Kurslar tez orada qo'shiladi.</div>`;
+: `<div class="card empty" style="grid-column:1/-1">${h(courseNavLabel())} tez orada qo'shiladi.</div>`;
   const body = `
   <section class="page-hero center">
   <span class="eyebrow">Katalog</span>
-  <h1>Kurslar</h1>
+  <h1>${h(courseNavLabel())}</h1>
   <p class="lead">Atestatsiyaga tayyorlov kurslari. Kursni ochish uchun tizimga kiring.</p>
   </section>
   <section class="section tight">
@@ -5986,10 +6058,10 @@ const server = http.createServer(async (req, res) => {
 
   const body = `
   <div class="page-head">
-  <div><h1>Kurslar</h1><p class="muted">Salom, ${h(user.name)}! O'zingizga kerakli kursni tanlang.</p></div>
+  <div><h1>${h(courseNavLabel())}</h1><p class="muted">Salom, ${h(user.name)}! O'zingizga kerakli kursni tanlang.</p></div>
   </div>
   <div class="grid three">${cards}</div>`;
-  send(res, 200, layout({ title: "Kurslar", body, user, admin }));
+  send(res, 200, layout({ title: courseNavLabel(), body, user, admin }));
   return;
   }
 
@@ -6663,7 +6735,7 @@ const server = http.createServer(async (req, res) => {
 : `<div class="card empty">${lessons.length ? `Darslarni ko'rish uchun <a href="/plans"><b>faol tarif</b></a> yoki admin bergan ruxsat kerak.` : "Bu kursda hozircha darslar yo'q."}</div>`;
 
   const body = `
-  <a class="back" href="/courses">  Kurslar</a>
+  <a class="back" href="/courses">  ${h(courseNavLabel())}</a>
   <div class="page-head">
   <div><h1>${h(course.title)}</h1><p class="muted">${h(course.description || "")}</p></div>
   </div>
@@ -7827,7 +7899,7 @@ const server = http.createServer(async (req, res) => {
 : `<tr><td colspan="5" class="muted">Hozircha kurslar yo'q.</td></tr>`;
 
   const body = `
-  <div class="page-head"><div><h1>Admin panel</h1><p class="muted">Kurslar, darslar va o'quvchilar boshqaruvi.</p></div><div class="actions"><a class="btn btn-ghost btn-sm" href="/admin/students">O'quvchilar</a><a class="btn btn-ghost btn-sm" href="/admin/plans">Tariflar</a><a class="btn btn-ghost btn-sm" href="/admin/payments">To'lovlar</a><a class="btn btn-ghost btn-sm" href="/admin/password">Parolni o'zgartirish</a><a class="btn btn-ghost btn-sm" href="/admin/contract">Ta'lim shartnomasi</a></div></div>
+  <div class="page-head"><div><h1>Admin panel</h1><p class="muted">Kurslar, darslar va o'quvchilar boshqaruvi.</p></div><div class="actions"><a class="btn btn-ghost btn-sm" href="/admin/students">O'quvchilar</a><a class="btn btn-ghost btn-sm" href="/admin/site-settings">Sayt sozlamalari</a><a class="btn btn-ghost btn-sm" href="/admin/plans">Tariflar</a><a class="btn btn-ghost btn-sm" href="/admin/payments">To'lovlar</a><a class="btn btn-ghost btn-sm" href="/admin/password">Parolni o'zgartirish</a><a class="btn btn-ghost btn-sm" href="/admin/contract">Ta'lim shartnomasi</a></div></div>
   <div class="stats">
   <div class="stat"><b>${stats.users}</b><span>O'quvchilar</span></div>
   <div class="stat"><b>${stats.courses}</b><span>Kurslar</span></div>
@@ -7872,6 +7944,28 @@ const server = http.createServer(async (req, res) => {
   </div>`;
   send(res, 200, layout({ title: "Admin panel", body, admin }));
   return;
+  }
+
+  if (p === "/admin/site-settings" && method === "GET") {
+    if (!admin) return redirect(res, "/admin/login");
+    const body = `<a class="back" href="/admin">&larr; Admin panel</a>
+      <div class="page-head"><div><h1>Sayt sozlamalari</h1><p class="muted">Navigatsiyada ko'rinadigan kurs bo'limi nomini o'zgartiring.</p></div></div>
+      ${url.searchParams.get("saved") === "1" ? alertBox("Menyu nomi saqlandi.", "success") : ""}
+      ${url.searchParams.get("err") === "name" ? alertBox("Nom 1–32 belgi oralig'ida bo'lishi kerak.", "error") : ""}
+      <div class="card"><form method="post" action="/admin/site-settings" class="form">
+        <div class="field"><label>Menyudagi kurslar nomi</label><input name="course_nav_label" value="${h(courseNavLabel())}" maxlength="32" required placeholder="Masalan: Kurslar"></div>
+        <button class="btn btn-primary" type="submit">Nomni saqlash</button>
+      </form></div>`;
+    send(res, 200, layout({ title: "Sayt sozlamalari", body, admin }));
+    return;
+  }
+
+  if (p === "/admin/site-settings" && method === "POST") {
+    if (!admin) return redirect(res, "/admin/login");
+    const label = String(fields.course_nav_label || "").trim().replace(/\s+/g, " ");
+    if (!label || label.length > 32) return redirect(res, "/admin/site-settings?err=name");
+    metaSet("course_nav_label", label);
+    return redirect(res, "/admin/site-settings?saved=1");
   }
 
   const studentAction = p.match(/^\/admin\/student\/(\d+)\/(block|unblock|grant|revoke|author|delete)$/);
