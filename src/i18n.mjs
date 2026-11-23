@@ -1,303 +1,126 @@
-const LANG_CODES = ["uz", "ru", "en"];
+const LANG_CODES = ["uz", "en"];
 const I18N = {
-  ru: {
-    "Salom,": "Здравствуйте,",
-    "Xush kelibsiz": "Добро пожаловать",
-    "O'rganishni davom eting va maqsadingizga erishing!": "Продолжайте учиться и достигайте своих целей!",
-    "kunlik streak": "дней подряд",
-    "Ilovani o'rnatish": "Установить приложение",
-    "Kurs jarayoni": "Прогресс курса",
-    "Yaxshi boshladingiz, davom eting 🚀": "Хорошее начало, продолжайте 🚀",
-    "Birinchi video darsni boshlang 🚀": "Начните первый видеоурок 🚀",
-    "Guruhda o'rningiz": "Ваше место в группе",
-    "Yutuqlar": "Достижения",
-    "Video darslar": "Видео-уроки",
-    "Darslarni qidirish...": "Поиск уроков...",
-    "Katak ko'rinishi": "В виде карточек",
-    "Ro'yxat ko'rinishi": "В виде списка",
-    "Guruh reytingi": "Рейтинг группы",
-    "Faol o'quvchilarning natijalari": "Результаты активных учеников",
-    "Haftalik": "За неделю",
-    "Bu hafta hali hech kim dars tugatmadi. Birinchi bo'ling!": "На этой неделе уроки ещё никто не завершил. Будьте первым!",
-    "Har kuni ozgina o'sish ham katta natijaga olib keladi.": "Небольшой ежедневный прогресс приводит к большим результатам.",
-    "Barcha darslar tugatilgan!": "Все уроки завершены!",
-    "Tabriklaymiz, siz barcha materiallarni o'zlashtirdingiz.": "Поздравляем, вы изучили все материалы.",
-    "Attestatsiya testlari": "Тесты аттестации",
-    "TKT testlari": "Тесты TKT",
-    "Kurs jarayon": "Прогресс курса",
-    "Parol kamida 6 belgidan iborat bo'lishi kerak.": "Пароль должен содержать не менее 6 символов.",
-    "Ism faqat harflardan iborat bo'lishi kerak.": "Имя должно содержать только буквы.",
-    "Telefon raqami faqat 9 ta raqamdan iborat bo'lishi kerak.": "Номер телефона должен содержать ровно 9 цифр.",
-    "Telegram username (@username) yoki raqamli ID kiriting.": "Введите username Telegram (@username) или числовой ID.",
-    "Bu telefon raqam allaqachon ro'yxatdan o'tgan.": "Этот номер телефона уже зарегистрирован.",
-    "Bu Telegram ID allaqachon ro'yxatdan o'tgan. Bir ID   bitta akkaunt.": "Этот ID Telegram уже зарегистрирован. Один ID — одна учётная запись.",
-    "Bu Telegram username allaqachon ro'yxatdan o'tgan.": "Этот username Telegram уже зарегистрирован.",
-    "Parol": "Пароль",
-    "Kamida 6 belgi": "Не менее 6 символов",
-    "Bosh sahifa": "Главная",
-    "Attestatsiya": "Аттестация",
-    "TKT": "TKT",
-    "Ilm izlash uchun yo'lga chiqqan kishiga Alloh jannat yo'lini oson qiladi.": "Тому, кто отправился искать знания, Аллах облегчает путь в Рай.",
-    "Sizlarning yaxshilaringiz Qur'onni o'rganib, uni o'rgatganlaringizdir.": "Лучшие из вас — те, кто изучает Коран и обучает ему других.",
-    "Amallar niyatlarga bog'liq.": "Поступки оцениваются по намерениям.",
-    "Yaxshi gap aytsin yoki sukut saqlasin.": "Пусть говорит благое или молчит.",
-    "Ikki ne'mat: sog'lik va bo'sh vaqt.": "Два блага, которые люди часто не ценят: здоровье и свободное время.",
-    "Ilm — insonni yuksaltiradigan nur.": "Знание — свет, возвышающий человека.",
-    "Ustoz bergan saboq — umrga yo'ldosh.": "Урок учителя сопровождает человека всю жизнь.",
-    "Mehnat qilgan — murodga yetar.": "Труд приводит к цели.",
-    "Bugungi kichik qadam ertangi katta natijadir.": "Маленький шаг сегодня — большой результат завтра.",
-    "Vaqtni qadrlagan maqsadiga yaqinlashadi.": "Тот, кто ценит время, приближается к своей цели.",
-    "Reja — niyatni amalga eltuvchi yo'l xaritasi.": "План — это маршрут от намерения к действию.",
-    "Takrorlash — bilimning mustahkam tayanchi.": "Повторение — надёжная опора знаний.",
-    "Til bilgan — el biladi.": "Знающий язык знает людей.",
-    "Shirin so'z ko'ngilni obod qiladi.": "Доброе слово согревает сердце.",
-    "Tinglash ham muloqotning muhim qismidir.": "Умение слушать — важная часть общения.",
-    "Savol berishdan uyalmang: bilmaganini so'rash ilm eshigidir.": "Не стесняйтесь задавать вопросы: вопрос открывает путь к знаниям.",
-    "Har kuni oz-ozdan o'rganish katta maqsadga olib keladi.": "Небольшое обучение каждый день приводит к большой цели.",
-    "Sabr va izchillik mahoratni shakllantiradi.": "Терпение и последовательность формируют мастерство.",
-    "Bilim ulashilsa, qadri ortadi.": "Когда знаниями делятся, их ценность растёт.",
-    "O'qish qalbga, mashq esa mahoratga yo'l ochadi.": "Учёба открывает путь к знаниям, а практика — к мастерству.",
-    "Maqsadni yozing, vaqtni belgilang, bugun boshlang.": "Запишите цель, назначьте время и начните сегодня.",
-    "Ustozga hurmat — ilmga hurmat.": "Уважение к учителю — уважение к знаниям.",
-    "Yaxshi muomala — tilning eng go'zal tarjimasi.": "Доброе отношение — лучший перевод слов.",
-    "Bugun o'rganganingiz ertaga birovga yo'l ko'rsatadi.": "То, чему вы научились сегодня, завтра поможет кому-то найти путь.",
-    "Haqiqiy tayyorgarlikni boshlang": "Начните подготовку",
-    "Ingliz tili attestatsiyasiga ishonch bilan tayyorlaning": "Готовьтесь к аттестации по английскому языку уверенно",
-    "Ingliz tili o'qituvchilari uchun attestatsiya testlari, TKT modullari, metodika va amaliy tayyorlov — barchasi bir platformada.": "Тесты для аттестации учителей английского языка, модули TKT, методика и практическая подготовка — всё на одной платформе.",
-    "Yo'nalishni tanlang": "Выберите направление",
-    "Username (@qobuljon) yoki raqamli ID. Kod bot orqali kelishi uchun avval botga": "Username (@qobuljon) или числовой ID. Чтобы получить код от бота, сначала отправьте ему",
-    "@username yoki 1097025987": "@username или 1097025987",
-    "Parol aynan 4 ta lotin harfi yoki raqamdan iborat bo'lishi kerak.": "Пароль должен состоять ровно из 4 латинских букв или цифр.",
-    "Teaching Knowledge Test (TKT) uchun tayyorgarlik imtihon uslubidagi modul sinov testlari": "Подготовка к Teaching Knowledge Test (TKT) — модульные пробные тесты в экзаменационном формате",
-    "Birgalikda natijaga": "Вместе — к результату",
-    "Bitta tarif bilan barcha pullik testlarni oching ancha tejamkor.": "Один тариф открывает все платные тесты — гораздо выгоднее.",
-    "Attestatsiya yoki TKT o'zingizga kerakli yo'nalishdan boshlang.": "Аттестация или TKT — начните с нужного направления.",
-    "Ingliz tili fani o'qituvchilari uchun testlar, metodika va demo dars.": "Тесты, методика и демо-уроки для учителей английского языка.",
-    "Teaching Knowledge Test formatidagi metodika va sinf boshqaruvi testlari.": "Тесты по методике и управлению классом в формате Teaching Knowledge Test.",
-    "Atestatsiyaga tayyorlov, metodika, demo dars va testlar barchasi bir joyda.": "Подготовка к аттестации, методика, демо-уроки и тесты — всё в одном месте.",
-    "Teaching Knowledge Test (TKT) uchun tayyorgarlik imtihon uslubidagi modul sinov testlari.": "Подготовка к Teaching Knowledge Test (TKT) — модульные пробные тесты в экзаменационном формате.",
-    "Habiba teacher ingliz tili fani o'qituvchilarini atestatsiyaga tayyorlaydigan onlayn platforma. Testlar, metodika, demo dars va portfolio bo'yicha tizimli materiallar.": "Habiba teacher — онлайн-платформа для подготовки учителей английского языка к аттестации. Системные материалы: тесты, методика, демо-уроки и портфолио.",
-    "Har bir dars sinfdagi haqiqiy vaziyatlarga moslashtirilgan.": "Каждый урок адаптирован к реальным ситуациям в классе.",
-    "Darslik va qo'llanmalarni platformadan ochish yoki yuklab olish.": "Открывайте учебники и пособия на платформе или скачивайте их.",
-    "O'qituvchilar uchun toifa attestatsiyasiga tayyorgarlik sinov testlari, natijalar va javoblar.": "Подготовка учителей к аттестации на категорию — пробные тесты, результаты и ответы.",
-    "Barcha yo'nalishlar": "Все направления",
-    "Do'stingiz bilan bir testda kuch sinashing. Kod yarating, do'stingiz qo'shilsin va eng ko'p to'g'ri javob bergan yutsin.": "Проверьте силы с другом в одном тесте. Создайте код, пригласите друга — побеждает тот, у кого больше правильных ответов.",
-    "Atestatsiyaga tayyorlov kurslari. Kursni ochish uchun tizimga kiring.": "Курсы подготовки к аттестации. Войдите, чтобы открыть курс.",
-    "Tugatilgan darslar va o'rtacha test natijasi bo'yicha.": "По пройденным урокам и среднему результату тестов.",
-    "Ingliz tili o'qituvchilari uchun atestatsiyaga tayyorlov: testlar, metodika, demo dars va portfolio.": "Подготовка учителей английского языка к аттестации: тесты, методика, демо-уроки и портфолио.",
-    "Ingliz tili o'qituvchilari uchun atestatsiyaga tayyorlov platformasi.": "Платформа подготовки учителей английского языка к аттестации.",
-    "Telegram orqali bog'laning": "Свяжитесь через Telegram",
-    "Excel / Word dan yuklash": "Загрузка из Excel / Word",
-    "Bo'limlar va matnlar": "Разделы и тексты",
-    "Namuna Excel faylni yuklab olish": "Скачать образец Excel",
-    "Yuklash": "Загрузить",
-    "Savol qo'shish": "Добавить вопрос",
-    "Dars qo'shish": "Добавить урок",
-    "Yangi savol": "Новый вопрос",
-    "Tahrirlash": "Редактировать",
-    "Saqlash": "Сохранить",
-    "O'chirish": "Удалить",
-    "Kurs nomini tahrirlash": "Редактировать название курса",
-    "Yangi dars": "Новый урок",
-    "Yangi kurs": "Новый курс",
-    "Yangi bo'lim": "Новый раздел",
-    "Darslar": "Уроки",
-    "Savollar": "Вопросы",
-    "Ruxsatlar": "Доступы",
-    "Materiallar": "Материалы",
-    "Test savollari": "Вопросы теста",
-    "Bo'limlar": "Разделы",
-    "Admin panel": "Админ-панель",
-    "Bosh sahifa": "Главная",
-    Attestatsiya: "Аттестация",
-    TKT: "TKT",
-    Duel: "Дуэль",
-    Kurslar: "Курсы",
-    Tariflar: "Тарифы",
-    Reyting: "Рейтинг",
-    Kirish: "Войти",
-    Chiqish: "Выйти",
-    Platforma: "Платформа",
-    Admin: "Админ",
-    "O'quvchilar": "Ученики",
-    "Saytni ko'rish": "Открыть сайт",
-    "Biz haqimizda": "О нас",
-    "Onlayn o'quv platformasi": "Онлайн-платформа обучения",
-    "Hoziroq boshlash": "Начать сейчас",
-    "Platformadan foydalanish": "Войти на платформу",
-    ATESTATSIYA: "АТТЕСТАЦИЯ",
-    "Mock testlar. Metodika. Demo dars": "Мок-тесты. Методика. Демо-урок",
-    "Yo'nalishni tanlang": "Выберите направление",
-    "Ochish   ": "Открыть",
-    "Barcha kurslar": "Все курсы",
-    "O'qituvchilar uchun amaliy tayyorlov": "Практическая подготовка для учителей",
-    "Haqiqiy formatdagi mock testlar": "Мок-тесты в реальном формате",
-    "PDF darslik va qo'llanmalar": "PDF-учебники и пособия",
-    "Video tushuntirishlar": "Видео-объяснения",
-    "Progress va natijalar nazorati": "Контроль прогресса и результатов",
-    "Bilim   amaliyotda kuch.": "Знания — сила на практике.",
-    "O'quvchilar": "Ученики",
-    Darslar: "Уроки",
-    "Tugatilgan darslar": "Пройденные уроки",
-    "Nega biz": "Почему мы",
-    "Natijaga olib boradigan tayyorlov": "Подготовка, которая приводит к результату",
-    "PDF materiallar": "PDF-материалы",
-    "Video darslar": "Видео-уроки",
-    "Trener tushuntirishlari va amaliy namunalar.": "Объяснения тренера и практические примеры.",
-    "Mock testlar": "Мок-тесты",
-    "Haqiqiy formatdagi testlar, natija va tahlil.": "Тесты в реальном формате, результаты и анализ.",
-    "Atestatsiyaga bugun tayyorlanishni boshlang": "Начните подготовку к аттестации сегодня",
-    "Ro'yxatdan o'ting yoki Telegram orqali bog'laning.": "Зарегистрируйтесь или напишите нам в Telegram.",
-    "Ro'yxatdan o'tish": "Регистрация",
-    "Barcha huquqlar himoyalangan.": "Все права защищены.",
-    "  Barcha yo'nalishlar": "Все направления",
-    "O'qituvchlar uchun mock testlar": "Мок-тесты для учителей",
-    "Attestatsiya testlari": "Тесты аттестации",
-    "TKT testlari": "Тесты TKT",
-    "Toifa testlari": "Тесты по категории",
-    "Ajratilgan vaqt:": "Время:",
-    "Savollar soni:": "Вопросы:",
-    "Eng yuqori ball:": "Максимальный балл:",
-    Bepul: "Бесплатно",
-    Ochilgan: "Открыто",
-    "Bu testlarni birma-bir sotib olish shart emas": "Не нужно покупать эти тесты по отдельности",
-    "Tarifni ko'rish   ": "Посмотреть тарифы",
-    Narx: "Цена",
-    "Test haqida": "О тесте",
-    Materiallar: "Материалы",
-    "Materiallar test ochilgach ko'rinadi.": "Материалы откроются после покупки теста.",
-    "Natijalar taqsimoti": "Распределение результатов",
-    "Har bir ishtirokchining eng yaxshi natijasi asosida": "По лучшему результату каждого участника",
-    "70% va yuqori": "70% и выше",
-    "Jami qatnashganlar:": "Всего участников:",
-    "Testga kirish uchun tizimga kiring": "Войдите, чтобы открыть тест",
-    "Testni boshlash": "Начать тест",
-    "Qayta topshirish": "Пройти заново",
-    "Sizning natijangiz:": "Ваш результат:",
-    "Tayyor bo'lsangiz, testni boshlang.": "Когда будете готовы, начните тест.",
-    "Telegram orqali sotib olish": "Купить через Telegram",
-    "Bu testni tarif bilan oching": "Откройте тест по тарифу",
-    "Bitta tarif   barcha pullik testlar uchun.": "Один тариф для всех платных тестов.",
-    "Savollar uchun:": "Вопросы:",
-    "Eng yaxshi 10 ishtirokchi": "Топ-10 участников",
-    "Hozircha natijalar yo'q. Birinchi bo'lib topshiring.": "Пока результатов нет. Будьте первым.",
-    "Tavsif va materiallarni tahrirlash   ": "Редактировать описание и материалы",
-    Boshqarish: "Управлять",
-    "Yangi test qo'shish": "Добавить новый тест",
-    Katalog: "Каталог",
-    "Bitta to'lov bilan barcha kurs va materiallarga kirish.": "Одна оплата — доступ ко всем курсам и материалам.",
-    "Tavsiya etiladi": "Рекомендуется",
-    "To'liq kirish": "Полный доступ",
-    "Barcha kurslar, PDF materiallar, testlar va yangilanishlar.": "Все курсы, PDF-материалы, тесты и обновления.",
-    "/ 3 oy": "/ 3 месяца",
-    "Barcha kurslarga kirish": "Доступ ко всем курсам",
-    "Mock testlar va natijalar": "Мок-тесты и результаты",
-    "Yangi materiallar bepul": "Новые материалы бесплатно",
-    "Sotib olish": "Купить",
-    "Telefon va parolingizni kiriting.": "Введите телефон и пароль.",
-    Telefon: "Телефон",
-    Parol: "Пароль",
-    "Akkountingiz yo'qmi?": "Нет аккаунта?",
-    "Ismingiz": "Ваше имя",
-    "Ism, telefon va parolni kiriting.": "Введите имя, телефон и пароль.",
-    "Akkountingiz bormi?": "Уже есть аккаунт?",
-    "Kamida 6 belgi": "Минимум 6 символов",
-    "Eng faol o'quvchilar": "Самые активные ученики",
-    "Tugatilgan darslar va o'tacha test natijasi bo'yicha.": "По пройденным урокам и среднему результату тестов.",
-    "O'quvchi": "Ученик",
-    "Tugatgan darslari": "Пройденные уроки",
-    "O'rtacha natija": "Средний результат",
-    "Hozircha natijalar yo'q.": "Пока результатов нет.",
-    "1-savol": "Вопрос 1",
-    "Oldingi": "Назад",
-    "Keyingi": "Далее",
-    "Yakunlash": "Завершить",
-    "Saytga o'tish": "Перейти на сайт",
-    "Test yakunlandi": "Тест завершён",
-    "Yaxshi natija!": "Хороший результат!",
-    "Yana urinib ko'ring": "Попробуйте ещё раз",
-    "Testlarga qaytish": "К тестам",
-    "Shriftni kichraytirish": "Уменьшить шрифт",
-    "Shriftni kattalashtirish": "Увеличить шрифт",
-    "Test savollari hali qo'shilmagan": "Вопросы теста ещё не добавлены",
-    "Administrator tez orada savollarni qo'shadi.": "Администратор скоро добавит вопросы.",
-    "Darsni tugatdim": "Урок завершён",
-    "Testni yakunlash": "Завершить тест",
-    "Kursga qaytish": "К курсу",
-    "Tugatilgan": "Завершено",
-    "Ochish": "Открыть",
-    Matn: "Текст",
-    Video: "Видео",
-    Test: "Тест",
-    "dars": "уроков",
-    "Yakunlandi": "Завершено",
-    "Natija": "Результат",
-    "Sertifikatlar": "Сертификаты",
-    "Til": "Язык",
-    "Kunduzgi va tungi rejim": "Дневной и ночной режим",
-    "Duel xonasi": "Комната дуэли",
-    "1 vs 1": "1 на 1",
-    "Raqib kutilmoqda": "Ожидание соперника",
-    "Hali o'ynamadi": "Ещё не играл",
-    "Kodni do'stingizga yuboring": "Отправьте код другу",
-    "Taklif kodi": "Код приглашения",
-    "Nusxalash": "Копировать",
-    "Do'stga yuborish": "Отправить другу",
-    "Duelni bekor qilish": "Отменить дуэль",
-    "G'alaba!": "Победа!",
-    "Mag'lubiyat": "Поражение",
-    "Durang!": "Ничья!",
-    "G'olib:": "Победитель:",
-    "Yangi duel": "Новая дуэль",
-    "Testlarga o'tish": "К тестам",
-    "Raqib natijasi kutilmoqda": "Ожидание результата соперника",
-    "Tayyormisiz?": "Готовы?",
-    "Duelni boshlash a ": "Start duel a\u001d",
-    "Faol duellar": "Активные дуэли",
-    "Duel tarixi": "История дуэлей",
-    "Kod": "Код",
-    "Holat": "Статус",
-    "Kutilmoqda": "Ожидание",
-    "Jonli": "В эфире",
-    "Yakunlangan": "Завершено",
-    "Xonaga kirish   ": "Войти в комнату",
-    "Bepul testlardan birini tanlang.": "Выберите один из бесплатных тестов.",
-    "Do'stingiz bergan 6 xonali kodni kiriting.": "Введите 6-значный код от друга.",
-    "Qo'shilish": "Присоединиться",
-    "Duel yaratish a ": "Create duel a\u001d",
-    "Duel   kim kuchli?": "Дуэль — кто сильнее?",
-    "Do'stingiz /duel sahifasida shu kodni kiritib qo'shiladi.": "Друг вводит этот код на /duel и присоединяется.",
-    "Ikkalangiz teng natija ko'rsatdingiz.": "У вас обоих одинаковый результат.",
-    "Kunlik pley-off": "Ежедневный плей-офф",
-    "Kunlik duel": "Ежедневная дуэль",
-    "Kunlik duel   finalga qadar sxema": "Ежедневная дуэль — сетка до финала",
-    "Sxemani ko'rish   ": "Посмотреть сетку",
-    "Turnirga qo'shilish a ": "Join the tournament a\u001d",
-    "Turnirni boshqarish": "Управление турниром",
-    "Turnirni boshlash": "Начать турнир",
-    "Siz ro'yxatdasiz": "Вы зарегистрированы",
-    "Kunlik duel g'olibi": "Победитель ежедневной дуэли",
-    "Aniqlanmadi": "Не определено",
-    "Hozircha ishtirokchilar yo'q.": "Пока нет участников.",
-    "O'ynash": "Играть",
-    "Turnirni boshlash uchun kamida 2 ishtirokchi kerak.": "Для старта нужно минимум 2 участника.",
-    "Bugun": "Сегодня",
-    "Attestatsiya jarayoni": "Процесс аттестации",
-    "Amaliy tayyorlov": "Практическая подготовка",
-    "Amaliyotchi o'qituvchi": "Практикующий учитель",
-    "Har bir dars   hayotdagi haqiqiy vaziyatlar uchun.": "Каждый урок — для реальных жизненных ситуаций.",
-    MATN: "ТЕКСТ",
-    SAVOL: "ВОПРОС",
-    "Tugatish": "Завершить",
-    "Bekor qilish": "Отмена",
-    "Ha": "Да",
-    "Javob berilgan": "Отвечено",
-    "Hozirgi savol": "Текущий вопрос",
-    "Testni tugatishni tasdiqlaysizmi?": "Завершить тест?",
-    "ta savol javobsiz.": "вопросов без ответа.",
-    "Barcha savollarga javob berilgan.": "Все вопросы отвечены.",
-  },
   en: {
+  "01 / MAQSADGA QADAM": "01 / A STEP TOWARD YOUR GOAL",
+  "02 / O'QUV DASTURI": "02 / LEARNING PROGRAM",
+  "03 / O'ZINGIZGA MOS TARIF": "03 / A PLAN THAT FITS YOU",
+  "04 / YORDAM": "04 / HELP",
+  AMALIYOT: "PRACTICE",
+  ATTESTATSIYA: "ATTESTATION",
+  "Amaliy mashq": "Practical exercise",
+  "Attestatsiya va TKT uchun testlar, video darslar hamda metodik materiallar. O'z maqsadingizga mos yo'nalishni tanlab, o'z sur'atingizda o'rganing.": "Attestation and TKT tests, video lessons, and teaching resources. Choose a learning path that fits your goals and study at your own pace.",
+  "Attestatsiya yoki TKT — o'zingizga kerakli yo'nalishdan boshlang.": "Attestation or TKT — start with the path you need.",
+  "Attestatsiya, TKT va o'qituvchilar uchun amaliy o'quv materiallari.": "Attestation, TKT, and practical learning resources for teachers.",
+  "Attestatsiyaga tayyorlov, metodika, demo dars va testlar — barchasi bir joyda.": "Attestation preparation, teaching methods, demo lessons, and tests — all in one place.",
+  "Avtor: Habiba Mo'minjonovna. Barcha huquqlar himoyalangan.": "Created by Habiba Mo'minjonovna. All rights reserved.",
+  "Avval oldingi test": "Complete the previous test first",
+  "Barcha kurslarni ko'rish": "View all courses",
+  "Barcha tariflar": "All plans",
+  "Barcha testlar yakunlandi!": "All tests are complete!",
+  "Bepul ro'yxatdan o'tish": "Register for free",
+  "Bilim — amaliyotda kuch.": "Knowledge becomes power through practice.",
+  "Bilimingizni": "Your knowledge",
+  "Bilimni darsda qo'llash": "Apply knowledge in class",
+  "Bilimni yangilang": "Refresh your knowledge",
+  "Bir maqsad sari": "Toward one goal",
+  "Birinchi testni boshlang 🚀": "Start your first test 🚀",
+  "Bosh sahifa yuqori qismi": "Top of the home page",
+  Boshlash: "Start",
+  "Boshlashdan oldin": "Before you begin",
+  "Brauzer menyusidan 'Ilovani o'rnatish' yoki 'Bosh ekranga qo'shish'ni tanlang.": "In your browser menu, choose Install app or Add to Home screen.",
+  "Bu hafta hali hech kim test yakunlamadi. Birinchi bo'ling!": "No one has completed a test this week yet. Be the first!",
+  "Bugungi kun hikmati": "Today's thought",
+  "CPD testlari": "CPD tests",
+  DARS: "LESSON",
+  "Darslarni telefondan ko'rsam bo'ladimi?": "Can I watch lessons on my phone?",
+  "HABIBA TEACHER · TA'LIM PLATFORMASI": "HABIBA TEACHER · LEARNING PLATFORM",
+  "Ha. Sayt telefon, planshet va kompyuter ekranlariga moslashadi.": "Yes. The site adapts to phones, tablets, and computers.",
+  "Habiba teacher — ingliz tili fani o'qituvchilarini attestatsiyaga tayyorlaydigan onlayn platforma. Testlar, metodika, demo dars va portfolio bo'yicha tizimli materiallar.": "Habiba Teacher is an online platform that helps English teachers prepare for attestation, with structured tests, teaching methods, demo lessons, and portfolio resources.",
+  "Har bir mavzu bilimni mustahkamlash, sinab ko'rish va dars jarayonida qo'llashga yordam beradi.": "Each topic helps you strengthen your knowledge, check your understanding, and apply it in class.",
+  "Har bir modul bo'yicha alohida tayyorgarlik": "Focused preparation for every module",
+  "Hozircha testlar yo'q.": "There are no tests yet.",
+  "Ilova qurilmangizga o'rnatilgan.": "The app is installed on your device.",
+  "Imtihonga tayyor bo'ling.": "Get ready for your exam.",
+  "Ingliz tili o'qituvchilari uchun imtihonlarga tayyorlov platformasi.": "An exam preparation platform for English teachers.",
+  "Istalgan qurilmada": "On any device",
+  "KEYINGI QADAM — SIZDAN": "THE NEXT STEP IS YOURS",
+  Kabinet: "Dashboard",
+  "Kabinetda tugatilgan darslar va test natijalaringizni ko'rishingiz mumkin.": "Your completed lessons and test results are available in your dashboard.",
+  "Kasbiy maqsadingizga": "Toward your professional goals",
+  "Keyingi test": "Next test",
+  "Kirishni ochish": "Unlock access",
+  "Kurslarni ko'rish": "View courses",
+  "Metodik materiallar va video tushuntirishlardan foydalanib, o'rganganlaringizni amaliy vaziyatlar bilan bog'lang.": "Use teaching resources and video explanations to connect what you learn with practical situations.",
+  Metodika: "Teaching methods",
+  "Mutaxassislik, kasbiy standartlar va pedagogik mahorat bo'yicha mavzularni o'rganing va testlarda mashq qiling.": "Study subject knowledge, professional standards, and teaching skills, then practise with tests.",
+  NATIJA: "RESULT",
+  "Natija va progress nazorati": "Results and progress tracking",
+  "Natijani kuzating": "Track your progress",
+  "O'QITUVCHILAR UCHUN ONLAYN TA'LIM": "ONLINE LEARNING FOR TEACHERS",
+  "O'qish natijalarim saqlanadimi?": "Are my learning results saved?",
+  "O'qishni": "Learning",
+  "O'qishni boshlash": "Start learning",
+  "O'qishni davom ettirish": "Continue learning",
+  "O'quv dasturi": "Learning program",
+  "O'quv yo'nalishi": "Learning path",
+  "O'quvchilar va darslar hisoblagichi": "Learners and lessons counter",
+  "O'rganing. Mashq qiling.": "Learn. Practise.",
+  "O'sishni kuzating.": "Track your progress.",
+  "O'zbek tilida": "In Uzbek",
+  "O'zingizni sinang": "Test yourself",
+  "Orbita va afzalliklar": "Learning path and benefits",
+  "Platforma imkoniyatlari": "Platform features",
+  "Platformada qaysi yo'nalishlar bor?": "Which learning paths are available?",
+  "Platformadan foydalanish haqida qisqa javoblar.": "Quick answers about using the platform.",
+  "Platformani yangilash": "Update the platform",
+  Poydevordan: "From the foundations",
+  "Qanday qilib kursga kiraman?": "How do I access a course?",
+  "Reja, mashq va natija — bir joyda": "Plan, practise, and track results in one place",
+  "Ro'yxatdan o'ting, kerakli yo'nalishni tanlang va tariflar sahifasidagi ko'rsatmalarga amal qiling.": "Register, choose a learning path, and follow the instructions on the plans page.",
+  Sahifa: "Page",
+  "Savol-javob": "Questions and answers",
+  "Serverdagi so'nggi o'zgarishlarni yuklash": "Load the latest server updates",
+  "Shaxsiy kabinetda progress va yakunlangan darslarni ko'ring.": "View your progress and completed lessons in your dashboard.",
+  "Sinov testlari": "Practice tests",
+  "Siz muvaffaqiyatli ro'yxatdan o'tdingiz.": "You registered successfully.",
+  TEST: "TEST",
+  "TKT modullarida til tizimi, dars rejalashtirish va o'quvchini qo'llab-quvvatlash mavzularini takrorlang.": "Review language systems, lesson planning, and learner support in the TKT modules.",
+  "TKT: 3 ta modul": "TKT: 3 modules",
+  "Tabriklaymiz, barcha testlarni yechib bo'ldingiz.": "Congratulations, you have completed all the tests.",
+  "Tarif kerak": "Plan required",
+  "Tarif talab qilinadi": "A plan is required",
+  "Tarifni ko'rish": "View plans",
+  "Tarifni tanlang, o'quv rejangizga mos tarzda foydalaning.": "Choose a plan that fits your learning schedule.",
+  "Tayyorgarlikni kichik, tushunarli bosqichlarga ajrating. Har bir mavzu sizni bilimni amalda qo'llashga yaqinlashtiradi.": "Break your preparation into clear, manageable steps. Each topic helps you put your knowledge into practice.",
+  "Telegram orqali bog'lanish": "Contact us on Telegram",
+  "Test va mashqlar orqali tushunganingizni tekshirib boring.": "Check your understanding with tests and exercises.",
+  Testlar: "Tests",
+  "Testlar jarayoni": "Test progress",
+  "Testlarni qidirish...": "Search tests...",
+  "Toifa sinoviga tayyorlov": "Qualification exam preparation",
+  Tugatildi: "Completed",
+  "Ustozlar uchun amaliy tayyorlov": "Practical preparation for teachers",
+  "Video dars va metodik qo'llanma bilan asosiy mavzularni takrorlang.": "Review key topics with video lessons and teaching guides.",
+  "Video va o'quv darslari": "Video and learning lessons",
+  "Yakuniy chaqiriq": "Take the next step",
+  "Yangi darslar va sinovlar platformada muntazam yangilanadi": "New lessons and practice tests are added regularly.",
+  Yangilash: "Refresh",
+  "Yo'nalish kartalari": "Learning path cards",
+  "Yo'nalishni tanlang va o'z rejangiz bo'yicha tayyorgarlikni boshlang.": "Choose a learning path and start preparing at your own pace.",
+  "Teaching Knowledge Test": "Teaching Knowledge Test",
+  "amaliyotgacha.": "through practice.",
+  "bilishingiz kerak.": "you need to know.",
+  "bugun boshlang.": "start today.",
+  "bugun yaqinlashing.": "move closer today.",
+  "mustahkamlang.": "strengthen it.",
+  "ta dars": "lessons",
+  "ta test": "tests",
+  "ta yo'nalish": "learning paths",
+  daqiqa: "minutes",
+  daq: "min",
+  kun: "days",
+  test: "test",
+  yakunlangan: "completed",
   "Ilm izlash uchun yo'lga chiqqan kishiga Alloh jannat yo'lini oson qiladi.": "Allah makes the path to Paradise easier for the one who sets out to seek knowledge.",
   "Sizlarning yaxshilaringiz Qur'onni o'rganib, uni o'rgatganlaringizdir.": "The best among you are those who learn the Qur'an and teach it.",
   "Amallar niyatlarga bog'liq.": "Actions are judged by intentions.",
@@ -624,88 +447,36 @@ function translateCore(text, lang) {
   if (cache.has(normalized)) return put(cache.get(normalized));
 
   let m;
-  if ((m = decoded.match(/^Salom,\s*(.+?)(!\s*👋)$/))) {
-    return put(`${lang === "ru" ? "Здравствуйте," : "Hello,"} ${m[1]}${m[2]}`);
+  if ((m = decoded.match(/^Salom,\s*(.+?)(!\s*👋)$/)) || (m = decoded.match(/^Salom,\s*(.+?)(!?)$/))) {
+    return put(`Hello, ${m[1]}${m[2]}`);
   }
-  if ((m = decoded.match(/^Salom,\s*(.+?)(!?)$/))) {
-    return put(`${lang === "ru" ? "Здравствуйте," : "Hello,"} ${m[1]}${m[2]}`);
-  }
-  if ((m = decoded.match(/^(\d+)\s*ta\s+video$/))) {
-    return put(lang === "ru" ? `${m[1]} видеоуроков` : `${m[1]} video lessons`);
-  }
-  if ((m = decoded.match(/^Sahifa\s+(\d+)\s*\/\s*(\d+)\s*\|\s*(\d+)\s*ta\s+dars$/))) {
-    return put(lang === "ru" ? `Страница ${m[1]} / ${m[2]} | уроки ${m[3]}` : `Page ${m[1]} / ${m[2]} | ${m[3]} lessons`);
-  }
-  if ((m = decoded.match(/^(\d+)\s*\/\s*(\d+)\s*dars$/))) {
-    return put(lang === "ru" ? `${m[1]} / ${m[2]} уроков` : `${m[1]} / ${m[2]} lessons`);
-  }
-  if ((m = decoded.match(/^(\d+)\s+kunlik streak$/))) {
-    return put(lang === "ru" ? `${m[1]} дней подряд` : `${m[1]} day streak`);
-  }
-  if ((m = decoded.match(/^(\d+)\s+dars\s*·\s*(\d+)\s+kun 🔥$/))) {
-    return put(lang === "ru" ? `${m[1]} уроков · ${m[2]} дней 🔥` : `${m[1]} lessons · ${m[2]} days 🔥`);
-  }
-  if ((m = decoded.match(/^#?(\d+)\s*\/\s*(\d+)$/))) {
-    return put(`${m[1]} / ${m[2]}`);
-  }
-  if ((m = source.match(/^Jami qatnashganlar:\s*(\d+)\s*ta$/))) {
-    return put(lang === "ru" ? `Всего участников: ${m[1]}` : `Total participants: ${m[1]}`);
-  }
-  if ((m = source.match(/^Sizning natijangiz:\s*(\d+)%$/))) {
-    return put(lang === "ru" ? `Ваш результат: ${m[1]}%` : `Your result: ${m[1]}%`);
-  }
-  if ((m = source.match(/^(\d+)\s*\/\s*(\d+)\s*savol$/))) {
-    return put(`${m[1]} / ${m[2]} ${lang === "ru" ? "вопросов" : "questions"}`);
-  }
-  if ((m = source.match(/^(\d+)-savol$/))) {
-    return put(lang === "ru" ? `Вопрос ${m[1]}` : `Question ${m[1]}`);
-  }
+  if ((m = decoded.match(/^(\d+)\s*ta\s+video$/))) return put(`${m[1]} video lessons`);
+  if ((m = decoded.match(/^Sahifa\s+(\d+)\s*\/\s*(\d+)\s*\|\s*(\d+)\s*ta\s+dars$/))) return put(`Page ${m[1]} / ${m[2]} | ${m[3]} lessons`);
+  if ((m = decoded.match(/^(\d+)\s*\/\s*(\d+)\s*dars$/))) return put(`${m[1]} / ${m[2]} lessons`);
+  if ((m = decoded.match(/^(\d+)\s+kunlik streak$/))) return put(`${m[1]} day streak`);
+  if ((m = decoded.match(/^(\d+)\s+dars\s*·\s*(\d+)\s+kun 🔥$/))) return put(`${m[1]} lessons · ${m[2]} days 🔥`);
+  if ((m = decoded.match(/^#?(\d+)\s*\/\s*(\d+)$/))) return put(`${m[1]} / ${m[2]}`);
+  if ((m = source.match(/^Jami qatnashganlar:\s*(\d+)\s*ta$/))) return put(`Total participants: ${m[1]}`);
+  if ((m = source.match(/^Sizning natijangiz:\s*(\d+)%$/))) return put(`Your result: ${m[1]}%`);
+  if ((m = source.match(/^(\d+)\s*\/\s*(\d+)\s*savol$/))) return put(`${m[1]} / ${m[2]} questions`);
+  if ((m = source.match(/^(\d+)-savol$/))) return put(`Question ${m[1]}`);
   if ((m = source.match(/^(\d+)\s*soat(?:\s*(\d+)\s*daqiqa)?$/))) {
     const h = Number(m[1]);
     const min = m[2] ? Number(m[2]) : 0;
-    if (lang === "ru") return put(`${h} ч${min ? ` ${min} мин` : ""}`);
     return put(`${h} ${h === 1 ? "hour" : "hours"}${min ? ` ${min} min` : ""}`);
   }
-  if ((m = source.match(/^(\d+)\s*daqiqa$/))) {
-    return put(lang === "ru" ? `${m[1]} мин` : `${m[1]} min`);
-  }
-  if ((m = source.match(/^([\d\s]+)\s*so'm$/))) {
-    return put(lang === "ru" ? `${m[1].trim()} сум` : `${m[1].trim()} UZS`);
-  }
-  if ((m = source.match(/^(\d+)\s*ballik$/)) || (m = source.match(/^(\d+)\s*ball$/))) {
-    return put(lang === "ru" ? `${m[1]} баллов` : `${m[1]} points`);
-  }
-  if ((m = source.match(/^(\d+)\s*dars$/))) {
-    return put(lang === "ru" ? `${m[1]} уроков` : `${m[1]} lessons`);
-  }
-  if ((m = source.match(/^(\d+)\s*Ko'rishlar$/))) {
-    return put(lang === "ru" ? `${m[1]} просмотров` : `${m[1]} views`);
-  }
-  if ((m = source.match(/^(\d+)\s*\/\s*(\d+)\s*to'g'ri javob$/))) {
-    return put(
-      lang === "ru"
-        ? `${m[1]} / ${m[2]} правильных ответов`
-        : `${m[1]} / ${m[2]} correct answers`
-    );
-  }
-  if ((m = source.match(/^(\d+)\s*ta$/))) {
-    return put(lang === "ru" ? `${m[1]} шт.` : `${m[1]} questions`);
-  }
-  if ((m = source.match(/^(\d+)\s*ta\s+test$/))) {
-    return put(lang === "ru" ? `${m[1]} тестов` : `${m[1]} tests`);
-  }
-  if ((m = source.match(/^(.+)\s+guruhiga$/))) {
-    return put(lang === "ru" ? `в группу ${m[1]}` : `to ${m[1]} group`);
-  }
-  if ((m = source.match(/^Bugun\s+(\d+)\/8\s+ishtirokchi\.$/))) {
-    return put(lang === "ru" ? `Сегодня ${m[1]}/8 участников.` : `Today ${m[1]}/8 participants.`);
-  }
-  if ((m = source.match(/^Kunlik pley-off\s*.\s+(.+)$/))) {
-    return put(lang === "ru" ? `Ежедневный плей-офф. ${m[1]}` : `Daily playoff. ${m[1]}`);
-  }
-  if ((m = source.match(/^Siz shu yerdasiz$/))) {
-    return put(lang === "ru" ? "Вы здесь" : "You are here");
-  }
+  if ((m = source.match(/^(\d+)\s*daqiqa$/))) return put(`${m[1]} min`);
+  if ((m = source.match(/^([\d\s]+)\s*so'm$/))) return put(`${m[1].trim()} UZS`);
+  if ((m = source.match(/^(\d+)\s*ballik$/)) || (m = source.match(/^(\d+)\s*ball$/))) return put(`${m[1]} points`);
+  if ((m = source.match(/^(\d+)\s*dars$/))) return put(`${m[1]} lessons`);
+  if ((m = source.match(/^(\d+)\s*Ko'rishlar$/))) return put(`${m[1]} views`);
+  if ((m = source.match(/^(\d+)\s*\/\s*(\d+)\s*to'g'ri javob$/))) return put(`${m[1]} / ${m[2]} correct answers`);
+  if ((m = source.match(/^(\d+)\s*ta$/))) return put(`${m[1]} items`);
+  if ((m = source.match(/^(\d+)\s*ta\s+test$/))) return put(`${m[1]} tests`);
+  if ((m = source.match(/^(.+)\s+guruhiga$/))) return put(`to ${m[1]} group`);
+  if ((m = source.match(/^Bugun\s+(\d+)\/8\s+ishtirokchi\.$/))) return put(`Today ${m[1]}/8 participants.`);
+  if ((m = source.match(/^Kunlik pley-off\s*.\s+(.+)$/))) return put(`Daily playoff. ${m[1]}`);
+  if ((m = source.match(/^Siz shu yerdasiz$/))) return put("You are here");
   return text;
 }
 

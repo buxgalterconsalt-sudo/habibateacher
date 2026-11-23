@@ -105,7 +105,7 @@ const SITE_TEXT_DEFAULTS = {
   site_name: config.siteName || "Habiba teacher",
   orbit_kicker: "HABIBA TEACHER · TA'LIM PLATFORMASI", orbit_test: "TEST", orbit_lesson: "DARS", orbit_result: "NATIJA", orbit_tag_1: "Attestatsiya", orbit_tag_2: "TKT", orbit_tag_3: "Metodika", orbit_tag_4: "Amaliy mashq",
   nav_home: "Bosh sahifa", nav_attestation: "Attestatsiya", nav_tkt: "TKT", nav_duel: "Duel", nav_courses: "Kurslar", nav_plans: "Tariflar", nav_leaderboard: "Reyting",
-  hero_eyebrow: "O'QITUVCHILAR UCHUN ONLAYN TA'LIM", hero_title: "Bilimingizni", hero_accent: "mustahkamlang.", hero_title_end: "Imtihonga tayyor bo'ling.", hero_description: "Attestatsiya va TKT uchun testlar, video darslar hamda metodik materiallar. O'z maqsadingizga mos yo'nalishni tanlab, o'z sur'atingizda o'rganing.", hero_primary: "Bepul ro'yxatdan o'tish", hero_primary_logged: "O'qishni davom ettirish", hero_secondary: "Dastur bilan tanishish", hero_trust_1: "O'zbek tilida", hero_trust_2: "Istalgan qurilmada", hero_trust_3: "Natija va progress nazorati", hero_note: "Yangi darslar va sinovlar platformada muntazam yangilanadi", hero_image_caption: "Ustozlar uchun amaliy tayyorlov", hero_float_mark: "TKT", hero_float_title: "TKT: 3 ta modul", hero_float_description: "Har bir modul bo'yicha alohida tayyorgarlik",
+  hero_eyebrow: "O'QITUVCHILAR UCHUN ONLAYN TA'LIM", hero_title: "Bilimingizni", hero_accent: "mustahkamlang.", hero_title_end: "Imtihonga tayyor bo'ling.", hero_description: "Attestatsiya va TKT uchun testlar, video darslar hamda metodik materiallar. O'z maqsadingizga mos yo'nalishni tanlab, o'z sur'atingizda o'rganing.", hero_primary: "Bepul ro'yxatdan o'tish", hero_primary_logged: "O'qishni davom ettirish", hero_secondary: "Yo'nalishni tanlang", hero_trust_1: "O'zbek tilida", hero_trust_2: "Istalgan qurilmada", hero_trust_3: "Natija va progress nazorati", hero_note: "Yangi darslar va sinovlar platformada muntazam yangilanadi", hero_image_caption: "Ustozlar uchun amaliy tayyorlov", hero_float_mark: "TKT", hero_float_title: "TKT: 3 ta modul", hero_float_description: "Har bir modul bo'yicha alohida tayyorgarlik",
   stat_directions: "O'quv yo'nalishi", stat_lessons: "Video va o'quv darslari", stat_tests: "Sinov testlari", stat_test_attestation: "Attestatsiya testlari", stat_test_tkt: "TKT testlari", stat_test_cpd: "CPD testlari", stat_students: "O'quvchilar", stat_note_title: "Bir maqsad sari", stat_note_description: "Reja, mashq va natija — bir joyda", program_direction_suffix: "ta yo'nalish", program_lesson_suffix: "ta dars", program_course_button: "Kurslarni ko'rish", program_attestation_tag: "ATTESTATSIYA", program_tkt_tag: "TKT", program_practice_tag: "AMALIYOT", footer_about: "Biz haqimizda",
   overview_eyebrow: "01 / MAQSADGA QADAM", overview_title: "O'rganing. Mashq qiling.", overview_accent: "O'sishni kuzating.", overview_description: "Tayyorgarlikni kichik, tushunarli bosqichlarga ajrating. Har bir mavzu sizni bilimni amalda qo'llashga yaqinlashtiradi.", pillar_1_title: "Bilimni yangilang", pillar_1_description: "Video dars va metodik qo'llanma bilan asosiy mavzularni takrorlang.", pillar_2_title: "O'zingizni sinang", pillar_2_description: "Test va mashqlar orqali tushunganingizni tekshirib boring.", pillar_3_title: "Natijani kuzating", pillar_3_description: "Shaxsiy kabinetda progress va yakunlangan darslarni ko'ring.",
   direction_heading: "Yo'nalishni tanlang", direction_description: "Attestatsiya yoki TKT — o'zingizga kerakli yo'nalishdan boshlang.", direction_attestation_title: "Attestatsiya testlari", direction_attestation_description: "Ingliz tili fani o'qituvchilari uchun testlar, metodika va demo dars.", direction_tkt_title: "TKT testlari", direction_tkt_description: "Teaching Knowledge Test formatidagi metodika va sinf boshqaruvi testlari.", direction_open: "Ochish",
@@ -182,7 +182,8 @@ function siteTexts(includeRemoved = false) {
   const result = {};
   for (const [key, fallback] of Object.entries(SITE_TEXT_DEFAULTS)) {
     const legacy = key === "nav_courses" ? metaGet("course_nav_label", "") : "";
-    result[key] = removed.has(key) && !includeRemoved ? "" : String(saved[key] ?? (legacy || fallback)).slice(0, 500);
+    const savedValue = key === "hero_secondary" && saved[key] === "Dastur bilan tanishish" ? fallback : saved[key];
+    result[key] = removed.has(key) && !includeRemoved ? "" : String(savedValue ?? (legacy || fallback)).slice(0, 500);
   }
   return result;
 }
@@ -1805,7 +1806,7 @@ ${seoTags}
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%2312b5a6'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='18' font-weight='bold' text-anchor='middle' fill='%2303211d'%3EH%3C/text%3E%3C/svg%3E">
 <script async src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>try{document.documentElement.dataset.theme=localStorage.getItem('ht_theme')||'dark';}catch(e){document.documentElement.dataset.theme='dark';}</script>
-<link rel="stylesheet" href="/assets/platform.css?v=20261123home11">
+<link rel="stylesheet" href="/assets/platform.css?v=20261123home12">
 </head>
 <body${admin && !publicPage ? ` class="admin-page"` : isStudentPage ? ` class="student-page${isDashboard ? " is-dashboard" : ""}"` : ""}>
 <header class="topbar">
@@ -1820,7 +1821,6 @@ ${seoTags}
   <div class="prefs">
   <div class="lang-switch" aria-label="Til">
   <a href="/lang/uz" class="lang-uz">UZ</a>
-  <a href="/lang/ru" class="lang-ru">RU</a>
   <a href="/lang/en" class="lang-en">EN</a>
   </div>
   <button class="theme-toggle" type="button" data-theme-toggle aria-label="Kunduzgi va tungi rejim">
@@ -1829,6 +1829,7 @@ ${seoTags}
   </button>
   </div>
   ${isDashboard ? "" : `<button class="app-refresh" type="button" data-app-refresh aria-label="Ilovani serverdan yangilash" title="Serverdagi so'nggi o'zgarishlarni yuklash"><span aria-hidden="true">⟳</span><b>Yangilash</b></button>`}
+  ${!user && !admin ? `<a class="mobile-header-login" href="/login">Kirish</a>` : ""}
   <button class="menu-toggle" type="button" id="menuToggle" aria-label="Menyu" aria-expanded="false">
   <span></span><span></span><span></span>
   </button>
@@ -1853,14 +1854,13 @@ ${seoTags}
   ? `<div class="mobile-user">${h(user.name)}</div>
   <a href="/dashboard">${h(siteTexts().dashboard_page_title || "Kabinet")}</a>
   <form method="post" action="/logout"><button class="mobile-link-btn" type="submit">Chiqish</button></form>`
-: `<a class="mobile-login" href="/login">Kirish</a>`
+: ""
   }`
   }
   </nav>
   <div class="mobile-prefs">
   <div class="lang-switch" aria-label="Til">
   <a href="/lang/uz" class="lang-uz">UZ</a>
-  <a href="/lang/ru" class="lang-ru">RU</a>
   <a href="/lang/en" class="lang-en">EN</a>
   </div>
   <button class="theme-toggle" type="button" data-theme-toggle aria-label="Kunduzgi va tungi rejim">
@@ -2097,7 +2097,7 @@ c.addEventListener('change', function () { b.disabled = !c.checked; });
 })();
 </script>
 <script>
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=10').then(function (registration) { registration.update().catch(function () {}); }).catch(function () {});
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=11').then(function (registration) { registration.update().catch(function () {}); }).catch(function () {});
 document.querySelectorAll('[data-app-refresh]').forEach(function (button) {
   button.addEventListener('click', async function () {
     if (button.disabled) return;
@@ -4280,10 +4280,9 @@ function dashboardPage(user) {
         var installPrompt = null;
         var installMessages = {
           uz: { installed: ${JSON.stringify(copy.dashboard_install_ready)}, help: ${JSON.stringify(copy.dashboard_install_help)} },
-          ru: { installed: "Приложение уже установлено.", help: "Откройте меню браузера и выберите «Установить приложение» или «Добавить на главный экран»." },
           en: { installed: "The app is already installed.", help: "Open your browser menu and choose Install app or Add to Home screen." }
         };
-        if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=10').catch(function () {});
+        if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=11').catch(function () {});
         window.addEventListener('beforeinstallprompt', function (event) {
           event.preventDefault();
           installPrompt = event;
@@ -4344,9 +4343,7 @@ function dashboardPage(user) {
           var info = document.createElement('span');
           info.className = 'dl-pageinfo';
           var lang = document.documentElement.lang;
-          info.textContent = lang === 'ru'
-            ? 'Страница ' + page + ' / ' + pages + ' | тесты ' + list.length
-            : lang === 'en'
+          info.textContent = lang === 'en'
             ? 'Page ' + page + ' / ' + pages + ' | ' + list.length + ' tests'
             : ${JSON.stringify(copy.dashboard_page_label)} + ' ' + page + ' / ' + pages + ' | ' + list.length + ' ' + ${JSON.stringify(copy.dashboard_test_list_label)};
           pager.appendChild(info);
@@ -4631,7 +4628,7 @@ function testDocument({ title, body }) {  return `<!DOCTYPE html>
 <body class="test-body student-page">
 ${body}
 <footer class="test-author-footer">${new Date().getFullYear()} ${h(config.siteName)} · Avtor: Habiba Mo'minjonovna</footer>
-<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=10').then(function (registration) { registration.update().catch(function () {}); }).catch(function () {});</script>
+<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=11').then(function (registration) { registration.update().catch(function () {}); }).catch(function () {});</script>
 </body>
 </html>`;
 }
@@ -5175,7 +5172,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   /* ------------------------------------------------------------- language */
-  const langMatch = p.match(/^\/lang\/(uz|ru|en)$/);
+  const langMatch = p.match(/^\/lang\/(uz|en)$/);
   if (langMatch && method === "GET") {
   let back = "/";
   const ref = req.headers.referer || "";
@@ -5422,7 +5419,6 @@ const server = http.createServer(async (req, res) => {
       directionStats[directionId].tests += Number(row.tests) || 0;
     }
   }
-  const directionPills = DIRECTIONS.map((direction) => `<a class="home-direction-pill" href="/${direction.id}"><b>${h(categoryLabel(direction.id))}</b><span>${directionStats[direction.id].tests} ta test</span></a>`).join("");
   const copy = siteTexts();
   const directionCards = DIRECTIONS.map((direction) => {
     const counts = directionStats[direction.id];
@@ -5461,12 +5457,11 @@ const server = http.createServer(async (req, res) => {
   <p class="lead">${h(copy.hero_description)}</p>
   <div class="landing-actions">
   <a class="btn btn-primary" href="${user ? "/courses": "/register"}">${h(user ? copy.hero_primary_logged : copy.hero_primary)} <span aria-hidden="true">↗</span></a>
-  <a class="btn btn-ghost" href="#program">${h(copy.hero_secondary)} <span aria-hidden="true">↓</span></a>
+  <a class="btn btn-ghost" href="#directions">${h(copy.hero_secondary)} <span aria-hidden="true">↓</span></a>
   </div>
   <div class="hero-trust"><span>${h(copy.hero_trust_1)}</span><span>${h(copy.hero_trust_2)}</span><span>${h(copy.hero_trust_3)}</span></div>
   <div class="home-hero-note"><span class="home-note-dot"></span> ${h(copy.hero_note)}
   </div>
-  <div class="home-direction-picks" data-home-direction-picks aria-label="O'quv yo'nalishlari">${directionPills}</div>
   </div>
   <div class="landing-hero-art" aria-label="Habiba teacher va o'qituvchilar">
   <div class="hero-photo-frame">
@@ -5635,7 +5630,6 @@ const server = http.createServer(async (req, res) => {
   }
   const hiddenSections = [
     ...Object.entries(homeSections).filter(([, visible]) => !visible).map(([key]) => `[data-home-section="${key}"]`),
-    ...(!homeSections.directions ? ["[data-home-direction-picks]"] : []),
     ...customHomeSections.filter((section) => !section.visible).map((section) => `[data-home-section="custom_${section.id}"]`)
   ].join(",");
   if (hiddenSections) body += `<style>${hiddenSections}{display:none!important}</style>`;
@@ -8159,7 +8153,7 @@ const server = http.createServer(async (req, res) => {
     const sectionOrder = homeSectionOrder(customHomeSections);
     const groups = [
       { id: "nav", title: "Menyu va sayt nomi", fields: [["site_name", "Sayt nomi"], ["nav_home", "Bosh sahifa"], ["nav_attestation", "Attestatsiya"], ["nav_tkt", "TKT"], ["nav_duel", "Duel"], ["nav_courses", "Kurslar / yo'nalishlar"], ["nav_plans", "Tariflar"], ["nav_leaderboard", "Reyting"]] },
-      { id: "hero", title: "Bosh sahifa — asosiy qism", fields: [["hero_eyebrow", "Yuqori kichik yozuv"], ["hero_title", "Sarlavhaning birinchi qismi"], ["hero_accent", "Rangli sarlavha qismi"], ["hero_title_end", "Sarlavhaning oxirgi qismi"], ["hero_description", "Tavsif"], ["hero_primary", "Asosiy tugma"], ["hero_primary_logged", "Kirish qilganlar tugmasi"], ["hero_secondary", "Ikkinchi tugma"], ["hero_trust_1", "Afzallik 1"], ["hero_trust_2", "Afzallik 2"], ["hero_trust_3", "Afzallik 3"], ["hero_note", "Yangilik xabari"], ["hero_image_caption", "Rasm osti yozuvi"], ["hero_float_mark", "TKT belgisi"], ["hero_float_title", "TKT kartasi sarlavhasi"], ["hero_float_description", "TKT kartasi tavsifi"]] },
+      { id: "hero", title: "Bosh sahifa — asosiy qism", fields: [["hero_eyebrow", "Yuqori kichik yozuv"], ["hero_title", "Sarlavhaning birinchi qismi"], ["hero_accent", "Rangli sarlavha qismi"], ["hero_title_end", "Sarlavhaning oxirgi qismi"], ["hero_description", "Tavsif"], ["hero_primary", "Asosiy tugma"], ["hero_primary_logged", "Kirish qilganlar tugmasi"], ["hero_secondary", "Yo'nalishni tanlash tugmasi"], ["hero_trust_1", "Afzallik 1"], ["hero_trust_2", "Afzallik 2"], ["hero_trust_3", "Afzallik 3"], ["hero_note", "Yangilik xabari"], ["hero_image_caption", "Rasm osti yozuvi"], ["hero_float_mark", "TKT belgisi"], ["hero_float_title", "TKT kartasi sarlavhasi"], ["hero_float_description", "TKT kartasi tavsifi"]] },
       { id: "overview", title: "Hisoblagich, kirish qismi va orbitalar", fields: [["stat_directions", "Yo'nalishlar hisoblagichi"], ["stat_lessons", "Video darslar hisoblagichi"], ["stat_tests", "Barcha testlar hisoblagichi"], ["stat_test_attestation", "Attestatsiya testlari nomi"], ["stat_test_tkt", "TKT testlari nomi"], ["stat_test_cpd", "CPD testlari nomi"], ["stat_students", "O'quvchilar hisoblagichi"], ["stat_note_title", "Hisoblagich yonidagi sarlavha"], ["stat_note_description", "Hisoblagich yonidagi izoh"], ["orbit_kicker", "Orbital karta yuqori yozuvi"], ["orbit_test", "Orbital test yorlig'i"], ["orbit_lesson", "Orbital dars yorlig'i"], ["orbit_result", "Orbital natija yorlig'i"], ["orbit_tag_1", "Orbital teg 1"], ["orbit_tag_2", "Orbital teg 2"], ["orbit_tag_3", "Orbital teg 3"], ["orbit_tag_4", "Orbital teg 4"], ["overview_eyebrow", "Kirish bo'limi kichik sarlavhasi"], ["overview_title", "Kirish bo'limi sarlavhasi"], ["overview_accent", "Rangli sarlavha qismi"], ["overview_description", "Kirish bo'limi tavsifi"], ["pillar_1_title", "Afzallik 1 sarlavhasi"], ["pillar_1_description", "Afzallik 1 tavsifi"], ["pillar_2_title", "Afzallik 2 sarlavhasi"], ["pillar_2_description", "Afzallik 2 tavsifi"], ["pillar_3_title", "Afzallik 3 sarlavhasi"], ["pillar_3_description", "Afzallik 3 tavsifi"]] },
       { id: "directions", title: "Yo'nalishlar va kurslar", fields: [["direction_heading", "Yo'nalishlar sarlavhasi"], ["direction_description", "Yo'nalishlar tavsifi"], ["direction_attestation_title", "Attestatsiya kartasi sarlavhasi"], ["direction_attestation_description", "Attestatsiya kartasi tavsifi"], ["direction_tkt_title", "TKT kartasi sarlavhasi"], ["direction_tkt_description", "TKT kartasi tavsifi"], ["direction_open", "Karta tugmasi"], ["course_section_eyebrow", "Kurslar kichik sarlavhasi"], ["course_section_title", "Kurslar bo'limi sarlavhasi"], ["course_section_description", "Kurslar bo'limi tavsifi"], ["course_section_button", "Kurslar tugmasi"]] },
       { id: "features", title: "Biz haqimizda va imkoniyatlar", fields: [["about_eyebrow", "Biz haqimizda kichik sarlavha"], ["about_title", "Biz haqimizda sarlavhasi"], ["about_description", "Biz haqimizda tavsifi"], ["about_check_1", "Afzallik ro'yxati 1"], ["about_check_2", "Afzallik ro'yxati 2"], ["about_check_3", "Afzallik ro'yxati 3"], ["about_check_4", "Afzallik ro'yxati 4"], ["about_card_title", "Yon kartadagi sarlavha"], ["about_card_description", "Yon kartadagi izoh"], ["feature_eyebrow", "Imkoniyatlar kichik sarlavhasi"], ["feature_title", "Imkoniyatlar sarlavhasi"], ["feature_pdf_title", "PDF karta sarlavhasi"], ["feature_pdf_description", "PDF karta tavsifi"], ["feature_video_title", "Video karta sarlavhasi"], ["feature_video_description", "Video karta tavsifi"], ["feature_test_title", "Test karta sarlavhasi"], ["feature_test_description", "Test karta tavsifi"]] },
