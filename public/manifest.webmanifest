@@ -4,7 +4,7 @@
   "short_name": "Habiba",
   "description": "Ingliz tili o'qituvchilari uchun onlayn tayyorlov platformasi",
   "lang": "uz",
-  "start_url": "/dashboard",
+  "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
