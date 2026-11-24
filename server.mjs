@@ -4135,9 +4135,9 @@ function dashboardPage(user) {
   const quoteIndex = ((dayIndex - quoteStartDay) % DAILY_WISDOM.length + DAILY_WISDOM.length) % DAILY_WISDOM.length;
   const quote = DAILY_WISDOM[quoteIndex];
   const quoteAttribution = quote.source || "Hikmatli fikr";
-  const dashboardQuoteText = copy.dashboard_quote_override.trim() || quote.text;
-  const dashboardQuoteAttribution = copy.dashboard_quote_override.trim() ? copy.dashboard_quote_source : quoteAttribution;
-  const dashboardQuoteUrl = copy.dashboard_quote_override.trim() ? "" : (quote.url || "");
+  const dashboardQuoteText = quote.text;
+  const dashboardQuoteAttribution = quoteAttribution;
+  const dashboardQuoteUrl = quote.url || "";
 
   const nextCard = next
     ? `<a class="dash-hero-card" href="${
