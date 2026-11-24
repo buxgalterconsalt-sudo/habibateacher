@@ -81,6 +81,8 @@ Platformada ikkita test yo'nalishi bor:
   (Advanced Passage, 2 000 so'm).
 - **TKT** (`/tkt`): 1, 2 va 3-modul mock testlari (6 ta bepul test).
 
+Attestatsiya tayyorgarligi uchun qo‘shimcha ravishda Reading, Grammar, Vocabulary, Pragmatika, Pedagogik mahorat va Kasbiy standart yo‘nalishlarida 20 tadan — jami 120 ta mashq testi (1 000 savol) mavjud.
+
 Kartochkada vaqt, savollar soni, maksimal ball, ko'rishlar va narx ko'rsatiladi.
 Narxi 0 bo'lgan testlar bepul; narx kiritilgan testlar **PRO** bo'lib, to'lovdan
 keyingina ochiladi.

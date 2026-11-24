@@ -918,6 +918,13 @@ function ensureDemoContent() {
 
 ensureDemoContent();
 
+db.prepare(`UPDATE lessons SET price = 0, is_pro = 0
+  WHERE id = (
+    SELECT l.id FROM lessons l JOIN courses c ON c.id = l.course_id
+    WHERE l.title = 'TKT 1-modul mock testi 1' AND c.title = 'TKT MODULE 1' AND c.category = 'tkt'
+    ORDER BY l.id LIMIT 1
+  )`).run();
+
 const normalizeAttestationGroupName = (value) => String(value || "").toLocaleLowerCase()
   .replace(/[’'`]/g, "")
   .replace(/\s+/g, " ")
@@ -978,6 +985,7 @@ function seedPreparedTests() {
     JSON.parse(fs.readFileSync(path.join(__dirname, "seed-data", "tkt-modules-1-2.json"), "utf8")),
     JSON.parse(fs.readFileSync(path.join(__dirname, "seed-data", "tkt-module-3.json"), "utf8")),
   ];
+  sources[0].push(...JSON.parse(fs.readFileSync(path.join(__dirname, "seed-data", "attestation-120.json"), "utf8")));
   const readingRows = JSON.parse(fs.readFileSync(path.join(__dirname, "seed-data", "attestation-reading.json"), "utf8"));
   const readingPassages = new Map(readingRows.filter((q) => q.passageId && q.passage).map((q) => [q.passageId, q.passage]));
   const preparedReading = readingRows.map((q) => ({ ...q, passage: readingPassages.get(q.passageId) || q.passage || "" }));
@@ -1052,7 +1060,7 @@ function seedPreparedTests() {
       let lesson = db.prepare("SELECT * FROM lessons WHERE course_id = ? AND title = ? ORDER BY id LIMIT 1").get(course.id, lessonTitle);
       if (!lesson) {
         const position = Number(set.position) || Number(set.number) + (set.category === "attestation" ? 7 : 0);
-        const duration = set.category === "tkt" ? 80 : 90;
+        const duration = Number(set.duration) || (set.category === "tkt" ? 80 : 90);
         const info = db.prepare(
           "INSERT INTO lessons (course_id, title, type, content, duration_min, position, price, is_pro, max_score, question_count, created_at) VALUES (?, ?, 'test', '', ?, ?, 0, 0, ?, ?, ?)"
         ).run(course.id, lessonTitle, duration, position, set.questions.length, set.questions.length, nowISO());
@@ -5556,7 +5564,7 @@ const server = http.createServer(async (req, res) => {
   <div class="wrap landing-hero-grid">
   <div class="landing-hero-copy">
   <span class="eyebrow">${h(copy.hero_eyebrow)}</span>
-  <h1>${h(copy.hero_title)} <span class="accent">${h(copy.hero_accent)}</span> ${h(copy.hero_title_end)}</h1>
+  <h1 class="home-hero-message">Muhim sinovlarga yolg‘iz tayyorlanish oson emas — hamisha yonida ishonchli tayanch va amaliy mashq maydoni bo‘lsa, yo‘l ancha yengillashadi. Shu yerda muntazam mashq qiling, xatolaringizni xotirjam tahlil qiling va o‘zingizdagi o‘sishni har kuni ko‘rib boring. Birgalikda ishonch bilan harakat qilsak, albatta yuqori natijalarga chiqamiz.</h1>
   <p class="lead">${h(copy.hero_description)}</p>
   <div class="landing-actions">
   ${user || !siteButtonVisible("hero_register") || !String(copy.hero_primary || "").trim() ? "" : `<a class="btn btn-primary" href="/register">${h(copy.hero_primary)} <span aria-hidden="true">↗</span></a>`}

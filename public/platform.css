@@ -6501,6 +6501,7 @@ body:not(.is-dashboard):not(.admin-page) .hero-trust span::before { background: 
 .landing-home .eyebrow { color: #b8a8ff; border-color: rgba(158, 132, 255, .24); background: rgba(112, 79, 210, .1); }
 .landing-home .landing-hero-copy .eyebrow { font-size: .7rem; letter-spacing: .14em; }
 .landing-home .landing-hero-copy h1 { max-width: 11ch; font-size: clamp(3rem, 6.1vw, 5.35rem); line-height: 1.01; letter-spacing: -.065em; }
+.landing-home .landing-hero-copy h1.home-hero-message { max-width: 46ch; margin: 20px 0 18px; font-size: clamp(1.15rem, 1.65vw, 1.42rem); line-height: 1.65; letter-spacing: -.02em; font-weight: 600; }
 .landing-home .landing-hero-copy h1 .accent,
 .landing-home .accent { background: linear-gradient(100deg, #a783ff 10%, #63baff 58%, #51d8d2 100%); color: transparent; background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 .landing-home .landing-hero-copy .lead { max-width: 56ch; margin-top: 22px; color: #bbb5d1; }
@@ -6635,6 +6636,7 @@ html[data-theme="light"] .home-final-card { background: linear-gradient(120deg, 
   .home-direction-grid .direction-card { min-height: 205px; }
   .landing-home .landing-hero-grid { padding-block: 46px 28px; }
   .landing-home .landing-hero-copy h1 { max-width: 12ch; font-size: clamp(2.75rem, 13vw, 4.15rem); }
+  .landing-home .landing-hero-copy h1.home-hero-message { max-width: 42ch; font-size: 1.08rem; line-height: 1.6; letter-spacing: -.015em; }
   .landing-home .landing-hero-art { min-height: 320px; }
   .landing-home .hero-photo-frame { width: min(86%, 370px); height: 350px; }
   .landing-home .hero-float-card.one { left: -1%; }
