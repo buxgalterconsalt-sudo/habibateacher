@@ -2068,38 +2068,11 @@ video.video {
   margin-top: 38px;
 }
 
-.attestation-group-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  max-width: 100%;
-  padding: 8px 14px;
-  border: 1px solid rgba(67, 209, 190, 0.35);
-  border-radius: 999px;
-  background: rgba(17, 69, 81, 0.48);
-  color: var(--text);
+.attestation-group-title {
   cursor: pointer;
   list-style: none;
-  transition: border-color .18s ease, background .18s ease;
 }
-
-.attestation-group-toggle::-webkit-details-marker { display: none; }
-.attestation-group-toggle::after {
-  content: "+";
-  color: var(--primary-soft);
-  font-size: 1.1rem;
-  font-weight: 750;
-  line-height: 1;
-}
-.attestation-test-group[open] > .attestation-group-toggle::after { content: "−"; }
-.attestation-group-toggle:hover,
-.attestation-test-group[open] > .attestation-group-toggle {
-  border-color: var(--primary-soft);
-  background: rgba(17, 92, 100, 0.55);
-}
-.attestation-group-toggle span { font-weight: 750; }
-.attestation-group-toggle small { color: var(--muted); font-size: .72rem; }
-.attestation-test-group > .test-grid { margin-top: 16px; }
+.attestation-group-title::-webkit-details-marker { display: none; }
 
 .test-group:first-child {
   margin-top: 0;

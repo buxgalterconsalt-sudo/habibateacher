@@ -6423,7 +6423,7 @@ const server = http.createServer(async (req, res) => {
   </a>`
 : "";
   const groupHeader = isAttestationGroup
-    ? `<summary class="attestation-group-toggle"><span>${h(course.title)}</span><small>Testlarni ko'rish</small></summary>`
+    ? `<summary class="test-group-head attestation-group-title"><h2>${h(course.title)}</h2></summary>`
     : `<div class="test-group-head"><div><h2>${h(course.title)}</h2></div></div>`;
   return `<${isAttestationGroup ? "details" : "section"} class="test-group${isAttestationGroup ? " attestation-test-group" : ""}">
   ${groupHeader}
