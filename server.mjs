@@ -4132,7 +4132,9 @@ function dashboardPage(user) {
 
   const dayIndex = Math.floor(dayStamp(clock.day) / 86400000);
   const quoteStartDay = Math.floor(Date.UTC(2026, 10, 24) / 86400000);
-  const quoteIndex = ((dayIndex - quoteStartDay) % DAILY_WISDOM.length + DAILY_WISDOM.length) % DAILY_WISDOM.length;
+  const quoteSlot = clock.minutes >= 12 * 60 ? 1 : 0;
+  const quoteSequenceIndex = (dayIndex - quoteStartDay) * 2 + quoteSlot;
+  const quoteIndex = ((quoteSequenceIndex % DAILY_WISDOM.length) + DAILY_WISDOM.length) % DAILY_WISDOM.length;
   const quote = DAILY_WISDOM[quoteIndex];
   const quoteAttribution = quote.source || "Hikmatli fikr";
   const dashboardQuoteText = quote.text;
@@ -4246,6 +4248,11 @@ function dashboardPage(user) {
       </div>
       <script>
       (function () {
+        var tashkentNow = new Date(Date.now() + 5 * 60 * 60 * 1000);
+        var minutesNow = tashkentNow.getUTCHours() * 60 + tashkentNow.getUTCMinutes();
+        var nextBoundary = minutesNow < 12 * 60 ? 12 * 60 : 24 * 60;
+        var refreshIn = (nextBoundary - minutesNow) * 60 * 1000 - tashkentNow.getUTCSeconds() * 1000 - tashkentNow.getUTCMilliseconds();
+        window.setTimeout(function () { window.location.reload(); }, Math.max(250, refreshIn));
         var installButton = document.getElementById('installApp');
         var installPrompt = null;
         var installMessages = {
