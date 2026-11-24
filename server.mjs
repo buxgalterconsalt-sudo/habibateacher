@@ -134,6 +134,7 @@ Object.assign(SITE_TEXT_DEFAULTS, {
 
 const HOME_SECTION_LABELS = {
   hero: "Bosh sahifa yuqori qismi",
+  "teachers-photo": "O'qituvchilar jamoasi rasmi",
   overview: "Orbita va afzalliklar",
   directions: "Yo'nalish kartalari",
   courses: "Barcha kurslar",
@@ -172,6 +173,11 @@ function homeSectionOrder(customSections = homeCustomSections()) {
   let saved = [];
   try { saved = JSON.parse(metaGet("home_section_order_json", "[]")); } catch (e) {}
   const order = Array.isArray(saved) ? saved.filter((key) => allKeys.includes(key)) : [];
+  if (!order.includes("teachers-photo")) {
+    const heroIndex = order.indexOf("hero");
+    if (heroIndex >= 0) order.splice(heroIndex + 1, 0, "teachers-photo");
+    else order.push("teachers-photo");
+  }
   for (const key of allKeys) if (!order.includes(key)) order.push(key);
   return order;
 }
@@ -1841,7 +1847,7 @@ ${canonical ? `<link rel="canonical" href="${canonical}">` : ""}
 <meta property="og:title" content="${h(seo.title || `${title} | ${siteBrandName()}`)}">
 <meta property="og:description" content="${h(description)}">
 ${openGraphUrl ? `<meta property="og:url" content="${openGraphUrl}">` : ""}
-${canonical === "https://habibateacher.uz/" ? '<meta property="og:image" content="https://habibateacher.uz/img/habiba-stage.jpg">' : ""}
+${canonical === "https://habibateacher.uz/" ? '<meta property="og:image" content="https://habibateacher.uz/img/habiba-portrait.jpg?v=20261124-2">' : ""}
 <meta name="twitter:card" content="summary_large_image">`;
   return `<!DOCTYPE html>
 <html lang="uz">
@@ -1856,7 +1862,7 @@ ${seoTags}
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%2312b5a6'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='18' font-weight='bold' text-anchor='middle' fill='%2303211d'%3EH%3C/text%3E%3C/svg%3E">
 <script async src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>try{document.documentElement.dataset.theme=localStorage.getItem('ht_theme')||'dark';}catch(e){document.documentElement.dataset.theme='dark';}</script>
-<link rel="stylesheet" href="/assets/platform.css?v=20261124dashboard-list-hide1">
+<link rel="stylesheet" href="/assets/platform.css?v=20261124home2">
 </head>
 <body${admin && !publicPage ? ` class="admin-page"` : isStudentPage ? ` class="student-page${isDashboard ? " is-dashboard" : ""}"` : ""}>
 <header class="topbar">
@@ -2144,7 +2150,7 @@ c.addEventListener('change', function () { b.disabled = !c.checked; });
 })();
 </script>
 <script>
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=24').then(function (registration) { registration.update().catch(function () {}); }).catch(function () {});
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=25').then(function (registration) { registration.update().catch(function () {}); }).catch(function () {});
 document.querySelectorAll('[data-app-refresh]').forEach(function (button) {
   button.addEventListener('click', async function () {
     if (button.disabled) return;
@@ -4360,7 +4366,7 @@ function dashboardPage(user) {
           uz: { installed: ${JSON.stringify(copy.dashboard_install_ready)}, help: ${JSON.stringify(copy.dashboard_install_help)} },
           en: { installed: "The app is already installed.", help: "Open your browser menu and choose Install app or Add to Home screen." }
         };
-        if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=24').catch(function () {});
+        if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=25').catch(function () {});
         window.addEventListener('beforeinstallprompt', function (event) {
           event.preventDefault();
           installPrompt = event;
@@ -4701,12 +4707,12 @@ function testDocument({ title, body }) {  return `<!DOCTYPE html>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%231e40af'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='18' font-weight='bold' text-anchor='middle' fill='white'%3EH%3C/text%3E%3C/svg%3E">
 <script async src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>try{document.documentElement.dataset.theme=localStorage.getItem('ht_theme')||'dark';}catch(e){document.documentElement.dataset.theme='dark';}</script>
-<link rel="stylesheet" href="/assets/platform.css?v=20261124dashboard-list-hide1">
+<link rel="stylesheet" href="/assets/platform.css?v=20261124home2">
 </head>
 <body class="test-body student-page">
 ${body}
 <footer class="test-author-footer">Ustozlarimizga ko‘mak bo‘lsin deya, ushbu materiallar Habiba Mo'minjonovna tomonidan taqdim etildi.</footer>
-<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=24').then(function (registration) { registration.update().catch(function () {}); }).catch(function () {});</script>
+<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=25').then(function (registration) { registration.update().catch(function () {}); }).catch(function () {});</script>
 </body>
 </html>`;
 }
@@ -5546,7 +5552,7 @@ const server = http.createServer(async (req, res) => {
   </div>
   <div class="landing-hero-art" aria-label="Habiba teacher va o'qituvchilar">
   <div class="hero-photo-frame">
-  <img src="/img/habiba-stage.jpg" alt="Habiba teacher ingliz tili o'qituvchilari bilan mashg'ulotda">
+  <img src="/img/habiba-portrait.jpg" alt="Habiba Mo'minjonovna">
   <div class="hero-photo-caption"><small>HABIBA TEACHER</small><b>${h(copy.hero_image_caption)}</b></div>
   </div>
   ${copy.hero_float_title || copy.hero_float_description ? `<div class="hero-float-card one">${copy.hero_float_title && copy.hero_float_mark ? `<span class="hero-float-mark">${h(copy.hero_float_mark)}</span>` : ""}<span>${copy.hero_float_title ? `<strong>${h(copy.hero_float_title)}</strong>` : ""}${copy.hero_float_description ? `<small>${h(copy.hero_float_description)}</small>` : ""}</span></div>` : ""}
@@ -5558,6 +5564,9 @@ const server = http.createServer(async (req, res) => {
     <div><b>${stats.tests}</b><span>${h(copy.stat_tests)}</span></div>
     <div class="home-stat-message"><span aria-hidden="true">✦</span><span><b>${h(copy.stat_note_title)}</b><small>${h(copy.stat_note_description)}</small></span></div>
   </div>
+  </section>
+  <section class="home-teachers-photo" data-home-section="teachers-photo" aria-label="O'qituvchilar jamoasi">
+    <img src="/img/teachers-group.jpg" alt="O'zbekistonlik o'qituvchilar British Council treningida">
   </section>
 
   <section class="section home-overview" id="program" data-home-section="overview">
