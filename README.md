@@ -34,6 +34,8 @@ Keyin **http://localhost:8789** ni oching. Admin sahifasi `/admin`; parol `confi
 - `src/config.mjs` — ilova sozlamalari;
 - `src/i18n.mjs` — UZ/RU/EN tarjimalari;
 - `src/question-import.mjs` — XLSX/DOCX savol importi;
+- `seed-data/daily-wisdom-uz.json` — 365 ta qisqa, ilm va o'rganishga oid hikmat; dashboard sanaga qarab bittasini chiqaradi;
+- `scripts/build-daily-wisdom.mjs` — kunlik hikmatlar ro'yxatini qayta yaratish;
 - `public/platform.css` — sayt uslublari;
 - `public/img/` — sahifadagi rasmlar.
 

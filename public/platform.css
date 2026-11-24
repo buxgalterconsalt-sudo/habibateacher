@@ -6041,6 +6041,10 @@ body.is-dashboard .dash-quote { display: flex; align-items: center; gap: 12px; m
 html[data-theme="light"] body.is-dashboard .dash-quote { background: linear-gradient(105deg,#e8f8f4,#f2effb); }
 body.is-dashboard .dash-quote-symbol { color: #33d5b6; font-size: 2rem; line-height: 1; }
 body.is-dashboard .dash-quote div { display: grid; gap: 1px; }
+body.is-dashboard .dash-quote > div { min-width: 0; flex: 1 1 auto; }
+body.is-dashboard .dash-quote div span,
+body.is-dashboard .dash-quote .dash-quote-author { overflow-wrap: anywhere; }
+body.is-dashboard .dash-quote .dash-quote-author a { color: inherit; text-decoration: underline; text-decoration-color: rgba(55, 201, 159, .5); text-underline-offset: 2px; }
 body.is-dashboard .dash-quote small { color: #61d9bd; font-size: .64rem; font-weight: 800; text-transform: uppercase; letter-spacing: .07em; }
 html[data-theme="light"] body.is-dashboard .dash-quote small { color: #138e78; }
 body.is-dashboard .dash-quote div span { font-size: .8rem; }

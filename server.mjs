@@ -17,6 +17,7 @@ import { loadAppConfig } from "./src/config.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const { config, port: PORT, dataDir: DATA_DIR, storageDir: STORAGE_DIR, publicDir: PUBLIC_DIR, maxUpload: MAX_UPLOAD } = loadAppConfig(__dirname);
+const DAILY_WISDOM = JSON.parse(fs.readFileSync(path.join(__dirname, "seed-data", "daily-wisdom-uz.json"), "utf8"));
 const MAX_VIDEO_UPLOAD = 4 * 1024 * 1024 * 1024;
 const VIDEO_UPLOAD_CHUNK = 2 * 1024 * 1024;
 const MAX_MULTIPART_BODY = Math.max(256 * 1024 * 1024, MAX_UPLOAD + 1024 * 1024);
@@ -4129,40 +4130,14 @@ function dashboardPage(user) {
     }
   }
 
-  const quotes = [
-    "Ilm izlash uchun yo'lga chiqqan kishiga Alloh jannat yo'lini oson qiladi. — Sahih Muslim, 2699a",
-    "Sizlarning yaxshilaringiz Qur'onni o'rganib, uni o'rgatganlaringizdir. — Sahih al-Buxoriy, 5027",
-    "Amallar niyatlarga bog'liq. — Sahih al-Buxoriy, 1",
-    "Yaxshi gap aytsin yoki sukut saqlasin. — Sahih al-Buxoriy, 6136",
-    "Ikki ne'mat: sog'lik va bo'sh vaqt. — Sahih al-Buxoriy, 6412",
-    "Ilm — insonni yuksaltiradigan nur. — Hikmatli so'z",
-    "Ustoz bergan saboq — umrga yo'ldosh. — Xalq maqoli",
-    "Mehnat qilgan — murodga yetar. — O'zbek maqoli",
-    "Bugungi kichik qadam ertangi katta natijadir. — Hikmatli so'z",
-    "Vaqtni qadrlagan maqsadiga yaqinlashadi. — Hikmatli so'z",
-    "Reja — niyatni amalga eltuvchi yo'l xaritasi. — Hikmatli so'z",
-    "Takrorlash — bilimning mustahkam tayanchi. — Hikmatli so'z",
-    "Til bilgan — el biladi. — O'zbek maqoli",
-    "Shirin so'z ko'ngilni obod qiladi. — O'zbek maqoli",
-    "Tinglash ham muloqotning muhim qismidir. — Hikmatli so'z",
-    "Savol berishdan uyalmang: bilmaganini so'rash ilm eshigidir. — Hikmatli so'z",
-    "Har kuni oz-ozdan o'rganish katta maqsadga olib boradi. — Hikmatli so'z",
-    "Sabr va izchillik mahoratni shakllantiradi. — Hikmatli so'z",
-    "Bilim ulashilsa, qadri ortadi. — Hikmatli so'z",
-    "O'qish qalbga, mashq esa mahoratga yo'l ochadi. — Hikmatli so'z",
-    "Maqsadni yozing, vaqtni belgilang, bugun boshlang. — Hikmatli so'z",
-    "Ustozga hurmat — ilmga hurmat. — O'zbek maqoli",
-    "Yaxshi muomala — tilning eng go'zal tarjimasi. — Hikmatli so'z",
-    "Bugun o'rganganingiz ertaga birovga yo'l ko'rsatadi. — Hikmatli so'z"
-  ];
   const dayIndex = Math.floor(dayStamp(clock.day) / 86400000);
-  const quote = quotes[((dayIndex % quotes.length) + quotes.length) % quotes.length];
-  const [quoteText, quoteSource = ""] = quote.split(" — ");
-  const quoteAttribution = quoteSource.startsWith("Sahih ")
-    ? `Sahih hadis · ${quoteSource}`
-    : /maqoli/i.test(quoteSource) ? quoteSource : "";
-  const dashboardQuoteText = copy.dashboard_quote_override.trim() || quoteText;
+  const quoteStartDay = Math.floor(Date.UTC(2026, 10, 24) / 86400000);
+  const quoteIndex = ((dayIndex - quoteStartDay) % DAILY_WISDOM.length + DAILY_WISDOM.length) % DAILY_WISDOM.length;
+  const quote = DAILY_WISDOM[quoteIndex];
+  const quoteAttribution = quote.source || "Hikmatli fikr";
+  const dashboardQuoteText = copy.dashboard_quote_override.trim() || quote.text;
   const dashboardQuoteAttribution = copy.dashboard_quote_override.trim() ? copy.dashboard_quote_source : quoteAttribution;
+  const dashboardQuoteUrl = copy.dashboard_quote_override.trim() ? "" : (quote.url || "");
 
   const nextCard = next
     ? `<a class="dash-hero-card" href="${
@@ -4229,7 +4204,7 @@ function dashboardPage(user) {
 
   return `<section class="dash-hero">
     <div class="wrap dash-welcome-wrap">
-      <div class="dash-quote"><span class="dash-quote-symbol" aria-hidden="true">&#128172;</span><div><small class="dash-quote-label">${h(copy.dashboard_quote_title)}</small><span>${h(dashboardQuoteText)}</span>${dashboardQuoteAttribution ? `<small class="dash-quote-author">— ${h(dashboardQuoteAttribution)}</small>` : ""}</div></div>
+      <div class="dash-quote"><span class="dash-quote-symbol" aria-hidden="true">&#128172;</span><div><small class="dash-quote-label">${h(copy.dashboard_quote_title)}</small><span>${h(dashboardQuoteText)}</span>${dashboardQuoteAttribution ? `<small class="dash-quote-author">— ${dashboardQuoteUrl ? `<a href="${h(dashboardQuoteUrl)}" target="_blank" rel="noopener noreferrer">${h(dashboardQuoteAttribution)}</a>` : h(dashboardQuoteAttribution)}</small>` : ""}</div></div>
       <div class="dash-welcome-row">
         <div>
           <span class="eyebrow">${h(copy.dashboard_greeting_eyebrow)}</span>
