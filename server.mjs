@@ -226,7 +226,7 @@ function courseNavLabel() {
 }
 
 function courseNavVisible() {
-  return metaGet("course_nav_visible", "1") !== "0";
+  return metaGet("course_nav_visible", "0") !== "0";
 }
 
 function siteBrandName() {
