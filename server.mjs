@@ -6422,12 +6422,11 @@ const server = http.createServer(async (req, res) => {
   <small>${h(course.title)} guruhiga</small>
   </a>`
 : "";
-  return `<section class="test-group">
-  <div class="test-group-head">
-  <div>
-  <h2>${h(course.title)}</h2>
-  </div>
-  </div>
+  const groupHeader = isAttestationGroup
+    ? `<summary class="attestation-group-toggle"><span>${h(course.title)}</span><small>Testlarni ko'rish</small></summary>`
+    : `<div class="test-group-head"><div><h2>${h(course.title)}</h2></div></div>`;
+  return `<${isAttestationGroup ? "details" : "section"} class="test-group${isAttestationGroup ? " attestation-test-group" : ""}">
+  ${groupHeader}
   ${
   hasPaid && list.length > 1
   ? `<div class="plan-banner">
@@ -6440,7 +6439,7 @@ const server = http.createServer(async (req, res) => {
 : ""
   }
   <div class="grid test-grid">${list.map((t) => testCard(t, Number(t.price) > 0 && userHasPlan)).join("")}${addCard}</div>
-  </section>`;
+  ${isAttestationGroup ? "</details>" : "</section>"}`;
   })
 .filter(Boolean)
 .join("");
