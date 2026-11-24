@@ -1855,7 +1855,7 @@ ${seoTags}
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%2312b5a6'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='18' font-weight='bold' text-anchor='middle' fill='%2303211d'%3EH%3C/text%3E%3C/svg%3E">
 <script async src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>try{document.documentElement.dataset.theme=localStorage.getItem('ht_theme')||'dark';}catch(e){document.documentElement.dataset.theme='dark';}</script>
-<link rel="stylesheet" href="/assets/platform.css?v=20261124dashboard-list5">
+<link rel="stylesheet" href="/assets/platform.css?v=20261124dashboard-lock1">
 </head>
 <body${admin && !publicPage ? ` class="admin-page"` : isStudentPage ? ` class="student-page${isDashboard ? " is-dashboard" : ""}"` : ""}>
 <header class="topbar">
@@ -2143,7 +2143,7 @@ c.addEventListener('change', function () { b.disabled = !c.checked; });
 })();
 </script>
 <script>
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=22').then(function (registration) { registration.update().catch(function () {}); }).catch(function () {});
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=23').then(function (registration) { registration.update().catch(function () {}); }).catch(function () {});
 document.querySelectorAll('[data-app-refresh]').forEach(function (button) {
   button.addEventListener('click', async function () {
     if (button.disabled) return;
@@ -4154,6 +4154,12 @@ function isFirstAttestationCategoryTest(test, tests) {
   return Number(firstInGroup?.id) === Number(test.id);
 }
 
+function isFirstCourseTest(test, tests) {
+  if (!test || test.type !== "test") return false;
+  const firstInCourse = tests.find((item) => Number(item.course_id) === Number(test.course_id));
+  return Number(firstInCourse?.id) === Number(test.id);
+}
+
 function dashboardPage(user) {
   const copy = siteTexts();
   const sequence = dashboardTestSequence(user.id);
@@ -4353,7 +4359,7 @@ function dashboardPage(user) {
           uz: { installed: ${JSON.stringify(copy.dashboard_install_ready)}, help: ${JSON.stringify(copy.dashboard_install_help)} },
           en: { installed: "The app is already installed.", help: "Open your browser menu and choose Install app or Add to Home screen." }
         };
-        if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=22').catch(function () {});
+        if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=23').catch(function () {});
         window.addEventListener('beforeinstallprompt', function (event) {
           event.preventDefault();
           installPrompt = event;
@@ -4694,12 +4700,12 @@ function testDocument({ title, body }) {  return `<!DOCTYPE html>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%231e40af'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='18' font-weight='bold' text-anchor='middle' fill='white'%3EH%3C/text%3E%3C/svg%3E">
 <script async src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>try{document.documentElement.dataset.theme=localStorage.getItem('ht_theme')||'dark';}catch(e){document.documentElement.dataset.theme='dark';}</script>
-<link rel="stylesheet" href="/assets/platform.css?v=20261124dashboard-list5">
+<link rel="stylesheet" href="/assets/platform.css?v=20261124dashboard-lock1">
 </head>
 <body class="test-body student-page">
 ${body}
 <footer class="test-author-footer">Ustozlarimizga ko‘mak bo‘lsin deya, ushbu materiallar Habiba Mo'minjonovna tomonidan taqdim etildi.</footer>
-<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=22').then(function (registration) { registration.update().catch(function () {}); }).catch(function () {});</script>
+<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=23').then(function (registration) { registration.update().catch(function () {}); }).catch(function () {});</script>
 </body>
 </html>`;
 }
@@ -6992,15 +6998,19 @@ const server = http.createServer(async (req, res) => {
 .all(user.id)
 .map((r) => [r.lesson_id, r.score])
   );
+  const courseTests = lessons.filter((lesson) => lesson.type === "test");
+  const nextCourseTest = courseTests.find((lesson) => !Object.prototype.hasOwnProperty.call(progress, lesson.id));
   const { total, done } = courseProgress(user.id, course.id);
 
   const rows = visibleLessons.length
   ? visibleLessons
 .map((l, i) => {
   const hasProgress = Object.prototype.hasOwnProperty.call(progress, l.id);
-  const finished = hasProgress && (l.type !== "test" || Number(progress[l.id]) >= 80);
+  const finished = hasProgress && (l.type !== "test" || (course.category === "attestation" ? progress[l.id] !== null : Number(progress[l.id]) >= 80));
+  const sequenceLocked = !admin && l.type === "test" && !finished && nextCourseTest && Number(l.id) !== Number(nextCourseTest.id);
   const firstVideoGate = l.type === "video" && !admin && !isIntroVideoLesson(l.id) && !hasLessonPermission(user.id, l.id) ? { locked: true } : { locked: false };
-  return `<a class="lesson-row" href="/lesson/${l.id}">
+  const rowTag = sequenceLocked ? "div" : "a";
+  return `<${rowTag} class="lesson-row${sequenceLocked ? " is-locked" : ""}"${sequenceLocked ? ' aria-disabled="true"' : ` href="/lesson/${l.id}"`}>
   <span class="num">${i + 1}</span>
   <span class="lesson-main">
   <b>${h(l.title)}</b>
@@ -7008,8 +7018,8 @@ const server = http.createServer(async (req, res) => {
   l.type === "test" ? ". test": ""
   }</small>
   </span>
-  ${finished ? `<span class="badge done">Tugatilgan${typeof progress[l.id] === "number" ? `. ${progress[l.id]}%`: ""}</span>`: `<span class="badge">${firstVideoGate.locked ? "Tarif kerak" : l.type === "video" && isIntroVideoLesson(l.id) ? "Bepul ochiq" : l.type === "video" && !hasLessonPermission(user.id, l.id) ? "Tarif kerak" : "Ochish"}</span>`}
-  </a>`;
+  ${sequenceLocked ? `<span class="badge locked">🔒 Qulflangan</span>` : finished ? `<span class="badge done">Tugatilgan${typeof progress[l.id] === "number" ? `. ${progress[l.id]}%`: ""}</span>`: `<span class="badge">${firstVideoGate.locked ? "Tarif kerak" : l.type === "video" && isIntroVideoLesson(l.id) ? "Bepul ochiq" : l.type === "video" && !hasLessonPermission(user.id, l.id) ? "Tarif kerak" : "Ochish"}</span>`}
+  </${rowTag}>`;
   })
 .join("")
 : `<div class="card empty">${lessons.length ? `Darslarni ko'rish uchun <a href="/plans"><b>faol tarif</b></a> yoki admin bergan ruxsat kerak.` : "Bu kursda hozircha darslar yo'q."}</div>`;
@@ -7034,7 +7044,7 @@ const server = http.createServer(async (req, res) => {
     const sequence = dashboardTestSequence(user.id);
     const currentIndex = sequence.tests.findIndex((item) => Number(item.id) === Number(lesson.id));
     if (currentIndex < 0) return redirect(res, "/dashboard");
-    const isFirstCategoryTest = isFirstAttestationCategoryTest(sequence.tests[currentIndex], sequence.tests);
+    const isFirstCategoryTest = isFirstAttestationCategoryTest(sequence.tests[currentIndex], sequence.tests) || isFirstCourseTest(sequence.tests[currentIndex], sequence.tests);
     const unmetPrevious = !isFirstCategoryTest && currentIndex > 0 ? sequence.tests.slice(0, currentIndex).find((item) => !sequence.completed.has(Number(item.id))) : null;
     if (unmetPrevious) return redirect(res, `/test/${unmetPrevious.id}`);
   }
