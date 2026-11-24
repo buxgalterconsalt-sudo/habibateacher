@@ -22,11 +22,11 @@ const practices = [
   "yangi g'oyani izlab topish", "o'z fikrini tinglash", "vazifani oxirigacha bajarish"
 ];
 const templates = [
-  (topic) => `Har kuni ${topic} — ilm yo'lidagi yangi qadam.`,
-  (topic) => `${topic[0].toUpperCase()}${topic.slice(1)} fikringizni charxlab, imkoniyatlaringizni kengaytiradi.`,
-  (topic) => `Muntazam ravishda ${topic} bugungi mehnatni ertangi mahoratga aylantiradi.`,
-  (topic) => `${topic[0].toUpperCase()}${topic.slice(1)}ni sabr bilan davom ettiring — natija albatta keladi.`,
-  (topic) => `Kichik odat bo'lgan ${topic} vaqt o'tib katta samara beradi.`
+  (topic) => `Ilm yo'lida ${topic}ning ham o'z o'rni bor.`,
+  (topic) => `Yaxshi shogird ${topic}ni qadrlaydi.`,
+  (topic) => `${topic[0].toUpperCase()}${topic.slice(1)} mahoratni kundalik ishda oshiradi.`,
+  (topic) => `Mashaqqatli paytda ${topic} yo'lni yengillashtiradi.`,
+  (topic) => `O'rganilgan bilim samarasini ${topic} ko'rsatadi.`
 ];
 
 const wisdom = Array.from({ length: 365 }, (_, index) => ({
