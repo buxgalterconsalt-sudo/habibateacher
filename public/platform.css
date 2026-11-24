@@ -5559,6 +5559,33 @@ body.is-dashboard .dl-search { min-height: 46px; }
   grid-template-columns: minmax(0, 1fr);
 }
 
+.dl-grid.list .dl-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas: "top module foot" "top title foot";
+  align-items: center;
+  gap: 2px 12px;
+  min-height: 0;
+  padding: 10px 14px;
+}
+
+.dl-grid.list .dl-top { grid-area: top; justify-content: flex-start; gap: 10px; }
+.dl-grid.list .dl-ico { width: 34px; height: 34px; border-radius: 10px; }
+.dl-grid.list .dl-status { padding: 4px 7px; font-size: .65rem; white-space: nowrap; }
+.dl-grid.list .dl-module { grid-area: module; padding: 0; border: 0; font-size: .65rem; }
+.dl-grid.list .dl-title { grid-area: title; min-width: 0; margin: 0; overflow: hidden; font-size: .88rem; text-overflow: ellipsis; white-space: nowrap; }
+.dl-grid.list .dl-sub { display: none; }
+.dl-grid.list .dl-foot { grid-area: foot; justify-content: flex-end; gap: 10px; margin: 0; padding: 0; border: 0; white-space: nowrap; }
+
+@media (max-width: 560px) {
+  body.is-dashboard .dl-grid.list .dl-card {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas: "top module" "top title" "foot foot";
+    gap: 3px 10px;
+  }
+  body.is-dashboard .dl-grid.list .dl-foot { justify-content: flex-end; }
+}
+
 .dl-card {
   display: flex;
   flex-direction: column;

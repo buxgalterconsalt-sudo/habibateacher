@@ -1855,7 +1855,7 @@ ${seoTags}
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%2312b5a6'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='18' font-weight='bold' text-anchor='middle' fill='%2303211d'%3EH%3C/text%3E%3C/svg%3E">
 <script async src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>try{document.documentElement.dataset.theme=localStorage.getItem('ht_theme')||'dark';}catch(e){document.documentElement.dataset.theme='dark';}</script>
-<link rel="stylesheet" href="/assets/platform.css?v=20261124attestation-unlock1">
+<link rel="stylesheet" href="/assets/platform.css?v=20261124dashboard-list5">
 </head>
 <body${admin && !publicPage ? ` class="admin-page"` : isStudentPage ? ` class="student-page${isDashboard ? " is-dashboard" : ""}"` : ""}>
 <header class="topbar">
@@ -2143,7 +2143,7 @@ c.addEventListener('change', function () { b.disabled = !c.checked; });
 })();
 </script>
 <script>
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=21').then(function (registration) { registration.update().catch(function () {}); }).catch(function () {});
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=22').then(function (registration) { registration.update().catch(function () {}); }).catch(function () {});
 document.querySelectorAll('[data-app-refresh]').forEach(function (button) {
   button.addEventListener('click', async function () {
     if (button.disabled) return;
@@ -4247,12 +4247,17 @@ function dashboardPage(user) {
       </a>`
     : `<div class="dash-hero-card done"><span class="dash-hero-ico">&#10003;</span><span class="dash-hero-copy"><b>${h(copy.dashboard_done_title)}</b><span class="muted">${h(copy.dashboard_done_description)}</span></span></div>`;
 
-  const lessonCards = lessons.length
+  const dashboardTests = lessons.filter((lesson) =>
+    lesson.course_category === "tkt" ||
+    (lesson.course_category === "attestation" && normalizeAttestationGroupName(lesson.course_title) === "toifa testlari")
+  );
+  const lessonCards = dashboardTests.length
     ? `<section class="dl-group">
-      <div class="dl-group-head"><h3>${h(copy.dashboard_tests_title)}</h3><span>${lessons.length} ${h(copy.dashboard_test_count_suffix)}</span></div>
-      <div class="dl-grid">${lessons.map((l, i) => {
+      <div class="dl-group-head"><h3>${h(copy.dashboard_tests_title)}</h3><span>${dashboardTests.length} ${h(copy.dashboard_test_count_suffix)}</span></div>
+      <div class="dl-grid list">${dashboardTests.map((l, i) => {
         const isDone = done.has(l.id);
-        const sequenceLocked = firstIncompleteIndex >= 0 && i > firstIncompleteIndex;
+        const sequenceIndex = lessons.findIndex((item) => Number(item.id) === Number(l.id));
+        const sequenceLocked = firstIncompleteIndex >= 0 && sequenceIndex > firstIncompleteIndex && !isFirstAttestationCategoryTest(l, lessons);
         const lockedPaidTest = !sequenceLocked && Number(l.price) > 0 && !testOwned(user.id, l.id);
         const href = sequenceLocked ? "" : lockedPaidTest ? "/plans" : `/test/${l.id}`;
         const cardTag = sequenceLocked ? "div" : "a";
@@ -4325,11 +4330,11 @@ function dashboardPage(user) {
 
       <div class="card dash-all">
         <div class="card-head dash-all-head">
-          <div><h2>${h(copy.dashboard_tests_title)}</h2><p class="muted small">${total} ${h(copy.dashboard_test_count_suffix)}</p></div>
+          <div><h2>${h(copy.dashboard_tests_title)}</h2><p class="muted small">${dashboardTests.length} ${h(copy.dashboard_test_count_suffix)}</p></div>
           <div class="dl-tools">
             <input id="dlSearch" class="dl-search" placeholder="${h(copy.dashboard_test_search)}" aria-label="${h(copy.dashboard_test_search)}">
-            <button type="button" class="dl-view active" data-view="grid" aria-label="${h(copy.dashboard_grid_view)}">&#9638;</button>
-            <button type="button" class="dl-view" data-view="list" aria-label="${h(copy.dashboard_list_view)}">&#9776;</button>
+            <button type="button" class="dl-view" data-view="grid" aria-label="${h(copy.dashboard_grid_view)}">&#9638;</button>
+            <button type="button" class="dl-view active" data-view="list" aria-label="${h(copy.dashboard_list_view)}">&#9776;</button>
           </div>
         </div>
         <div class="dl-groups" id="dlGrid">${lessonCards || `<p class="muted">${h(copy.dashboard_no_tests)}</p>`}</div>
@@ -4348,7 +4353,7 @@ function dashboardPage(user) {
           uz: { installed: ${JSON.stringify(copy.dashboard_install_ready)}, help: ${JSON.stringify(copy.dashboard_install_help)} },
           en: { installed: "The app is already installed.", help: "Open your browser menu and choose Install app or Add to Home screen." }
         };
-        if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=21').catch(function () {});
+        if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=22').catch(function () {});
         window.addEventListener('beforeinstallprompt', function (event) {
           event.preventDefault();
           installPrompt = event;
@@ -4374,7 +4379,7 @@ function dashboardPage(user) {
         var search = document.getElementById('dlSearch');
         if (!grid || !pager) return;
         var cards = Array.prototype.slice.call(grid.querySelectorAll('.dl-card'));
-        var per = 6;
+        var per = 5;
         var page = 1;
         function filtered() {
           var q = (search && search.value ? search.value : '').toLowerCase().trim();
@@ -4689,12 +4694,12 @@ function testDocument({ title, body }) {  return `<!DOCTYPE html>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%231e40af'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='18' font-weight='bold' text-anchor='middle' fill='white'%3EH%3C/text%3E%3C/svg%3E">
 <script async src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>try{document.documentElement.dataset.theme=localStorage.getItem('ht_theme')||'dark';}catch(e){document.documentElement.dataset.theme='dark';}</script>
-<link rel="stylesheet" href="/assets/platform.css?v=20261124attestation-unlock1">
+<link rel="stylesheet" href="/assets/platform.css?v=20261124dashboard-list5">
 </head>
 <body class="test-body student-page">
 ${body}
 <footer class="test-author-footer">Ustozlarimizga ko‘mak bo‘lsin deya, ushbu materiallar Habiba Mo'minjonovna tomonidan taqdim etildi.</footer>
-<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=21').then(function (registration) { registration.update().catch(function () {}); }).catch(function () {});</script>
+<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=22').then(function (registration) { registration.update().catch(function () {}); }).catch(function () {});</script>
 </body>
 </html>`;
 }
