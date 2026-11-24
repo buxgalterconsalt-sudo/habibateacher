@@ -1855,7 +1855,7 @@ ${seoTags}
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%2312b5a6'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='18' font-weight='bold' text-anchor='middle' fill='%2303211d'%3EH%3C/text%3E%3C/svg%3E">
 <script async src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>try{document.documentElement.dataset.theme=localStorage.getItem('ht_theme')||'dark';}catch(e){document.documentElement.dataset.theme='dark';}</script>
-<link rel="stylesheet" href="/assets/platform.css?v=20261124attestation-preview1">
+<link rel="stylesheet" href="/assets/platform.css?v=20261124attestation-unlock1">
 </head>
 <body${admin && !publicPage ? ` class="admin-page"` : isStudentPage ? ` class="student-page${isDashboard ? " is-dashboard" : ""}"` : ""}>
 <header class="topbar">
@@ -2143,7 +2143,7 @@ c.addEventListener('change', function () { b.disabled = !c.checked; });
 })();
 </script>
 <script>
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=20').then(function (registration) { registration.update().catch(function () {}); }).catch(function () {});
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=21').then(function (registration) { registration.update().catch(function () {}); }).catch(function () {});
 document.querySelectorAll('[data-app-refresh]').forEach(function (button) {
   button.addEventListener('click', async function () {
     if (button.disabled) return;
@@ -4147,6 +4147,13 @@ function dashboardTestSequence(userId) {
   return { tests, completed };
 }
 
+function isFirstAttestationCategoryTest(test, tests) {
+  const groupName = normalizeAttestationGroupName(test?.course_title);
+  if (!ATTESTATION_GROUP_PRIORITY.has(groupName) && groupName !== "toifa testlari") return false;
+  const firstInGroup = tests.find((item) => Number(item.course_id) === Number(test.course_id));
+  return Number(firstInGroup?.id) === Number(test.id);
+}
+
 function dashboardPage(user) {
   const copy = siteTexts();
   const sequence = dashboardTestSequence(user.id);
@@ -4341,7 +4348,7 @@ function dashboardPage(user) {
           uz: { installed: ${JSON.stringify(copy.dashboard_install_ready)}, help: ${JSON.stringify(copy.dashboard_install_help)} },
           en: { installed: "The app is already installed.", help: "Open your browser menu and choose Install app or Add to Home screen." }
         };
-        if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=20').catch(function () {});
+        if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=21').catch(function () {});
         window.addEventListener('beforeinstallprompt', function (event) {
           event.preventDefault();
           installPrompt = event;
@@ -4682,12 +4689,12 @@ function testDocument({ title, body }) {  return `<!DOCTYPE html>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%231e40af'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='18' font-weight='bold' text-anchor='middle' fill='white'%3EH%3C/text%3E%3C/svg%3E">
 <script async src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>try{document.documentElement.dataset.theme=localStorage.getItem('ht_theme')||'dark';}catch(e){document.documentElement.dataset.theme='dark';}</script>
-<link rel="stylesheet" href="/assets/platform.css?v=20261124attestation-preview1">
+<link rel="stylesheet" href="/assets/platform.css?v=20261124attestation-unlock1">
 </head>
 <body class="test-body student-page">
 ${body}
 <footer class="test-author-footer">Ustozlarimizga ko‘mak bo‘lsin deya, ushbu materiallar Habiba Mo'minjonovna tomonidan taqdim etildi.</footer>
-<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=20').then(function (registration) { registration.update().catch(function () {}); }).catch(function () {});</script>
+<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=21').then(function (registration) { registration.update().catch(function () {}); }).catch(function () {});</script>
 </body>
 </html>`;
 }
@@ -6442,18 +6449,8 @@ const server = http.createServer(async (req, res) => {
   const groupHeader = isAttestationGroup
     ? `<summary class="test-group-head attestation-group-title${groupHasTests ? " has-tests" : ""}"><h2>${h(course.title)}</h2>${groupHasTests ? `<span class="attestation-group-marker" aria-hidden="true"></span>` : ""}</summary>`
     : `<div class="test-group-head"><div><h2>${h(course.title)}</h2></div></div>`;
-  const previewOneTest = isAttestationGroup && !admin && list.length > 1;
-  const visibleTests = previewOneTest ? list.slice(0, 1) : list;
-  const renderTest = (test) => {
-    const isComplete = sequence?.completed.has(Number(test.id)) || false;
-    const locked = !!sequence && !isComplete && Number(test.id) !== Number(nextTest?.id);
-    return testCard(test, Number(test.price) > 0 && userHasPlan, locked, nextTest?.id);
-  };
-  const remainingTests = previewOneTest
-    ? `<details class="test-more"><summary>Qolgan testlarni ko‘rish</summary><div class="grid test-grid">${list.slice(1).map(renderTest).join("")}</div></details>`
-    : "";
-  const openPreview = isAttestationGroup && !admin && list.length ? " open" : "";
-  return `<${isAttestationGroup ? "details" : "section"} class="test-group${isAttestationGroup ? ` attestation-test-group${groupHasTests ? " has-tests" : ""}` : ""}"${openPreview}>
+  const firstTestIdInGroup = Number(list[0]?.id) || 0;
+  return `<${isAttestationGroup ? "details" : "section"} class="test-group${isAttestationGroup ? ` attestation-test-group${groupHasTests ? " has-tests" : ""}` : ""}">
   ${groupHeader}
   ${
   hasPaid && list.length > 1
@@ -6466,8 +6463,12 @@ const server = http.createServer(async (req, res) => {
   </div>`
 : ""
   }
-  <div class="grid test-grid">${visibleTests.map(renderTest).join("")}${addCard}</div>
-  ${remainingTests}
+  <div class="grid test-grid">${list.map((t) => {
+    const isComplete = sequence?.completed.has(Number(t.id)) || false;
+    const isFirstTestInGroup = isAttestationGroup && Number(t.id) === firstTestIdInGroup;
+    const locked = !!sequence && !isComplete && Number(t.id) !== Number(nextTest?.id) && !isFirstTestInGroup;
+    return testCard(t, Number(t.price) > 0 && userHasPlan, locked, isFirstTestInGroup ? t.id : nextTest?.id);
+  }).join("")}${addCard}</div>
   ${isAttestationGroup ? "</details>" : "</section>"}`;
   })
 .filter(Boolean)
@@ -7028,7 +7029,8 @@ const server = http.createServer(async (req, res) => {
     const sequence = dashboardTestSequence(user.id);
     const currentIndex = sequence.tests.findIndex((item) => Number(item.id) === Number(lesson.id));
     if (currentIndex < 0) return redirect(res, "/dashboard");
-    const unmetPrevious = currentIndex > 0 ? sequence.tests.slice(0, currentIndex).find((item) => !sequence.completed.has(Number(item.id))) : null;
+    const isFirstCategoryTest = isFirstAttestationCategoryTest(sequence.tests[currentIndex], sequence.tests);
+    const unmetPrevious = !isFirstCategoryTest && currentIndex > 0 ? sequence.tests.slice(0, currentIndex).find((item) => !sequence.completed.has(Number(item.id))) : null;
     if (unmetPrevious) return redirect(res, `/test/${unmetPrevious.id}`);
   }
 
@@ -7248,7 +7250,8 @@ const server = http.createServer(async (req, res) => {
     const sequence = dashboardTestSequence(user.id);
     const index = sequence.tests.findIndex((item) => Number(item.id) === Number(lesson.id));
     if (index < 0) return redirect(res, "/dashboard");
-    const unmet = sequence.tests.slice(0, index).find((item) => !sequence.completed.has(Number(item.id)));
+    const isFirstCategoryTest = isFirstAttestationCategoryTest(sequence.tests[index], sequence.tests);
+    const unmet = isFirstCategoryTest ? null : sequence.tests.slice(0, index).find((item) => !sequence.completed.has(Number(item.id)));
     if (unmet) return redirect(res, `/test/${unmet.id}`);
   }
   if (!admin && lesson.type !== "test" && lesson.type !== "video" && !hasLessonPermission(user.id, lesson.id)) return redirect(res, "/plans");
