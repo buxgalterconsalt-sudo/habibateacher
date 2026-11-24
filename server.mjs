@@ -1599,6 +1599,9 @@ function passwordPolicyError(password) {
 function passwordRequirementsMarkup() {
   return '<small class="password-hint">Kamida 8 ta belgi: katta va kichik lotin harfi, raqam hamda maxsus belgi. Eng ko\'pi 64 ta belgi.</small>';
 }
+function registrationPasswordInput(name, autocomplete, placeholder = "") {
+  return `<span class="password-input-wrap"><input name="${h(name)}" type="password" required minlength="8" maxlength="64" autocomplete="${h(autocomplete)}"${placeholder ? ` placeholder="${h(placeholder)}"` : ""}><button class="password-toggle" type="button" data-password-toggle aria-label="Parolni ko'rsat" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button></span>`;
+}
 
 function resetPasswordForm(phone, token, error = "") {
   return `<section class="login-modern"><div class="login-card">
@@ -1852,7 +1855,7 @@ ${seoTags}
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%2312b5a6'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='18' font-weight='bold' text-anchor='middle' fill='%2303211d'%3EH%3C/text%3E%3C/svg%3E">
 <script async src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>try{document.documentElement.dataset.theme=localStorage.getItem('ht_theme')||'dark';}catch(e){document.documentElement.dataset.theme='dark';}</script>
-<link rel="stylesheet" href="/assets/platform.css?v=20261123home16">
+<link rel="stylesheet" href="/assets/platform.css?v=20261124attestation1">
 </head>
 <body${admin && !publicPage ? ` class="admin-page"` : isStudentPage ? ` class="student-page${isDashboard ? " is-dashboard" : ""}"` : ""}>
 <header class="topbar">
@@ -2140,7 +2143,17 @@ c.addEventListener('change', function () { b.disabled = !c.checked; });
 })();
 </script>
 <script>
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=15').then(function (registration) { registration.update().catch(function () {}); }).catch(function () {});
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=18').then(function (registration) { registration.update().catch(function () {}); }).catch(function () {});
+document.addEventListener('click', function (event) {
+  var button = event.target.closest ? event.target.closest('[data-password-toggle]') : null;
+  if (!button) return;
+  var input = button.parentElement.querySelector('input');
+  if (!input) return;
+  var show = input.type === 'password';
+  input.type = show ? 'text' : 'password';
+  button.setAttribute('aria-pressed', String(show));
+  button.setAttribute('aria-label', show ? 'Parolni yashir' : 'Parolni ko\'rsat');
+});
 document.querySelectorAll('[data-app-refresh]').forEach(function (button) {
   button.addEventListener('click', async function () {
     if (button.disabled) return;
@@ -2306,13 +2319,14 @@ function moduleHref(lesson) {
   return `/${category}`;
 }
 
-function testCard(test, owned = false) {
+function testCard(test, owned = false, locked = false, unlockTestId = 0) {
   const isPro = Number(test.price) > 0;
   const count = Number(test.question_count) || Number(test.qcount) || 0;
   const score = Number(test.max_score) || 0;
   const priceLabel = owned ? "Ochilgan": isPro ? `${formatSum(test.price)} so'm`: "Bepul";
-  return `<a class="test-card ${isPro ? "pro": "free"}" href="/test/${test.id}">
-  <span class="test-flag">${isPro ? "PRO": "FREE"}</span>
+  const targetId = locked && unlockTestId ? Number(unlockTestId) : Number(test.id);
+  return `<a class="test-card ${isPro ? "pro": "free"}${locked ? " test-locked" : ""}" href="/test/${targetId}"${locked ? ` aria-label="${h(test.title)} yopiq. Avval oldingi testni bajaring."` : ""}>
+  <span class="test-flag">${locked ? "🔒" : isPro ? "PRO": "FREE"}</span>
   <h3>${h(test.title)}</h3>
   <div class="test-params">
   <div><span>Ajratilgan vaqt:</span><b>${formatDuration(test.duration_min)}</b></div>
@@ -2323,7 +2337,7 @@ function testCard(test, owned = false) {
   <span class="like-btn" data-like="${test.id}" role="button" tabindex="0" title="Yoqdi">${icon("heart")} <b>${Number(test.likes) || 0}</b></span>
   <span>${icon("eye")} ${Number(test.views) || 0}</span>
   </div>
-  <span class="test-price">${priceLabel}</span>
+  <span class="test-price">${locked ? "Avval oldingi testni bajaring" : priceLabel}</span>
   </a>`;
 }
 
@@ -4126,7 +4140,14 @@ function dashboardTestSequence(userId) {
     `SELECT l.*, c.title AS course_title, c.category AS course_category
      FROM lessons l JOIN courses c ON c.id = l.course_id
      WHERE c.is_published = 1 AND l.type = 'test'
-     ORDER BY c.id, l.position, l.id`
+     AND EXISTS (SELECT 1 FROM questions q WHERE q.lesson_id = l.id)
+       ORDER BY CASE WHEN c.category = 'attestation' THEN 0 ELSE 1 END,
+         CASE WHEN c.category = 'attestation' THEN CASE lower(c.title)
+           WHEN 'reading testlari' THEN 0 WHEN 'grammar testlari' THEN 1
+           WHEN 'vocabulary testlari' THEN 2 WHEN 'pragmatika testlari' THEN 3
+           WHEN 'pedagogik mahorat testlari' THEN 4 WHEN 'kasbiy standart testlari' THEN 5
+           WHEN 'toifa testlari' THEN 6 ELSE 7 END ELSE 0 END,
+         c.id, l.position, l.id`
   ).all();
   const completed = new Set(db.prepare(
     `SELECT p.lesson_id FROM progress p JOIN lessons l ON l.id = p.lesson_id
@@ -4330,7 +4351,7 @@ function dashboardPage(user) {
           uz: { installed: ${JSON.stringify(copy.dashboard_install_ready)}, help: ${JSON.stringify(copy.dashboard_install_help)} },
           en: { installed: "The app is already installed.", help: "Open your browser menu and choose Install app or Add to Home screen." }
         };
-        if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=15').catch(function () {});
+        if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=18').catch(function () {});
         window.addEventListener('beforeinstallprompt', function (event) {
           event.preventDefault();
           installPrompt = event;
@@ -4676,7 +4697,7 @@ function testDocument({ title, body }) {  return `<!DOCTYPE html>
 <body class="test-body student-page">
 ${body}
 <footer class="test-author-footer">Ustozlarimizga ko‘mak bo‘lsin deya, ushbu materiallar Habiba Mo'minjonovna tomonidan taqdim etildi.</footer>
-<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=15').then(function (registration) { registration.update().catch(function () {}); }).catch(function () {});</script>
+<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=18').then(function (registration) { registration.update().catch(function () {}); }).catch(function () {});</script>
 </body>
 </html>`;
 }
@@ -5705,8 +5726,8 @@ const server = http.createServer(async (req, res) => {
   <div class="field"><label>Otangizning ismi (otchestvo)</label><input name="father_name" required maxlength="60" autocomplete="off" placeholder="Muminjonovna / yoki / vich / qizi / o'g'li"></div>
   <div class="field"><label>Tug'ilgan kun.oy.yil</label><input name="birth_date" data-birth-date required inputmode="numeric" maxlength="10" autocomplete="off" pattern="[0-9]{2}\\.[0-9]{2}\\.[0-9]{4}" placeholder="kun.oy.yil, masalan 05.09.1995"></div>
   <div class="field"><label>Telefon raqamingiz</label><input name="phone" data-phone required inputmode="tel" autocomplete="username" placeholder="+998 93 568 00 91"></div>
-  <div class="field"><label>Parol</label><input name="password" type="password" required minlength="8" maxlength="64" autocomplete="new-password">${passwordRequirementsMarkup()}</div>
-  <div class="field"><label>Parolni qayta tasdiqlang</label><input name="password_confirm" type="password" required minlength="8" maxlength="64" autocomplete="new-password" placeholder="Parolni qayta kiriting"></div>
+  <div class="field"><label>Parol</label>${registrationPasswordInput("password", "new-password")}${passwordRequirementsMarkup()}</div>
+  <div class="field"><label>Parolni qayta tasdiqlang</label>${registrationPasswordInput("password_confirm", "new-password", "Parolni qayta kiriting")}</div>
   <button class="btn btn-primary" type="submit">Ro'yxatdan o'tish</button>
   </form>`,
   `<p class="alt">Akkountingiz bormi? <a href="/login${next ? `?next=${encodeURIComponent(next)}`: ""}">Kirish</a></p>`,
@@ -5766,8 +5787,8 @@ const server = http.createServer(async (req, res) => {
   <div class="field"><label>Otangizning ismi (otchestvo)</label><input name="father_name" value="${h(fatherName)}" required maxlength="60" autocomplete="off"></div>
   <div class="field"><label>Tug'ilgan kun.oy.yil</label><input name="birth_date" data-birth-date value="${h(birthDateInput)}" required inputmode="numeric" maxlength="10" autocomplete="off" pattern="[0-9]{2}\\.[0-9]{2}\\.[0-9]{4}" placeholder="kun.oy.yil, masalan 05.09.1995"></div>
   <div class="field"><label>Telefon raqamingiz</label><input name="phone" data-phone value="${h(fields.phone || "")}" required inputmode="tel" maxlength="17" autocomplete="username" placeholder="+998 90 123 45 67"></div>
-  <div class="field"><label>Parol</label><input name="password" type="password" required minlength="8" maxlength="64" autocomplete="new-password">${passwordRequirementsMarkup()}</div>
-  <div class="field"><label>Parolni qayta tasdiqlang</label><input name="password_confirm" type="password" required minlength="8" maxlength="64" autocomplete="new-password"></div>
+  <div class="field"><label>Parol</label>${registrationPasswordInput("password", "new-password")}${passwordRequirementsMarkup()}</div>
+  <div class="field"><label>Parolni qayta tasdiqlang</label>${registrationPasswordInput("password_confirm", "new-password")}</div>
   <button class="btn btn-primary" type="submit">Ro'yxatdan o'tish</button>
   </form>`,
   `<p class="alt">Akkountingiz bormi? <a href="/login${next ? `?next=${encodeURIComponent(next)}`: ""}">Kirish</a></p>`,
@@ -6396,11 +6417,14 @@ const server = http.createServer(async (req, res) => {
   FROM lessons l JOIN courses c ON c.id = l.course_id
   WHERE l.type = 'test' AND c.category IN (${categoryMarks}) AND c.is_published = 1
     AND (c.category <> 'tkt' OR EXISTS (SELECT 1 FROM questions q WHERE q.lesson_id = l.id))
+    AND (? = 1 OR EXISTS (SELECT 1 FROM questions q WHERE q.lesson_id = l.id))
   ORDER BY l.course_id, l.position, l.id`
   )
-  .all(...queryCategories);
+  .all(...queryCategories, admin ? 1 : 0);
 
   const userHasPlan = !!user && hasPlanAccess(user.id);
+  const sequence = user && !admin ? dashboardTestSequence(user.id) : null;
+  const nextTest = sequence?.tests.find((test) => !sequence.completed.has(Number(test.id))) || null;
 
   const byCourse = new Map();
   for (const test of tests) {
@@ -6411,8 +6435,10 @@ const server = http.createServer(async (req, res) => {
   const sections = courses
 .map((course) => {
   const list = byCourse.get(course.id) || [];
-  const isAttestationGroup = cat === "attestation" &&
-    ATTESTATION_GROUP_PRIORITY.has(normalizeAttestationGroupName(course.title));
+  const isAttestationGroup = cat === "attestation" && (
+    ATTESTATION_GROUP_PRIORITY.has(normalizeAttestationGroupName(course.title)) ||
+    normalizeAttestationGroupName(course.title) === "toifa testlari"
+  );
   if (!list.length && !admin && !isAttestationGroup) return "";
   const hasPaid = list.some((t) => Number(t.price) > 0);
   const addCard = admin
@@ -6422,10 +6448,11 @@ const server = http.createServer(async (req, res) => {
   <small>${h(course.title)} guruhiga</small>
   </a>`
 : "";
+  const groupHasTests = list.length > 0;
   const groupHeader = isAttestationGroup
-    ? `<summary class="test-group-head attestation-group-title"><h2>${h(course.title)}</h2></summary>`
+    ? `<summary class="test-group-head attestation-group-title${groupHasTests ? " has-tests" : ""}"><h2>${h(course.title)}</h2>${groupHasTests ? `<span class="attestation-group-marker" aria-hidden="true"></span>` : ""}</summary>`
     : `<div class="test-group-head"><div><h2>${h(course.title)}</h2></div></div>`;
-  return `<${isAttestationGroup ? "details" : "section"} class="test-group${isAttestationGroup ? " attestation-test-group" : ""}">
+  return `<${isAttestationGroup ? "details" : "section"} class="test-group${isAttestationGroup ? ` attestation-test-group${groupHasTests ? " has-tests" : ""}` : ""}">
   ${groupHeader}
   ${
   hasPaid && list.length > 1
@@ -6438,18 +6465,22 @@ const server = http.createServer(async (req, res) => {
   </div>`
 : ""
   }
-  <div class="grid test-grid">${list.map((t) => testCard(t, Number(t.price) > 0 && userHasPlan)).join("")}${addCard}</div>
+  <div class="grid test-grid">${list.map((t) => {
+    const isComplete = sequence?.completed.has(Number(t.id)) || false;
+    const locked = !!sequence && !isComplete && Number(t.id) !== Number(nextTest?.id);
+    return testCard(t, Number(t.price) > 0 && userHasPlan, locked, nextTest?.id);
+  }).join("")}${addCard}</div>
   ${isAttestationGroup ? "</details>" : "</section>"}`;
   })
 .filter(Boolean)
 .join("");
 
   const body = `
-  <section class="page-hero">
+  ${cat === "attestation" ? "" : `<section class="page-hero">
   <a class="back" href="/">  Barcha yo'nalishlar</a>
   <h1>${h(meta.h1)}</h1>
   <p class="lead">${h(meta.lead)}</p>
-  </section>
+  </section>`}
   <section class="section tight">
   <div class="wrap">
   <div class="tests-head">
@@ -7215,6 +7246,13 @@ const server = http.createServer(async (req, res) => {
   if (!user) return redirect(res, "/login");
   const lesson = db.prepare("SELECT * FROM lessons WHERE id = ?").get(Number(lessonMatch[1]));
   if (!lesson) return notFound(res, user, admin);
+  if (!admin && lesson.type === "test") {
+    const sequence = dashboardTestSequence(user.id);
+    const index = sequence.tests.findIndex((item) => Number(item.id) === Number(lesson.id));
+    if (index < 0) return redirect(res, "/dashboard");
+    const unmet = sequence.tests.slice(0, index).find((item) => !sequence.completed.has(Number(item.id)));
+    if (unmet) return redirect(res, `/test/${unmet.id}`);
+  }
   if (!admin && lesson.type !== "test" && lesson.type !== "video" && !hasLessonPermission(user.id, lesson.id)) return redirect(res, "/plans");
   if (!admin && lesson.type === "video" && !isIntroVideoLesson(lesson.id) && !hasLessonPermission(user.id, lesson.id)) return redirect(res, "/plans");
   const videoPreviewOnly = lesson.type === "video" && !admin && !hasLessonPermission(user.id, lesson.id) && !isIntroVideoLesson(lesson.id);
