@@ -225,6 +225,10 @@ function courseNavLabel() {
   return value.slice(0, 32) || "Kurslar";
 }
 
+function courseNavVisible() {
+  return metaGet("course_nav_visible", "1") !== "0";
+}
+
 function siteBrandName() {
   return String(siteTexts().site_name || config.siteName || "Habiba teacher").trim().slice(0, 80);
 }
@@ -1782,6 +1786,7 @@ function clearFailures(ip) {
 /* ------------------------------------------------------------------ views */
 function navFor(user, admin, publicPage = false) {
   const copy = siteTexts();
+  const coursesLink = courseNavVisible() ? `<a href="/courses">${h(copy.nav_courses)}</a>` : "";
   if (admin && !publicPage) {
   return `<nav class="nav">
   <a href="/admin" class="active">Admin</a>
@@ -1798,7 +1803,7 @@ function navFor(user, admin, publicPage = false) {
   <a href="/attestation">${h(copy.nav_attestation)}</a>
   <a href="/tkt">${h(copy.nav_tkt)}</a>
   <a href="/duel">${h(copy.nav_duel)}</a>
-  <a href="/courses">${h(copy.nav_courses)}</a>
+  ${coursesLink}
   <a href="/plans">${h(copy.nav_plans)}</a>
   <a href="/leaderboard">${h(copy.nav_leaderboard)}</a>`;
 
@@ -1808,7 +1813,7 @@ function navFor(user, admin, publicPage = false) {
   <a href="/attestation">${h(copy.nav_attestation)}</a>
   <a href="/tkt">${h(copy.nav_tkt)}</a>
   <a href="/duel">${h(copy.nav_duel)}</a>
-  <a href="/courses">${h(copy.nav_courses)}</a>
+  ${coursesLink}
   <a href="/dashboard">${h(siteTexts().dashboard_page_title || "Kabinet")}</a>
   ${Number(user.is_author) ? `<a href="/author">Muallif paneli</a>` : ""}
   <a href="/leaderboard">${h(copy.nav_leaderboard)}</a>
@@ -1901,7 +1906,7 @@ ${seoTags}
   <a href="/attestation">${h(copy.nav_attestation)}</a>
   <a href="/tkt">${h(copy.nav_tkt)}</a>
   <a href="/duel">${h(copy.nav_duel)}</a>
-  <a href="/courses">${h(copy.nav_courses)}</a>
+  ${courseNavVisible() ? `<a href="/courses">${h(copy.nav_courses)}</a>` : ""}
   <a href="/plans">${h(copy.nav_plans)}</a>
   <a href="/leaderboard">${h(copy.nav_leaderboard)}</a>
   ${
@@ -1945,7 +1950,7 @@ ${body}
   <a href="/attestation">${h(copy.nav_attestation)}</a>
   <a href="/tkt">${h(copy.nav_tkt)}</a>
   <a href="/duel">${h(copy.nav_duel)}</a>
-  <a href="/courses">${h(copy.nav_courses)}</a>
+  ${courseNavVisible() ? `<a href="/courses">${h(copy.nav_courses)}</a>` : ""}
   <a href="/plans">${h(copy.nav_plans)}</a>
   <a href="/leaderboard">${h(copy.nav_leaderboard)}</a>
   <a href="/#about">${h(copy.footer_about)}</a>
@@ -8279,6 +8284,8 @@ const server = http.createServer(async (req, res) => {
   if (p === "/admin/site-settings" && method === "GET") {
     if (!admin) return redirect(res, "/admin/login");
     const copy = siteTexts(true);
+    const multilevelCourses = db.prepare("SELECT c.id, COUNT(l.id) AS lesson_count FROM courses c LEFT JOIN lessons l ON l.course_id = c.id WHERE c.is_test_group = 0 GROUP BY c.id").all();
+    const multilevelLessonCount = multilevelCourses.reduce((sum, course) => sum + Number(course.lesson_count || 0), 0);
     const homeSections = homeSectionVisibility();
     const customHomeSections = homeCustomSections();
     const sectionOrder = homeSectionOrder(customHomeSections);
@@ -8330,15 +8337,19 @@ const server = http.createServer(async (req, res) => {
     const body = `<a class="back" href="/admin">&larr; Admin panel</a>
       <div class="page-head"><div><h1>Sayt sozlamalari</h1><p class="muted">Menyu va bosh sahifadagi asosiy matnlarni shu yerdan tahrirlang. O'zgarishlar saqlangandan so'ng darhol ko'rinadi.</p></div></div>
       ${url.searchParams.get("saved") === "1" ? alertBox("Sayt matnlari saqlandi.", "success") : ""}
+      ${url.searchParams.get("cleared") === "1" ? alertBox("Multilevel darslari tozalandi. Kurslar bo'sh holatda saqlandi.", "success") : ""}
+      ${url.searchParams.get("err") === "clear" ? alertBox("Multilevel tarkibini tozalashda xatolik yuz berdi. Hech qanday qisman o'zgarish saqlanmadi.", "error") : ""}
       ${url.searchParams.get("err") === "length" ? alertBox("Qisqa yozuvlar 180, izohlar esa 500 belgigacha bo'lishi mumkin.", "error") : ""}
       <form method="post" action="/admin/site-settings" class="form site-copy-form">
         <input type="hidden" name="site_copy_removed" id="siteCopyRemoved" value="${h(JSON.stringify([...removedCopyKeys]))}">
         <input type="hidden" name="site_copy_extras" id="siteCopyExtras" value="${h(JSON.stringify(copyExtras))}">
+        <section class="card"><h2>Multilevel tugmasi</h2><label class="check-row"><input type="checkbox" name="course_nav_visible" value="1"${courseNavVisible() ? " checked" : ""}> Menyuda “${h(courseNavLabel())}” tugmasini ko'rsatish</label><p class="muted">Belgini olib tashlasangiz, Multilevel havolasi yuqori menyu va pastki havolalardan butunlay yo'qoladi.</p><p class="muted">Admin panel → kurs → darslar orqali video, PDF, matn yoki test qo'shish mumkin.</p><a class="btn btn-ghost btn-sm" href="/admin">Admin panelni ochish</a></section>
         <button class="btn btn-primary" type="submit">Barcha matnlarni saqlash</button>
         <section class="home-section-settings"><div><h2>Bosh sahifa bo'limlari</h2><p class="muted">Bo'limlarni sudrab tartiblang, belgisini olib tashlab yashiring yoki yangi bo'lim qo'shing. Tartib saytga shu ko'rinishda chiqadi.</p></div><input type="hidden" name="home_section_order" id="homeSectionOrder" value="${sectionOrderJson}"><input type="hidden" name="home_custom_sections" id="homeCustomSections" value="${customSectionsJson}"><div class="home-order-list" id="homeSectionOrderList">${sectionFields}</div><button class="btn btn-ghost" id="addHomeSection" type="button">+ Yangi bo'lim qo'shish</button><small class="muted">Yangi bo'lim uchun sarlavha va tavsif kiriting. Ko'pi bilan 20 ta qo'shimcha bo'lim.</small></section>
         ${fields}
         <button class="btn btn-primary" type="submit">Barcha matnlarni saqlash</button>
-      </form>`;
+      </form>
+      <section class="card" style="margin-top:22px;border-color:rgba(220,70,70,.45)"><h2>Multilevel darslarini tozalash</h2><p>${multilevelCourses.length} ta kursda jami ${multilevelLessonCount} ta dars bor. Tozalash kurslarni saqlab qoladi va ichidagi video, PDF, matn, testlar, materiallar, savollar hamda shu darslarga tegishli o'quvchi natijalarini o'chiradi.</p><form method="post" action="/admin/site-settings/clear-multilevel" onsubmit="return confirm('Multileveldagi ${multilevelLessonCount} ta dars va ularga tegishli materiallar, savollar va natijalar butunlay o‘chiriladi. Kurs nomlari qoladi. Davom etilsinmi?')"><button class="btn btn-danger" type="submit">Multilevel ichidagi barcha darslarni tozalash</button></form></section>`;
     const sectionScript = `<script>(function(){var list=document.getElementById('homeSectionOrderList');var form=list&&list.closest('form');var add=document.getElementById('addHomeSection');var orderInput=document.getElementById('homeSectionOrder');var customInput=document.getElementById('homeCustomSections');if(!list||!form||!orderInput||!customInput)return;function updateTitle(row){var input=row.querySelector('[data-custom-title]');var label=row.querySelector('.home-order-label span');if(input&&label)label.textContent=input.value||'Yangi bo\\'lim'}function makeCustom(){var id='custom_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);var row=document.createElement('div');row.className='home-order-item home-custom-item';row.draggable=true;row.dataset.homeOrderItem='';row.dataset.sectionKey=id;row.innerHTML='<div class="home-order-head"><span class="home-drag-handle" aria-hidden="true">⠿</span><label class="home-order-label"><input type="checkbox" data-custom-visible checked><span>Yangi bo\\'lim</span></label><div class="home-order-buttons"><button type="button" data-order-move="up" aria-label="Yuqoriga">↑</button><button type="button" data-order-move="down" aria-label="Pastga">↓</button></div></div><details class="home-custom-editor" open><summary>Bo\\'lim matnlarini tahrirlash</summary><div class="home-custom-fields"><label>Sarlavha<input data-custom-title maxlength="180" value=""></label><label>Tavsif<textarea data-custom-description maxlength="2000" rows="3"></textarea></label><label>Tugma yozuvi (ixtiyoriy)<input data-custom-button maxlength="80" value=""></label><label>Tugma havolasi (ixtiyoriy)<input data-custom-url maxlength="500" placeholder="/courses yoki https://..."></label><button class="btn btn-sm" type="button" data-remove-custom>Bo\\'limni o\\'chirish</button></div></details>';list.appendChild(row);row.querySelector('[data-custom-title]').focus()}if(add)add.addEventListener('click',function(){if(list.querySelectorAll('.home-custom-item').length>=20){alert('Ko\\'pi bilan 20 ta yangi bo\\'lim qo\\'shish mumkin.');return}makeCustom()});list.addEventListener('input',function(event){var row=event.target.closest('.home-custom-item');if(row&&event.target.matches('[data-custom-title]'))updateTitle(row)});list.addEventListener('click',function(event){var row=event.target.closest('[data-home-order-item]');if(!row)return;if(event.target.closest('[data-remove-custom]')){row.remove();return}var move=event.target.closest('[data-order-move]');if(!move)return;if(move.dataset.orderMove==='up'&&row.previousElementSibling)list.insertBefore(row,row.previousElementSibling);if(move.dataset.orderMove==='down'&&row.nextElementSibling)list.insertBefore(row.nextElementSibling,row)});var dragging=null;list.addEventListener('dragstart',function(event){dragging=event.target.closest('[data-home-order-item]');if(dragging){dragging.classList.add('is-dragging');event.dataTransfer.effectAllowed='move'}});list.addEventListener('dragend',function(){if(dragging)dragging.classList.remove('is-dragging');dragging=null});list.addEventListener('dragover',function(event){if(!dragging)return;event.preventDefault();var target=event.target.closest('[data-home-order-item]');if(!target||target===dragging)return;var rect=target.getBoundingClientRect();list.insertBefore(dragging,event.clientY<rect.top+rect.height/2?target:target.nextElementSibling)});form.addEventListener('submit',function(){var rows=Array.from(list.querySelectorAll('[data-home-order-item]'));orderInput.value=JSON.stringify(rows.map(function(row){return row.dataset.sectionKey}));customInput.value=JSON.stringify(rows.filter(function(row){return row.classList.contains('home-custom-item')}).map(function(row){var val=function(selector){var el=row.querySelector(selector);return el?el.value.trim():''};var visible=row.querySelector('[data-custom-visible]');return{id:row.dataset.sectionKey.replace(/^custom_/,'').slice(0,40),title:val('[data-custom-title]'),description:val('[data-custom-description]'),buttonLabel:val('[data-custom-button]'),buttonUrl:val('[data-custom-url]'),visible:!!(visible&&visible.checked)}}))})})();</script>`;
     const copyScript = `<script>(function(){var form=document.querySelector('.site-copy-form');var removed=document.getElementById('siteCopyRemoved');var extras=document.getElementById('siteCopyExtras');if(!form||!removed||!extras)return;function addExtra(group){var row=document.createElement('div');row.className='site-copy-extra-row';row.dataset.copyExtra='';row.dataset.copyExtraId='copy_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);var label=document.createElement('label');label.textContent='Matn nomi';var name=document.createElement('input');name.maxLength=100;name.dataset.copyExtraLabel='';label.appendChild(name);var textLabel=document.createElement('label');textLabel.textContent='Saytda ko\\'rinadigan matn';var text=document.createElement('textarea');text.maxLength=1000;text.rows=2;text.dataset.copyExtraText='';textLabel.appendChild(text);var remove=document.createElement('button');remove.type='button';remove.className='btn btn-sm btn-danger';remove.dataset.copyExtraRemove='';remove.textContent='Olib tashlash';row.append(label,textLabel,remove);group.querySelector('[data-copy-extras]').appendChild(row);name.focus()}form.addEventListener('click',function(event){var remove=event.target.closest('[data-copy-remove]');if(remove){var row=remove.closest('[data-copy-row]');if(row){row.hidden=true;var list=row.closest('.site-copy-grid').querySelector('[data-copy-restore-list]');var restore=document.createElement('button');restore.type='button';restore.className='btn btn-sm';restore.dataset.copyRestore=row.dataset.copyKey;restore.textContent=row.querySelector('label').textContent+' — qaytarish';list.appendChild(restore)}return}var restore=event.target.closest('[data-copy-restore]');if(restore){var key=restore.dataset.copyRestore;var row=form.querySelector('[data-copy-key="'+key+'"]');if(row)row.hidden=false;restore.remove();return}var deleteExtra=event.target.closest('[data-copy-extra-remove]');if(deleteExtra){deleteExtra.closest('[data-copy-extra]').remove();return}var add=event.target.closest('[data-copy-add]');if(add)addExtra(add.closest('[data-copy-group]'))});form.addEventListener('submit',function(){var removedKeys=Array.from(form.querySelectorAll('[data-copy-row][hidden]')).map(function(row){return row.dataset.copyKey});removed.value=JSON.stringify(removedKeys);var rows=Array.from(form.querySelectorAll('[data-copy-extra]')).map(function(row){return{id:row.dataset.copyExtraId,group:row.closest('[data-copy-group]').dataset.copyGroup,label:(row.querySelector('[data-copy-extra-label]').value||'').trim(),text:(row.querySelector('[data-copy-extra-text]').value||'').trim()}}).filter(function(row){return row.label&&row.text});extras.value=JSON.stringify(rows.slice(0,100))})})();</script>`;
     const fullBody = body + sectionScript + copyScript;
@@ -8346,8 +8357,60 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  if (p === "/admin/site-settings/clear-multilevel" && method === "POST") {
+    if (!admin) return redirect(res, "/admin/login");
+    const lessons = db.prepare("SELECT l.id, l.file_id FROM lessons l JOIN courses c ON c.id = l.course_id WHERE c.is_test_group = 0").all();
+    const lessonIds = lessons.map((row) => Number(row.id));
+    if (lessonIds.length) {
+      const marks = lessonIds.map(() => "?").join(",");
+      const materialFileIds = db.prepare(`SELECT file_id FROM materials WHERE lesson_id IN (${marks}) AND file_id <> ''`).all(...lessonIds).map((row) => String(row.file_id));
+      const questionIds = db.prepare(`SELECT id FROM questions WHERE lesson_id IN (${marks})`).all(...lessonIds).map((row) => Number(row.id));
+      const duelIds = db.prepare(`SELECT id FROM duels WHERE lesson_id IN (${marks})`).all(...lessonIds).map((row) => Number(row.id));
+      const tournamentIds = db.prepare(`SELECT id FROM tournaments WHERE test_id IN (${marks})`).all(...lessonIds).map((row) => Number(row.id));
+      db.exec("BEGIN IMMEDIATE");
+      try {
+        if (duelIds.length) {
+          const duelMarks = duelIds.map(() => "?").join(",");
+          for (const table of ["duel_questions", "duel_starts", "duel_plays"]) db.prepare(`DELETE FROM ${table} WHERE duel_id IN (${duelMarks})`).run(...duelIds);
+          db.prepare(`DELETE FROM duels WHERE id IN (${duelMarks})`).run(...duelIds);
+        }
+        if (tournamentIds.length) {
+          const tournamentMarks = tournamentIds.map(() => "?").join(",");
+          const matchIds = db.prepare(`SELECT id FROM tournament_matches WHERE tournament_id IN (${tournamentMarks})`).all(...tournamentIds).map((row) => Number(row.id));
+          if (matchIds.length) {
+            const matchMarks = matchIds.map(() => "?").join(",");
+            db.prepare(`DELETE FROM tournament_starts WHERE match_id IN (${matchMarks})`).run(...matchIds);
+            db.prepare(`DELETE FROM tournament_matches WHERE id IN (${matchMarks})`).run(...matchIds);
+          }
+          for (const table of ["tournament_entries", "tournament_questions"]) db.prepare(`DELETE FROM ${table} WHERE tournament_id IN (${tournamentMarks})`).run(...tournamentIds);
+          db.prepare(`DELETE FROM tournaments WHERE id IN (${tournamentMarks})`).run(...tournamentIds);
+        }
+        if (questionIds.length) {
+          const questionMarks = questionIds.map(() => "?").join(",");
+          db.prepare(`DELETE FROM duel_questions WHERE question_id IN (${questionMarks})`).run(...questionIds);
+          db.prepare(`DELETE FROM tournament_questions WHERE question_id IN (${questionMarks})`).run(...questionIds);
+        }
+        for (const table of ["test_attempts", "progress", "purchases", "likes", "video_watch", "lesson_viewers", "test_sections", "materials", "questions"]) {
+          db.prepare(`DELETE FROM ${table} WHERE lesson_id IN (${marks})`).run(...lessonIds);
+        }
+        db.prepare(`DELETE FROM lessons WHERE id IN (${marks})`).run(...lessonIds);
+        db.exec("COMMIT");
+      } catch (error) {
+        db.exec("ROLLBACK");
+        console.error("[site-settings] Multilevel tozalash bajarilmadi:", error.message);
+        return redirect(res, "/admin/site-settings?err=clear");
+      }
+      const fileIds = new Set([...lessons.map((row) => String(row.file_id || "")).filter(Boolean), ...materialFileIds]);
+      for (const fileId of fileIds) {
+        try { fs.unlinkSync(path.join(STORAGE_DIR, fileId)); } catch (e) {}
+      }
+    }
+    return redirect(res, "/admin/site-settings?cleared=1");
+  }
+
   if (p === "/admin/site-settings" && method === "POST") {
     if (!admin) return redirect(res, "/admin/login");
+    metaSet("course_nav_visible", fields.course_nav_visible === "1" ? "1" : "0");
     let removedCopyKeys = [];
     try { removedCopyKeys = JSON.parse(String(fields.site_copy_removed || "[]")); } catch (e) {}
     const validCopyKeys = new Set(Object.keys(SITE_TEXT_DEFAULTS));
