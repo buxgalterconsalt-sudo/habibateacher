@@ -107,7 +107,7 @@ const SITE_TEXT_DEFAULTS = {
   orbit_kicker: "HABIBA TEACHER · TA'LIM PLATFORMASI", orbit_test: "TEST", orbit_lesson: "DARS", orbit_result: "NATIJA", orbit_tag_1: "Attestatsiya", orbit_tag_2: "TKT", orbit_tag_3: "Metodika", orbit_tag_4: "Amaliy mashq",
   nav_home: "Bosh sahifa", nav_attestation: "Attestatsiya", nav_tkt: "TKT", nav_duel: "Duel", nav_plans: "Tariflar", nav_leaderboard: "Reyting",
   hero_eyebrow: "O'QITUVCHILAR UCHUN ONLAYN TA'LIM", hero_title: "Bilimingizni", hero_accent: "mustahkamlang.", hero_title_end: "Imtihonga tayyor bo'ling.", hero_description: "Attestatsiya va TKT uchun testlar, video darslar hamda metodik materiallar. O'z maqsadingizga mos yo'nalishni tanlab, o'z sur'atingizda o'rganing.", hero_primary: "Bepul ro'yxatdan o'tish", hero_primary_logged: "O'qishni davom ettirish", hero_secondary: "Yo'nalishni tanlang", hero_trust_1: "O'zbek tilida", hero_trust_2: "Istalgan qurilmada", hero_trust_3: "Natija va progress nazorati", hero_note: "Yangi darslar va sinovlar platformada muntazam yangilanadi", hero_image_caption: "Ustozlar uchun amaliy tayyorlov", hero_float_mark: "TKT", hero_float_title: "TKT: 3 ta modul", hero_float_description: "Har bir modul bo'yicha alohida tayyorgarlik",
-  stat_directions: "O'quv yo'nalishi", stat_lessons: "Video va o'quv darslari", stat_tests: "Sinov testlari", stat_test_attestation: "Attestatsiya testlari", stat_test_tkt: "TKT testlari", stat_test_cpd: "CPD testlari", stat_students: "O'quvchilar", stat_note_title: "Bir maqsad sari", stat_note_description: "Reja, mashq va natija — bir joyda", program_direction_suffix: "ta yo'nalish", program_lesson_suffix: "ta dars", program_attestation_tag: "ATTESTATSIYA", program_tkt_tag: "TKT", program_practice_tag: "AMALIYOT", footer_about: "Biz haqimizda",
+  stat_directions: "Yo'nalishlar", stat_lessons: "Video va o'quv darslari", stat_tests: "Sinov testlari", stat_test_attestation: "Attestatsiya testlari", stat_test_tkt: "TKT testlari", stat_test_cpd: "CPD testlari", stat_students: "O'quvchilar", stat_note_title: "Bir maqsad sari", stat_note_description: "Reja, mashq va natija — bir joyda", program_direction_suffix: "ta yo'nalish", program_lesson_suffix: "ta dars", program_attestation_tag: "ATTESTATSIYA", program_tkt_tag: "TKT", program_practice_tag: "AMALIYOT", footer_about: "Biz haqimizda",
   overview_eyebrow: "01 / MAQSADGA QADAM", overview_title: "O'rganing. Mashq qiling.", overview_accent: "O'sishni kuzating.", overview_description: "Tayyorgarlikni kichik, tushunarli bosqichlarga ajrating. Har bir mavzu sizni bilimni amalda qo'llashga yaqinlashtiradi.", pillar_1_title: "Bilimni yangilang", pillar_1_description: "Video dars va metodik qo'llanma bilan asosiy mavzularni takrorlang.", pillar_2_title: "O'zingizni sinang", pillar_2_description: "Test va mashqlar orqali tushunganingizni tekshirib boring.", pillar_3_title: "Natijani kuzating", pillar_3_description: "Shaxsiy kabinetda progress va yakunlangan darslarni ko'ring.",
   direction_heading: "Yo'nalishni tanlang", direction_description: "Attestatsiya yoki TKT — o'zingizga kerakli yo'nalishdan boshlang.", direction_attestation_title: "Attestatsiya testlari", direction_attestation_description: "Ingliz tili fani o'qituvchilari uchun testlar, metodika va demo dars.", direction_tkt_title: "TKT testlari", direction_tkt_description: "Teaching Knowledge Test formatidagi metodika va sinf boshqaruvi testlari.", direction_open: "Ochish",
   about_eyebrow: "Biz haqimizda", about_title: "O'qituvchilar uchun amaliy tayyorlov", about_description: "Habiba teacher — ingliz tili fani o'qituvchilarini attestatsiyaga tayyorlaydigan onlayn platforma. Testlar, metodika, demo dars va portfolio bo'yicha tizimli materiallar.", about_check_1: "Haqiqiy formatdagi mock testlar", about_check_2: "PDF darslik va qo'llanmalar", about_check_3: "Video tushuntirishlar", about_check_4: "Progress va natijalar nazorati", about_card_title: "Bilim — amaliyotda kuch.", about_card_description: "Har bir dars sinfdagi haqiqiy vaziyatlarga moslashtirilgan.",
@@ -188,6 +188,10 @@ function siteTexts(includeRemoved = false) {
   for (const [key, fallback] of Object.entries(SITE_TEXT_DEFAULTS)) {
     const legacy = "";
     const savedValue = key === "hero_secondary" && saved[key] === "Dastur bilan tanishish" ? fallback : saved[key];
+    if (key === "stat_directions" && (!String(savedValue ?? "").trim() || String(savedValue).trim().toLowerCase() === "multilevel")) {
+      result[key] = fallback;
+      continue;
+    }
     result[key] = removed.has(key) && !includeRemoved ? "" : String(savedValue ?? (legacy || fallback)).slice(0, 500);
   }
   return result;
@@ -5517,6 +5521,18 @@ const server = http.createServer(async (req, res) => {
     }
   }
   const copy = siteTexts();
+  const aboutChecks = [copy.about_check_1, copy.about_check_2, copy.about_check_3, copy.about_check_4]
+    .filter((value) => String(value || "").trim())
+    .map((value) => `<li>${h(value)}</li>`).join("");
+  const featureCards = [
+    ["book", copy.feature_pdf_title, copy.feature_pdf_description],
+    ["play", copy.feature_video_title, copy.feature_video_description],
+    ["quiz", copy.feature_test_title, copy.feature_test_description]
+  ].filter(([, title, description]) => String(title || "").trim() || String(description || "").trim())
+    .map(([iconName, title, description]) => `<div class="card"><div class="ico">${icon(iconName)}</div>${String(title || "").trim() ? `<h3>${h(title)}</h3>` : ""}${String(description || "").trim() ? `<p class="muted">${h(description)}</p>` : ""}</div>`).join("");
+  const faqItems = [1, 2, 3, 4].map((index) => ({ question: copy[`faq_q${index}`], answer: copy[`faq_a${index}`] }))
+    .filter((item) => String(item.question || "").trim())
+    .map((item) => `<details><summary>${h(item.question)}<span>+</span></summary>${String(item.answer || "").trim() ? `<p>${h(item.answer)}</p>` : ""}</details>`).join("");
   const directionCards = DIRECTIONS.map((direction) => {
     const counts = directionStats[direction.id];
     const detail = counts.tests ? `${counts.tests} ta test · ${counts.courses} ta kurs` : "Testlar tez orada qo'shiladi";
@@ -5562,10 +5578,10 @@ const server = http.createServer(async (req, res) => {
   </div>
   </div>
   <div class="wrap home-statbar">
-    <div><b>${stats.courses}</b><span>${h(copy.stat_directions)}</span></div>
-    <div><b>${stats.lessons}+</b><span>${h(copy.stat_lessons)}</span></div>
-    <div><b>${stats.tests}</b><span>${h(copy.stat_tests)}</span></div>
-    <div class="home-stat-message"><span aria-hidden="true">✦</span><span><b>${h(copy.stat_note_title)}</b><small>${h(copy.stat_note_description)}</small></span></div>
+    ${String(copy.stat_directions || "").trim() ? `<div><b>${stats.courses}</b><span>${h(copy.stat_directions)}</span></div>` : ""}
+    ${String(copy.stat_lessons || "").trim() ? `<div><b>${stats.lessons}+</b><span>${h(copy.stat_lessons)}</span></div>` : ""}
+    ${String(copy.stat_tests || "").trim() ? `<div><b>${stats.tests}</b><span>${h(copy.stat_tests)}</span></div>` : ""}
+    ${String(copy.stat_note_title || "").trim() || String(copy.stat_note_description || "").trim() ? `<div class="home-stat-message"><span aria-hidden="true">✦</span><span>${String(copy.stat_note_title || "").trim() ? `<b>${h(copy.stat_note_title)}</b>` : ""}${String(copy.stat_note_description || "").trim() ? `<small>${h(copy.stat_note_description)}</small>` : ""}</span></div>` : ""}
   </div>
   </section>
   <section class="home-teachers-photo" data-home-section="teachers-photo" aria-label="O'qituvchilar jamoasi">
@@ -5598,12 +5614,7 @@ const server = http.createServer(async (req, res) => {
   <span class="eyebrow">${h(copy.about_eyebrow)}</span>
   <h2>${h(copy.about_title)}</h2>
   <p class="muted">${h(copy.about_description)}</p>
-  <ul class="check-list">
-  <li>${h(copy.about_check_1)}</li>
-  <li>${h(copy.about_check_2)}</li>
-  <li>${h(copy.about_check_3)}</li>
-  <li>${h(copy.about_check_4)}</li>
-  </ul>
+  ${aboutChecks ? `<ul class="check-list">${aboutChecks}</ul>` : ""}
   </div>
   <div class="about-art">
   <div class="about-mark">H</div>
@@ -5615,12 +5626,12 @@ const server = http.createServer(async (req, res) => {
 
   <section class="stats-band" data-home-section="stats">
   <div class="wrap stats home-count-stats">
-  <div class="stat"><b>${stats.users}</b><span>${h(copy.stat_students)}</span></div>
-  <div class="stat"><b>${stats.courses}</b><span>${h(copy.stat_directions)}</span></div>
-  <div class="stat"><b>${stats.lessons}</b><span>${h(copy.stat_lessons)}</span></div>
-  <div class="stat"><b>${stats.tests_attestation}</b><span>${h(copy.stat_test_attestation)}</span></div>
-  <div class="stat"><b>${stats.tests_tkt}</b><span>${h(copy.stat_test_tkt)}</span></div>
-  <div class="stat"><b>${stats.tests_cpd}</b><span>${h(copy.stat_test_cpd)}</span></div>
+  ${String(copy.stat_students || "").trim() ? `<div class="stat"><b>${stats.users}</b><span>${h(copy.stat_students)}</span></div>` : ""}
+  ${String(copy.stat_directions || "").trim() ? `<div class="stat"><b>${stats.courses}</b><span>${h(copy.stat_directions)}</span></div>` : ""}
+  ${String(copy.stat_lessons || "").trim() ? `<div class="stat"><b>${stats.lessons}</b><span>${h(copy.stat_lessons)}</span></div>` : ""}
+  ${String(copy.stat_test_attestation || "").trim() ? `<div class="stat"><b>${stats.tests_attestation}</b><span>${h(copy.stat_test_attestation)}</span></div>` : ""}
+  ${String(copy.stat_test_tkt || "").trim() ? `<div class="stat"><b>${stats.tests_tkt}</b><span>${h(copy.stat_test_tkt)}</span></div>` : ""}
+  ${String(copy.stat_test_cpd || "").trim() ? `<div class="stat"><b>${stats.tests_cpd}</b><span>${h(copy.stat_test_cpd)}</span></div>` : ""}
   <div class="stat"><b>${stats.tests_bsb_chsb}</b><span>BSB va CHSB testlari</span></div>
   </div>
   </section>
@@ -5631,11 +5642,7 @@ const server = http.createServer(async (req, res) => {
   <span class="eyebrow">${h(copy.feature_eyebrow)}</span>
   <h2>${h(copy.feature_title)}</h2>
   </div>
-  <div class="grid three">
-  <div class="card"><div class="ico">${icon("book")}</div><h3>${h(copy.feature_pdf_title)}</h3><p class="muted">${h(copy.feature_pdf_description)}</p></div>
-  <div class="card"><div class="ico">${icon("play")}</div><h3>${h(copy.feature_video_title)}</h3><p class="muted">${h(copy.feature_video_description)}</p></div>
-  <div class="card"><div class="ico">${icon("quiz")}</div><h3>${h(copy.feature_test_title)}</h3><p class="muted">${h(copy.feature_test_description)}</p></div>
-  </div>
+  <div class="grid three">${featureCards}</div>
   </div>
   </section>`;
 
@@ -5660,12 +5667,7 @@ const server = http.createServer(async (req, res) => {
   </section>
   <section class="section home-faq" data-home-section="faq">
     <div class="wrap home-faq-grid"><div><span class="eyebrow">${h(copy.faq_eyebrow)}</span><h2>${h(copy.faq_title)} <span class="accent">${h(copy.faq_accent)}</span></h2><p class="muted">${h(copy.faq_description)}</p>${siteButtonVisible("faq_contact") && String(copy.faq_contact || "").trim() && config.telegram ? `<a class="home-contact-link" href="${h(config.telegram)}" target="_blank" rel="noopener">${h(copy.faq_contact)} ↗</a>` : ""}</div>
-      <div class="home-faq-list">
-        <details><summary>${h(copy.faq_q1)}<span>+</span></summary><p>${h(copy.faq_a1)}</p></details>
-        <details><summary>${h(copy.faq_q2)}<span>+</span></summary><p>${h(copy.faq_a2)}</p></details>
-        <details><summary>${h(copy.faq_q3)}<span>+</span></summary><p>${h(copy.faq_a3)}</p></details>
-        <details><summary>${h(copy.faq_q4)}<span>+</span></summary><p>${h(copy.faq_a4)}</p></details>
-      </div>
+      ${faqItems ? `<div class="home-faq-list">${faqItems}</div>` : ""}
     </div>
   </section>
   <section class="section home-final-cta" data-home-section="final"><div class="wrap home-final-card"><div><span class="eyebrow">${h(copy.final_eyebrow)}</span><h2>${h(copy.final_title)} <span class="accent">${h(copy.final_accent)}</span></h2><p class="muted">${h(copy.final_description)}</p></div>${siteButtonVisible("final_cta") && String((user ? copy.final_button_logged : copy.final_button) || "").trim() ? `<a class="btn btn-primary" href="${user ? "/attestation" : "/register"}">${h(user ? copy.final_button_logged : copy.final_button)} <span aria-hidden="true">↗</span></a>` : ""}</div></section>
