@@ -105,12 +105,11 @@ function metaSet(key, value) {
 const SITE_TEXT_DEFAULTS = {
   site_name: config.siteName || "Habiba teacher",
   orbit_kicker: "HABIBA TEACHER · TA'LIM PLATFORMASI", orbit_test: "TEST", orbit_lesson: "DARS", orbit_result: "NATIJA", orbit_tag_1: "Attestatsiya", orbit_tag_2: "TKT", orbit_tag_3: "Metodika", orbit_tag_4: "Amaliy mashq",
-  nav_home: "Bosh sahifa", nav_attestation: "Attestatsiya", nav_tkt: "TKT", nav_duel: "Duel", nav_courses: "Kurslar", nav_plans: "Tariflar", nav_leaderboard: "Reyting",
+  nav_home: "Bosh sahifa", nav_attestation: "Attestatsiya", nav_tkt: "TKT", nav_duel: "Duel", nav_plans: "Tariflar", nav_leaderboard: "Reyting",
   hero_eyebrow: "O'QITUVCHILAR UCHUN ONLAYN TA'LIM", hero_title: "Bilimingizni", hero_accent: "mustahkamlang.", hero_title_end: "Imtihonga tayyor bo'ling.", hero_description: "Attestatsiya va TKT uchun testlar, video darslar hamda metodik materiallar. O'z maqsadingizga mos yo'nalishni tanlab, o'z sur'atingizda o'rganing.", hero_primary: "Bepul ro'yxatdan o'tish", hero_primary_logged: "O'qishni davom ettirish", hero_secondary: "Yo'nalishni tanlang", hero_trust_1: "O'zbek tilida", hero_trust_2: "Istalgan qurilmada", hero_trust_3: "Natija va progress nazorati", hero_note: "Yangi darslar va sinovlar platformada muntazam yangilanadi", hero_image_caption: "Ustozlar uchun amaliy tayyorlov", hero_float_mark: "TKT", hero_float_title: "TKT: 3 ta modul", hero_float_description: "Har bir modul bo'yicha alohida tayyorgarlik",
-  stat_directions: "O'quv yo'nalishi", stat_lessons: "Video va o'quv darslari", stat_tests: "Sinov testlari", stat_test_attestation: "Attestatsiya testlari", stat_test_tkt: "TKT testlari", stat_test_cpd: "CPD testlari", stat_students: "O'quvchilar", stat_note_title: "Bir maqsad sari", stat_note_description: "Reja, mashq va natija — bir joyda", program_direction_suffix: "ta yo'nalish", program_lesson_suffix: "ta dars", program_course_button: "Kurslarni ko'rish", program_attestation_tag: "ATTESTATSIYA", program_tkt_tag: "TKT", program_practice_tag: "AMALIYOT", footer_about: "Biz haqimizda",
+  stat_directions: "O'quv yo'nalishi", stat_lessons: "Video va o'quv darslari", stat_tests: "Sinov testlari", stat_test_attestation: "Attestatsiya testlari", stat_test_tkt: "TKT testlari", stat_test_cpd: "CPD testlari", stat_students: "O'quvchilar", stat_note_title: "Bir maqsad sari", stat_note_description: "Reja, mashq va natija — bir joyda", program_direction_suffix: "ta yo'nalish", program_lesson_suffix: "ta dars", program_attestation_tag: "ATTESTATSIYA", program_tkt_tag: "TKT", program_practice_tag: "AMALIYOT", footer_about: "Biz haqimizda",
   overview_eyebrow: "01 / MAQSADGA QADAM", overview_title: "O'rganing. Mashq qiling.", overview_accent: "O'sishni kuzating.", overview_description: "Tayyorgarlikni kichik, tushunarli bosqichlarga ajrating. Har bir mavzu sizni bilimni amalda qo'llashga yaqinlashtiradi.", pillar_1_title: "Bilimni yangilang", pillar_1_description: "Video dars va metodik qo'llanma bilan asosiy mavzularni takrorlang.", pillar_2_title: "O'zingizni sinang", pillar_2_description: "Test va mashqlar orqali tushunganingizni tekshirib boring.", pillar_3_title: "Natijani kuzating", pillar_3_description: "Shaxsiy kabinetda progress va yakunlangan darslarni ko'ring.",
   direction_heading: "Yo'nalishni tanlang", direction_description: "Attestatsiya yoki TKT — o'zingizga kerakli yo'nalishdan boshlang.", direction_attestation_title: "Attestatsiya testlari", direction_attestation_description: "Ingliz tili fani o'qituvchilari uchun testlar, metodika va demo dars.", direction_tkt_title: "TKT testlari", direction_tkt_description: "Teaching Knowledge Test formatidagi metodika va sinf boshqaruvi testlari.", direction_open: "Ochish",
-  course_section_eyebrow: "Kurslar", course_section_title: "Barcha kurslar", course_section_description: "Attestatsiyaga tayyorlov, metodika, demo dars va testlar — barchasi bir joyda.", course_section_button: "Barcha kurslarni ko'rish",
   about_eyebrow: "Biz haqimizda", about_title: "O'qituvchilar uchun amaliy tayyorlov", about_description: "Habiba teacher — ingliz tili fani o'qituvchilarini attestatsiyaga tayyorlaydigan onlayn platforma. Testlar, metodika, demo dars va portfolio bo'yicha tizimli materiallar.", about_check_1: "Haqiqiy formatdagi mock testlar", about_check_2: "PDF darslik va qo'llanmalar", about_check_3: "Video tushuntirishlar", about_check_4: "Progress va natijalar nazorati", about_card_title: "Bilim — amaliyotda kuch.", about_card_description: "Har bir dars sinfdagi haqiqiy vaziyatlarga moslashtirilgan.",
   feature_eyebrow: "Nega biz", feature_title: "Natijaga olib boradigan tayyorlov", feature_pdf_title: "PDF materiallar", feature_pdf_description: "Darslik va qo'llanmalarni platformadan ochish yoki yuklab olish.", feature_video_title: "Video darslar", feature_video_description: "Trener tushuntirishlari va amaliy namunalar.", feature_test_title: "Mock testlar", feature_test_description: "Haqiqiy formatdagi testlar, natija va tahlil.",
   program_eyebrow: "02 / O'QUV DASTURI", program_title: "Poydevordan", program_accent: "amaliyotgacha.", program_description: "Har bir mavzu bilimni mustahkamlash, sinab ko'rish va dars jarayonida qo'llashga yordam beradi.", program_step_1_title: "Toifa sinoviga tayyorlov", program_step_1_description: "Mutaxassislik, kasbiy standartlar va pedagogik mahorat bo'yicha mavzularni o'rganing va testlarda mashq qiling.", program_step_2_title: "Teaching Knowledge Test", program_step_2_description: "TKT modullarida til tizimi, dars rejalashtirish va o'quvchini qo'llab-quvvatlash mavzularini takrorlang.", program_step_3_title: "Bilimni darsda qo'llash", program_step_3_description: "Metodik materiallar va video tushuntirishlardan foydalanib, o'rganganlaringizni amaliy vaziyatlar bilan bog'lang.",
@@ -137,7 +136,6 @@ const HOME_SECTION_LABELS = {
   "teachers-photo": "O'qituvchilar jamoasi rasmi",
   overview: "Orbita va afzalliklar",
   directions: "Yo'nalish kartalari",
-  courses: "Barcha kurslar",
   about: "Biz haqimizda",
   stats: "O'quvchilar va darslar hisoblagichi",
   features: "Platforma imkoniyatlari",
@@ -188,7 +186,7 @@ function siteTexts(includeRemoved = false) {
   const removed = new Set(siteCopyRemoved());
   const result = {};
   for (const [key, fallback] of Object.entries(SITE_TEXT_DEFAULTS)) {
-    const legacy = key === "nav_courses" ? metaGet("course_nav_label", "") : "";
+    const legacy = "";
     const savedValue = key === "hero_secondary" && saved[key] === "Dastur bilan tanishish" ? fallback : saved[key];
     result[key] = removed.has(key) && !includeRemoved ? "" : String(savedValue ?? (legacy || fallback)).slice(0, 500);
   }
@@ -220,22 +218,12 @@ function siteCopyExtraMarkup(group) {
   return rows.length ? `<div class="site-copy-extra-public">${rows.map((row) => `<p><b>${h(row.label)}</b> ${h(row.text)}</p>`).join("")}</div>` : "";
 }
 
-function courseNavLabel() {
-  const value = String(siteTexts().nav_courses || "Kurslar").trim();
-  return value.slice(0, 32) || "Kurslar";
-}
-
-function courseNavVisible() {
-  return metaGet("course_nav_visible", "0") !== "0";
-}
-
 const REMOVABLE_SITE_BUTTONS = [
   ["nav_home", "Menyu: Bosh sahifa"], ["nav_attestation", "Menyu: Attestatsiya"], ["nav_tkt", "Menyu: TKT"],
-  ["nav_duel", "Menyu: Duel"], ["nav_courses", "Menyu: Multilevel"], ["nav_plans", "Menyu: Tariflar"],
+  ["nav_duel", "Menyu: Duel"], ["nav_plans", "Menyu: Tariflar"],
   ["nav_leaderboard", "Menyu: Reyting"], ["nav_login", "Menyu: Kirish"], ["hero_register", "Bosh sahifa: ro'yxatdan o'tish"],
   ["hero_directions", "Bosh sahifa: yo'nalishni tanlash"], ["direction_open", "Yo'nalish kartalari: Ochish"],
-  ["home_courses", "Bosh sahifa: kurslarni ko'rish"],
-  ["program_courses", "Bosh sahifa: o'quv dasturi tugmasi"], ["pricing_all", "Bosh sahifa: barcha tariflar"],
+  ["pricing_all", "Bosh sahifa: barcha tariflar"],
   ["pricing_plan", "Bosh sahifa: tarif kartasi tugmalari"], ["faq_contact", "Bosh sahifa: bog'lanish"],
   ["final_cta", "Bosh sahifa: yakuniy chaqiriq"], ["custom_home_buttons", "Qo'shimcha bosh sahifa bo'limlaridagi tugmalar"],
   ["footer_directions", "Pastki qism: Yo'nalishlar"], ["footer_about", "Pastki qism: Biz haqimizda"],
@@ -1811,7 +1799,6 @@ function clearFailures(ip) {
 /* ------------------------------------------------------------------ views */
 function navFor(user, admin, publicPage = false) {
   const copy = siteTexts();
-  const coursesLink = courseNavVisible() && siteButtonVisible("nav_courses") ? `<a href="/courses">${h(copy.nav_courses)}</a>` : "";
   if (admin && !publicPage) {
   return `<nav class="nav">
   <a href="/admin" class="active">Admin</a>
@@ -1824,25 +1811,23 @@ function navFor(user, admin, publicPage = false) {
   }
 
   const links = `
-  ${siteButtonVisible("nav_home") ? `<a href="/">${h(copy.nav_home)}</a>` : ""}
-  ${siteButtonVisible("nav_attestation") ? `<a href="/attestation">${h(copy.nav_attestation)}</a>` : ""}
-  ${siteButtonVisible("nav_tkt") ? `<a href="/tkt">${h(copy.nav_tkt)}</a>` : ""}
-  ${siteButtonVisible("nav_duel") ? `<a href="/duel">${h(copy.nav_duel)}</a>` : ""}
-  ${coursesLink}
-  ${siteButtonVisible("nav_plans") ? `<a href="/plans">${h(copy.nav_plans)}</a>` : ""}
-  ${siteButtonVisible("nav_leaderboard") ? `<a href="/leaderboard">${h(copy.nav_leaderboard)}</a>` : ""}`;
+  ${siteButtonVisible("nav_home") && String(copy.nav_home || "").trim() ? `<a href="/">${h(copy.nav_home)}</a>` : ""}
+  ${siteButtonVisible("nav_attestation") && String(copy.nav_attestation || "").trim() ? `<a href="/attestation">${h(copy.nav_attestation)}</a>` : ""}
+  ${siteButtonVisible("nav_tkt") && String(copy.nav_tkt || "").trim() ? `<a href="/tkt">${h(copy.nav_tkt)}</a>` : ""}
+  ${siteButtonVisible("nav_duel") && String(copy.nav_duel || "").trim() ? `<a href="/duel">${h(copy.nav_duel)}</a>` : ""}
+  ${siteButtonVisible("nav_plans") && String(copy.nav_plans || "").trim() ? `<a href="/plans">${h(copy.nav_plans)}</a>` : ""}
+  ${siteButtonVisible("nav_leaderboard") && String(copy.nav_leaderboard || "").trim() ? `<a href="/leaderboard">${h(copy.nav_leaderboard)}</a>` : ""}`;
 
   if (user) {
   return `<nav class="nav nav-student">
-  ${siteButtonVisible("nav_home") ? `<a href="/">${h(copy.nav_home)}</a>` : ""}
-  ${siteButtonVisible("nav_attestation") ? `<a href="/attestation">${h(copy.nav_attestation)}</a>` : ""}
-  ${siteButtonVisible("nav_tkt") ? `<a href="/tkt">${h(copy.nav_tkt)}</a>` : ""}
-  ${siteButtonVisible("nav_duel") ? `<a href="/duel">${h(copy.nav_duel)}</a>` : ""}
-  ${coursesLink}
+  ${siteButtonVisible("nav_home") && String(copy.nav_home || "").trim() ? `<a href="/">${h(copy.nav_home)}</a>` : ""}
+  ${siteButtonVisible("nav_attestation") && String(copy.nav_attestation || "").trim() ? `<a href="/attestation">${h(copy.nav_attestation)}</a>` : ""}
+  ${siteButtonVisible("nav_tkt") && String(copy.nav_tkt || "").trim() ? `<a href="/tkt">${h(copy.nav_tkt)}</a>` : ""}
+  ${siteButtonVisible("nav_duel") && String(copy.nav_duel || "").trim() ? `<a href="/duel">${h(copy.nav_duel)}</a>` : ""}
   <a href="/dashboard">${h(siteTexts().dashboard_page_title || "Kabinet")}</a>
   ${Number(user.is_author) ? `<a href="/author">Muallif paneli</a>` : ""}
-  ${siteButtonVisible("nav_leaderboard") ? `<a href="/leaderboard">${h(copy.nav_leaderboard)}</a>` : ""}
-  ${siteButtonVisible("nav_plans") ? `<a class="btn btn-sm student-plan" href="/plans">${h(copy.nav_plans)}</a>` : ""}
+  ${siteButtonVisible("nav_leaderboard") && String(copy.nav_leaderboard || "").trim() ? `<a href="/leaderboard">${h(copy.nav_leaderboard)}</a>` : ""}
+  ${siteButtonVisible("nav_plans") && String(copy.nav_plans || "").trim() ? `<a class="btn btn-sm student-plan" href="/plans">${h(copy.nav_plans)}</a>` : ""}
   <span class="who">${h(user.name)}</span>
   <form method="post" action="/logout"><button class="link" type="submit">Chiqish</button></form>
   </nav>`;
@@ -1897,7 +1882,7 @@ ${seoTags}
 <body${admin && !publicPage ? ` class="admin-page"` : isStudentPage ? ` class="student-page${isDashboard ? " is-dashboard" : ""}"` : ""}>
 <header class="topbar">
   <div class="wrap bar">
-  <a class="brand" href="${admin ? "/admin": user ? "/courses": "/"}">
+  <a class="brand" href="${admin ? "/admin": user ? "/attestation": "/"}">
   <span class="mark">H</span>
   <span>${h(siteBrandName())}</span>
   <span class="tag">${admin ? "Admin": "Platforma"}</span>
@@ -1927,13 +1912,12 @@ ${seoTags}
   admin && !publicPage
   ? `<a href="/admin">Admin</a><a href="/admin/students">O'quvchilar</a><a href="/admin/site-settings">Sayt sozlamalari</a><a href="/leaderboard">Reyting</a><a href="/">Saytni ko'rish</a>
   <form method="post" action="/admin/logout"><button class="mobile-link-btn" type="submit">Chiqish</button></form>`
-   : `${siteButtonVisible("nav_home") ? `<a href="/">${h(copy.nav_home)}</a>` : ""}
-  ${siteButtonVisible("nav_attestation") ? `<a href="/attestation">${h(copy.nav_attestation)}</a>` : ""}
-  ${siteButtonVisible("nav_tkt") ? `<a href="/tkt">${h(copy.nav_tkt)}</a>` : ""}
-  ${siteButtonVisible("nav_duel") ? `<a href="/duel">${h(copy.nav_duel)}</a>` : ""}
-  ${courseNavVisible() && siteButtonVisible("nav_courses") ? `<a href="/courses">${h(copy.nav_courses)}</a>` : ""}
-  ${siteButtonVisible("nav_plans") ? `<a href="/plans">${h(copy.nav_plans)}</a>` : ""}
-  ${siteButtonVisible("nav_leaderboard") ? `<a href="/leaderboard">${h(copy.nav_leaderboard)}</a>` : ""}
+   : `${siteButtonVisible("nav_home") && String(copy.nav_home || "").trim() ? `<a href="/">${h(copy.nav_home)}</a>` : ""}
+  ${siteButtonVisible("nav_attestation") && String(copy.nav_attestation || "").trim() ? `<a href="/attestation">${h(copy.nav_attestation)}</a>` : ""}
+  ${siteButtonVisible("nav_tkt") && String(copy.nav_tkt || "").trim() ? `<a href="/tkt">${h(copy.nav_tkt)}</a>` : ""}
+  ${siteButtonVisible("nav_duel") && String(copy.nav_duel || "").trim() ? `<a href="/duel">${h(copy.nav_duel)}</a>` : ""}
+  ${siteButtonVisible("nav_plans") && String(copy.nav_plans || "").trim() ? `<a href="/plans">${h(copy.nav_plans)}</a>` : ""}
+  ${siteButtonVisible("nav_leaderboard") && String(copy.nav_leaderboard || "").trim() ? `<a href="/leaderboard">${h(copy.nav_leaderboard)}</a>` : ""}
   ${
   user
   ? `<div class="mobile-user">${h(user.name)}</div>
@@ -1970,19 +1954,18 @@ ${body}
   <p class="footer-donation-note">Ustozlarimizga ko‘mak bo‘lsin deya, ushbu materiallar Habiba Mo'minjonovna tomonidan taqdim etildi.</p>
   </div>
   <nav class="footer-links">
-  ${siteButtonVisible("nav_home") ? `<a href="/">${h(copy.nav_home)}</a>` : ""}
+  ${siteButtonVisible("nav_home") && String(copy.nav_home || "").trim() ? `<a href="/">${h(copy.nav_home)}</a>` : ""}
   ${siteButtonVisible("footer_directions") ? `<a href="/#directions">Yo'nalishlar</a>` : ""}
-  ${siteButtonVisible("nav_attestation") ? `<a href="/attestation">${h(copy.nav_attestation)}</a>` : ""}
-  ${siteButtonVisible("nav_tkt") ? `<a href="/tkt">${h(copy.nav_tkt)}</a>` : ""}
-  ${siteButtonVisible("nav_duel") ? `<a href="/duel">${h(copy.nav_duel)}</a>` : ""}
-  ${courseNavVisible() && siteButtonVisible("nav_courses") ? `<a href="/courses">${h(copy.nav_courses)}</a>` : ""}
-  ${siteButtonVisible("nav_plans") ? `<a href="/plans">${h(copy.nav_plans)}</a>` : ""}
-  ${siteButtonVisible("nav_leaderboard") ? `<a href="/leaderboard">${h(copy.nav_leaderboard)}</a>` : ""}
-  ${siteButtonVisible("footer_about") ? `<a href="/#about">${h(copy.footer_about)}</a>` : ""}
+  ${siteButtonVisible("nav_attestation") && String(copy.nav_attestation || "").trim() ? `<a href="/attestation">${h(copy.nav_attestation)}</a>` : ""}
+  ${siteButtonVisible("nav_tkt") && String(copy.nav_tkt || "").trim() ? `<a href="/tkt">${h(copy.nav_tkt)}</a>` : ""}
+  ${siteButtonVisible("nav_duel") && String(copy.nav_duel || "").trim() ? `<a href="/duel">${h(copy.nav_duel)}</a>` : ""}
+  ${siteButtonVisible("nav_plans") && String(copy.nav_plans || "").trim() ? `<a href="/plans">${h(copy.nav_plans)}</a>` : ""}
+  ${siteButtonVisible("nav_leaderboard") && String(copy.nav_leaderboard || "").trim() ? `<a href="/leaderboard">${h(copy.nav_leaderboard)}</a>` : ""}
+  ${siteButtonVisible("footer_about") && String(copy.footer_about || "").trim() ? `<a href="/#about">${h(copy.footer_about)}</a>` : ""}
   </nav>
   <div class="footer-contact">
-  ${siteButtonVisible("footer_telegram") ? `<a href="${h(config.telegram || "#")}" target="_blank" rel="noopener">Telegram</a>` : ""}
-  ${siteButtonVisible("footer_phone") ? `<a href="tel:${h(String(config.phone || "").replace(/[^\d+]/g, ""))}">${h(config.phone || "")}</a>` : ""}
+  ${siteButtonVisible("footer_telegram") && config.telegram ? `<a href="${h(config.telegram)}" target="_blank" rel="noopener">Telegram</a>` : ""}
+  ${siteButtonVisible("footer_phone") && config.phone ? `<a href="tel:${h(String(config.phone).replace(/[^\d+]/g, ""))}">${h(config.phone)}</a>` : ""}
   </div>
   </div>
 </footer>
@@ -4856,7 +4839,7 @@ function testPage(lesson, questions, testSections = [], attemptId = 0) {
   <div class="solve mcacademy-solve" style="--fs:1;--fs-reading:1">
   <header class="solve-topbar">
   <div class="solve-inner">
-  <a class="solve-brand" href="/courses"><span class="mark">H</span><b>${h(config.siteName)}</b></a>
+  <a class="solve-brand" href="/attestation"><span class="mark">H</span><b>${h(config.siteName)}</b></a>
   <div class="solve-head">
   <div class="solve-titles">
   <b>${h(lesson.title)}</b>
@@ -5114,7 +5097,7 @@ function testResultPage(lesson, questions, score, answers = {}, passMark = 80) {
     : "";
   const body = `
   <header class="test-header">
-  <a class="test-brand" href="/courses"><span class="mark">H</span><b>${h(config.siteName)}</b></a>
+  <a class="test-brand" href="/attestation"><span class="mark">H</span><b>${h(config.siteName)}</b></a>
   <div class="test-mid"><b>${h(lesson.title)}</b><span>Yakunlandi</span></div>
   <div class="test-tools"><a class="test-exit" href="${moduleHref(lesson)}">Saytga o'tish</a></div>
   </header>
@@ -5159,7 +5142,7 @@ const server = http.createServer(async (req, res) => {
     return;
   }
   if (method === "GET" && p === "/sitemap.xml") {
-    const urls = ["/", ...DIRECTION_IDS.map((id) => `/${id}`), "/courses", "/plans"];
+    const urls = ["/", ...DIRECTION_IDS.map((id) => `/${id}`), "/plans"];
     const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls.map((route) => `<url><loc>https://habibateacher.uz${route}</loc></url>`).join("")}</urlset>`;
     res.writeHead(200, { "Content-Type": "application/xml; charset=utf-8", "Cache-Control": "public, max-age=3600" });
     res.end(xml);
@@ -5308,7 +5291,7 @@ const server = http.createServer(async (req, res) => {
   if (p === "/contract/accept" && method === "POST") {
   if (!user) return redirect(res, "/login");
   db.prepare("UPDATE users SET contract_accepted_at = ? WHERE id = ?").run(nowISO(), user.id);
-  let back = "/courses";
+  let back = "/attestation";
   try {
   const ref = String(req.headers.referer || "");
   if (ref) {
@@ -5316,7 +5299,7 @@ const server = http.createServer(async (req, res) => {
   if (refUrl.host === req.headers.host) back = refUrl.pathname + refUrl.search;
   }
   } catch (e) {}
-  return redirect(res, back || "/courses");
+  return redirect(res, back || "/attestation");
   }
 
   /* --------------------------------------------------------------- likes */
@@ -5537,29 +5520,18 @@ const server = http.createServer(async (req, res) => {
   const directionCards = DIRECTIONS.map((direction) => {
     const counts = directionStats[direction.id];
     const detail = counts.tests ? `${counts.tests} ta test · ${counts.courses} ta kurs` : "Testlar tez orada qo'shiladi";
-    const isLink = siteButtonVisible("direction_open");
+    const isLink = siteButtonVisible("direction_open") && String(copy.direction_open || "").trim();
     return `${isLink ? `<a class="direction-card" href="/${direction.id}">` : `<div class="direction-card">`}<span class="home-direction-count">${counts.tests || "→"}</span><h3>${h(categoryLabel(direction.id))}</h3><p class="muted">${h(direction.description)}</p><small>${h(detail)}</small>${isLink ? `<span class="card-link">${h(copy.direction_open)}</span></a>` : `</div>`}`;
   }).join("");
   const homeSections = homeSectionVisibility();
   const customHomeSections = homeCustomSections();
   const savedHomeSectionOrder = homeSectionOrder(customHomeSections);
 
-  const courses = db
-.prepare(
-  `SELECT c.*, (SELECT COUNT(*) FROM lessons l WHERE l.course_id = c.id) AS lesson_count
-  FROM courses c WHERE c.is_published = 1 AND c.is_test_group = 0 ORDER BY c.id DESC LIMIT 6`
-  )
-.all();
-
-  const courseCards = courses.length
-  ? courses.map((c) => publicCourseCard(c, user)).join("")
-: `<div class="card empty" style="grid-column:1/-1">${h(courseNavLabel())} tez orada qo'shiladi.</div>`;
-
   const planCards = getPlans().map((plan, index) => `<article class="home-plan-card${index === 1 ? " featured" : ""}">
     <span class="home-kicker">${index === 0 ? "BOSHLASH" : index === 1 ? "MASHHUR TANLOV" : "UZLUKSIZ RIVOJLANISH"}</span>
     <h3>${h(plan.title)}</h3><p>${h(plan.description)}</p>
     <div class="home-plan-price">${formatSum(plan.price)} <small>so'm</small></div>
-    ${siteButtonVisible("pricing_plan") ? `<a class="btn ${index === 1 ? "btn-primary" : "btn-ghost"}" href="/plans">${h(copy.pricing_button)} <span aria-hidden="true">↗</span></a>` : ""}
+    ${siteButtonVisible("pricing_plan") && String(copy.pricing_button || "").trim() ? `<a class="btn ${index === 1 ? "btn-primary" : "btn-ghost"}" href="/plans">${h(copy.pricing_button)} <span aria-hidden="true">↗</span></a>` : ""}
   </article>`).join("");
 
   let body = `
@@ -5571,8 +5543,8 @@ const server = http.createServer(async (req, res) => {
   <h1>${h(copy.hero_title)} <span class="accent">${h(copy.hero_accent)}</span> ${h(copy.hero_title_end)}</h1>
   <p class="lead">${h(copy.hero_description)}</p>
   <div class="landing-actions">
-  ${user || !siteButtonVisible("hero_register") ? "" : `<a class="btn btn-primary" href="/register">${h(copy.hero_primary)} <span aria-hidden="true">↗</span></a>`}
-  ${siteButtonVisible("hero_directions") ? `<button class="btn btn-ghost home-direction-toggle" type="button" data-direction-toggle aria-expanded="false" aria-controls="directions">${h(copy.hero_secondary)} <span aria-hidden="true">⌄</span></button>` : ""}
+  ${user || !siteButtonVisible("hero_register") || !String(copy.hero_primary || "").trim() ? "" : `<a class="btn btn-primary" href="/register">${h(copy.hero_primary)} <span aria-hidden="true">↗</span></a>`}
+  ${siteButtonVisible("hero_directions") && String(copy.hero_secondary || "").trim() ? `<button class="btn btn-ghost home-direction-toggle" type="button" data-direction-toggle aria-expanded="false" aria-controls="directions">${h(copy.hero_secondary)} <span aria-hidden="true">⌄</span></button>` : ""}
   </div>
   <div class="home-direction-picker" id="directions" data-home-section="directions" hidden>
     <div class="grid home-direction-grid">${directionCards}</div>
@@ -5620,18 +5592,6 @@ const server = http.createServer(async (req, res) => {
     </div>
   </section>
 
-  <section class="section" id="courses" data-home-section="courses">
-  <div class="wrap">
-  <div class="section-head center">
-  <span class="eyebrow">${h(copy.course_section_eyebrow || courseNavLabel())}</span>
-  <h2>${h(copy.course_section_title)}</h2>
-  <p class="muted">${h(copy.course_section_description)}</p>
-  </div>
-  <div class="grid three">${courseCards}</div>
-  ${siteButtonVisible("home_courses") ? `<div class="center-actions"><a class="btn btn-ghost" href="/courses">${h(copy.course_section_button)}</a></div>` : ""}
-  </div>
-  </section>
-
   <section class="section about" id="about" data-home-section="about">
   <div class="wrap about-grid">
   <div>
@@ -5656,7 +5616,7 @@ const server = http.createServer(async (req, res) => {
   <section class="stats-band" data-home-section="stats">
   <div class="wrap stats home-count-stats">
   <div class="stat"><b>${stats.users}</b><span>${h(copy.stat_students)}</span></div>
-  <div class="stat"><b>${stats.courses}</b><span>${h(courseNavLabel())}</span></div>
+  <div class="stat"><b>${stats.courses}</b><span>${h(copy.stat_directions)}</span></div>
   <div class="stat"><b>${stats.lessons}</b><span>${h(copy.stat_lessons)}</span></div>
   <div class="stat"><b>${stats.tests_attestation}</b><span>${h(copy.stat_test_attestation)}</span></div>
   <div class="stat"><b>${stats.tests_tkt}</b><span>${h(copy.stat_test_tkt)}</span></div>
@@ -5685,7 +5645,6 @@ const server = http.createServer(async (req, res) => {
       <div><span class="eyebrow">${h(copy.program_eyebrow)}</span><h2>${h(copy.program_title)} <span class="accent">${h(copy.program_accent)}</span></h2>
         <p class="muted">${h(copy.program_description)}</p>
         <div class="home-program-meta"><b>${stats.courses} ${h(copy.program_direction_suffix)}</b><span></span><b>${stats.lessons} ${h(copy.program_lesson_suffix)}</b></div>
-        ${siteButtonVisible("program_courses") ? `<a class="btn btn-ghost" href="/courses">${h(copy.program_course_button)} <span aria-hidden="true">↗</span></a>` : ""}
       </div>
       <div class="home-steps">
         <details open><summary><span>01</span><span><small>${h(copy.program_attestation_tag)}</small><b>${h(copy.program_step_1_title)}</b></span><i>⌄</i></summary><p>${h(copy.program_step_1_description)}</p></details>
@@ -5695,12 +5654,12 @@ const server = http.createServer(async (req, res) => {
     </div>
   </section>
   <section class="section home-pricing" data-home-section="pricing">
-    <div class="wrap"><div class="section-head home-section-head"><div><span class="eyebrow">${h(copy.pricing_eyebrow)}</span><h2>${h(copy.pricing_title)} <span class="accent">${h(copy.pricing_accent)}</span></h2><p class="muted">${h(copy.pricing_description)}</p></div>${siteButtonVisible("pricing_all") ? `<a class="btn btn-ghost" href="/plans">${h(copy.pricing_all)} <span aria-hidden="true">↗</span></a>` : ""}</div>
+    <div class="wrap"><div class="section-head home-section-head"><div><span class="eyebrow">${h(copy.pricing_eyebrow)}</span><h2>${h(copy.pricing_title)} <span class="accent">${h(copy.pricing_accent)}</span></h2><p class="muted">${h(copy.pricing_description)}</p></div>${siteButtonVisible("pricing_all") && String(copy.pricing_all || "").trim() ? `<a class="btn btn-ghost" href="/plans">${h(copy.pricing_all)} <span aria-hidden="true">↗</span></a>` : ""}</div>
       <div class="home-plan-grid">${planCards}</div>
     </div>
   </section>
   <section class="section home-faq" data-home-section="faq">
-    <div class="wrap home-faq-grid"><div><span class="eyebrow">${h(copy.faq_eyebrow)}</span><h2>${h(copy.faq_title)} <span class="accent">${h(copy.faq_accent)}</span></h2><p class="muted">${h(copy.faq_description)}</p>${siteButtonVisible("faq_contact") ? `<a class="home-contact-link" href="${h(config.telegram || "#")}" target="_blank" rel="noopener">${h(copy.faq_contact)} ↗</a>` : ""}</div>
+    <div class="wrap home-faq-grid"><div><span class="eyebrow">${h(copy.faq_eyebrow)}</span><h2>${h(copy.faq_title)} <span class="accent">${h(copy.faq_accent)}</span></h2><p class="muted">${h(copy.faq_description)}</p>${siteButtonVisible("faq_contact") && String(copy.faq_contact || "").trim() && config.telegram ? `<a class="home-contact-link" href="${h(config.telegram)}" target="_blank" rel="noopener">${h(copy.faq_contact)} ↗</a>` : ""}</div>
       <div class="home-faq-list">
         <details><summary>${h(copy.faq_q1)}<span>+</span></summary><p>${h(copy.faq_a1)}</p></details>
         <details><summary>${h(copy.faq_q2)}<span>+</span></summary><p>${h(copy.faq_a2)}</p></details>
@@ -5709,7 +5668,7 @@ const server = http.createServer(async (req, res) => {
       </div>
     </div>
   </section>
-  <section class="section home-final-cta" data-home-section="final"><div class="wrap home-final-card"><div><span class="eyebrow">${h(copy.final_eyebrow)}</span><h2>${h(copy.final_title)} <span class="accent">${h(copy.final_accent)}</span></h2><p class="muted">${h(copy.final_description)}</p></div>${siteButtonVisible("final_cta") ? `<a class="btn btn-primary" href="${user ? "/courses" : "/register"}">${h(user ? copy.final_button_logged : copy.final_button)} <span aria-hidden="true">↗</span></a>` : ""}</div></section>
+  <section class="section home-final-cta" data-home-section="final"><div class="wrap home-final-card"><div><span class="eyebrow">${h(copy.final_eyebrow)}</span><h2>${h(copy.final_title)} <span class="accent">${h(copy.final_accent)}</span></h2><p class="muted">${h(copy.final_description)}</p></div>${siteButtonVisible("final_cta") && String((user ? copy.final_button_logged : copy.final_button) || "").trim() ? `<a class="btn btn-primary" href="${user ? "/attestation" : "/register"}">${h(user ? copy.final_button_logged : copy.final_button)} <span aria-hidden="true">↗</span></a>` : ""}</div></section>
   </div>`;
 
   body += additions;
@@ -5755,7 +5714,7 @@ const server = http.createServer(async (req, res) => {
 
   /* ------------------------------------------------------------- signup */
   if (p === "/register") {
-  if (user) return redirect(res, "/courses");
+  if (user) return redirect(res, "/attestation");
 
   if (method === "GET") {
   const next = safeNext(url.searchParams.get("next"));
@@ -6048,7 +6007,7 @@ const server = http.createServer(async (req, res) => {
       clearCookie(res, "ht_device");
     }
   }
-  if (user) return redirect(res, pageNext || "/courses");
+  if (user) return redirect(res, pageNext || "/attestation");
 
   if (method === "GET") {
   const step = 1;
@@ -6319,66 +6278,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   /* ------------------------------------------------------------ courses */
-  if (p === "/courses" && method === "GET") {
-  if (!user) {
-  const courses = db
-.prepare(
-  `SELECT c.*, (SELECT COUNT(*) FROM lessons l WHERE l.course_id = c.id) AS lesson_count
-  FROM courses c WHERE c.is_published = 1 AND c.is_test_group = 0 ORDER BY c.id DESC`
-  )
-.all();
-  const cards = courses.length
-  ? courses.map((c) => publicCourseCard(c, null)).join("")
-: `<div class="card empty" style="grid-column:1/-1">${h(courseNavLabel())} tez orada qo'shiladi.</div>`;
-  const body = `
-  <section class="page-hero center">
-  <span class="eyebrow">Katalog</span>
-  <h1>${h(courseNavLabel())}</h1>
-  <p class="lead">Atestatsiyaga tayyorlov kurslari. Kursni ochish uchun tizimga kiring.</p>
-  </section>
-  <section class="section tight">
-  <div class="wrap">
-  <div class="grid three">${cards}</div>
-  <div class="center-actions"><a class="btn btn-primary" href="/register">Ro'yxatdan o'tish</a></div>
-  </div>
-  </section>`;
-  send(res, 200, layout({ title: "Ingliz tili o'qituvchilari uchun kurslar", body, user, admin, seo: { path: "/courses", title: "Ingliz tili o'qituvchilari uchun kurslar | Habiba teacher", description: "Imtihonlarga tayyorlov kurslari, TKT darslari, mock testlar va metodik materiallar ingliz tili o'qituvchilari uchun.", keywords: "ingliz tili o'qituvchilari uchun kurs, imtihonlarga tayyorlov kursi, pedagogika kurslari, TKT kursi, metodika darslari" } }));
-  return;
-  }
-
-  const courses = db
-.prepare(
-  `SELECT c.*,
-  (SELECT COUNT(*) FROM lessons l WHERE l.course_id = c.id) AS lesson_count,
-  (SELECT COUNT(*) FROM progress pr JOIN lessons l ON l.id = pr.lesson_id
-  WHERE l.course_id = c.id AND pr.user_id = ?) AS done_count
-  FROM courses c WHERE c.is_published = 1 AND c.is_test_group = 0 ORDER BY c.id DESC`
-  )
-.all(user.id);
-
-  const cards = courses.length
-  ? courses
-.map((c) => {
-  const percent = c.lesson_count ? Math.round((c.done_count / c.lesson_count) * 100): 0;
-  return `<a class="card course-card" href="/course/${c.id}">
-  <div class="course-ico">${icon("layers")}</div>
-  <h3>${h(c.title)}</h3>
-  <p class="muted">${h(c.description || "Kurs tavsifi yo'q")}</p>
-  <div class="progress"><span style="width:${percent}%"></span></div>
-  <div class="progress-meta"><span>${c.done_count}/${c.lesson_count} dars</span><span>${percent}%</span></div>
-  </a>`;
-  })
-.join("")
-: `<div class="card empty">Hozircha kurslar yo'q. Tez orada qo'shiladi.</div>`;
-
-  const body = `
-  <div class="page-head">
-  <div><h1>${h(courseNavLabel())}</h1><p class="muted">Salom, ${h(user.name)}! O'zingizga kerakli kursni tanlang.</p></div>
-  </div>
-  <div class="grid three">${cards}</div>`;
-  send(res, 200, layout({ title: courseNavLabel(), body, user, admin }));
-  return;
-  }
+  if (p === "/courses" && method === "GET") return redirect(res, "/attestation");
 
   /* -------------------------------------------------------------- plans */
   if (p === "/plans/request" && method === "POST") {
@@ -7071,7 +6971,7 @@ const server = http.createServer(async (req, res) => {
 : `<div class="card empty">${lessons.length ? `Darslarni ko'rish uchun <a href="/plans"><b>faol tarif</b></a> yoki admin bergan ruxsat kerak.` : "Bu kursda hozircha darslar yo'q."}</div>`;
 
   const body = `
-  <a class="back" href="/courses">  ${h(courseNavLabel())}</a>
+  <a class="back" href="/admin">Admin panel</a>
   <div class="page-head">
   <div><h1>${h(course.title)}</h1><p class="muted">${h(course.description || "")}</p></div>
   </div>
@@ -8201,7 +8101,7 @@ const server = http.createServer(async (req, res) => {
 
   if (p === "/author" && method === "GET") {
     if (!user) return redirect(res, "/login?next=/author");
-    if (!author && !admin) return redirect(res, "/courses");
+    if (!author && !admin) return redirect(res, "/attestation");
     const courses = db.prepare(`SELECT c.id, c.title, c.category, c.is_published,
       (SELECT COUNT(*) FROM lessons l WHERE l.course_id = c.id) AS lesson_count
       FROM courses c ORDER BY c.id DESC`).all();
@@ -8310,18 +8210,16 @@ const server = http.createServer(async (req, res) => {
   if (p === "/admin/site-settings" && method === "GET") {
     if (!admin) return redirect(res, "/admin/login");
     const copy = siteTexts(true);
-    const multilevelCourses = db.prepare("SELECT c.id, COUNT(l.id) AS lesson_count FROM courses c LEFT JOIN lessons l ON l.course_id = c.id WHERE c.is_test_group = 0 GROUP BY c.id").all();
-    const multilevelLessonCount = multilevelCourses.reduce((sum, course) => sum + Number(course.lesson_count || 0), 0);
     const homeSections = homeSectionVisibility();
     const customHomeSections = homeCustomSections();
     const sectionOrder = homeSectionOrder(customHomeSections);
     const groups = [
-      { id: "nav", title: "Menyu va sayt nomi", fields: [["site_name", "Sayt nomi"], ["nav_home", "Bosh sahifa"], ["nav_attestation", "Attestatsiya"], ["nav_tkt", "TKT"], ["nav_duel", "Duel"], ["nav_courses", "Kurslar / yo'nalishlar"], ["nav_plans", "Tariflar"], ["nav_leaderboard", "Reyting"]] },
+      { id: "nav", title: "Menyu va sayt nomi", fields: [["site_name", "Sayt nomi"], ["nav_home", "Bosh sahifa"], ["nav_attestation", "Attestatsiya"], ["nav_tkt", "TKT"], ["nav_duel", "Duel"], ["nav_plans", "Tariflar"], ["nav_leaderboard", "Reyting"]] },
       { id: "hero", title: "Bosh sahifa — asosiy qism", fields: [["hero_eyebrow", "Yuqori kichik yozuv"], ["hero_title", "Sarlavhaning birinchi qismi"], ["hero_accent", "Rangli sarlavha qismi"], ["hero_title_end", "Sarlavhaning oxirgi qismi"], ["hero_description", "Tavsif"], ["hero_primary", "Asosiy tugma"], ["hero_primary_logged", "Kirish qilganlar tugmasi"], ["hero_secondary", "Yo'nalishni tanlash tugmasi"], ["hero_trust_1", "Afzallik 1"], ["hero_trust_2", "Afzallik 2"], ["hero_trust_3", "Afzallik 3"], ["hero_note", "Yangilik xabari"], ["hero_image_caption", "Rasm osti yozuvi"], ["hero_float_mark", "TKT belgisi"], ["hero_float_title", "TKT kartasi sarlavhasi"], ["hero_float_description", "TKT kartasi tavsifi"]] },
       { id: "overview", title: "Hisoblagich, kirish qismi va orbitalar", fields: [["stat_directions", "Yo'nalishlar hisoblagichi"], ["stat_lessons", "Video darslar hisoblagichi"], ["stat_tests", "Barcha testlar hisoblagichi"], ["stat_test_attestation", "Attestatsiya testlari nomi"], ["stat_test_tkt", "TKT testlari nomi"], ["stat_test_cpd", "CPD testlari nomi"], ["stat_students", "O'quvchilar hisoblagichi"], ["stat_note_title", "Hisoblagich yonidagi sarlavha"], ["stat_note_description", "Hisoblagich yonidagi izoh"], ["orbit_kicker", "Orbital karta yuqori yozuvi"], ["orbit_test", "Orbital test yorlig'i"], ["orbit_lesson", "Orbital dars yorlig'i"], ["orbit_result", "Orbital natija yorlig'i"], ["orbit_tag_1", "Orbital teg 1"], ["orbit_tag_2", "Orbital teg 2"], ["orbit_tag_3", "Orbital teg 3"], ["orbit_tag_4", "Orbital teg 4"], ["overview_eyebrow", "Kirish bo'limi kichik sarlavhasi"], ["overview_title", "Kirish bo'limi sarlavhasi"], ["overview_accent", "Rangli sarlavha qismi"], ["overview_description", "Kirish bo'limi tavsifi"], ["pillar_1_title", "Afzallik 1 sarlavhasi"], ["pillar_1_description", "Afzallik 1 tavsifi"], ["pillar_2_title", "Afzallik 2 sarlavhasi"], ["pillar_2_description", "Afzallik 2 tavsifi"], ["pillar_3_title", "Afzallik 3 sarlavhasi"], ["pillar_3_description", "Afzallik 3 tavsifi"]] },
-      { id: "directions", title: "Yo'nalishlar va kurslar", fields: [["direction_heading", "Yo'nalishlar sarlavhasi"], ["direction_description", "Yo'nalishlar tavsifi"], ["direction_attestation_title", "Attestatsiya kartasi sarlavhasi"], ["direction_attestation_description", "Attestatsiya kartasi tavsifi"], ["direction_tkt_title", "TKT kartasi sarlavhasi"], ["direction_tkt_description", "TKT kartasi tavsifi"], ["direction_open", "Karta tugmasi"], ["course_section_eyebrow", "Kurslar kichik sarlavhasi"], ["course_section_title", "Kurslar bo'limi sarlavhasi"], ["course_section_description", "Kurslar bo'limi tavsifi"], ["course_section_button", "Kurslar tugmasi"]] },
+      { id: "directions", title: "Yo'nalishlar", fields: [["direction_heading", "Yo'nalishlar sarlavhasi"], ["direction_description", "Yo'nalishlar tavsifi"], ["direction_attestation_title", "Attestatsiya kartasi sarlavhasi"], ["direction_attestation_description", "Attestatsiya kartasi tavsifi"], ["direction_tkt_title", "TKT kartasi sarlavhasi"], ["direction_tkt_description", "TKT kartasi tavsifi"], ["direction_open", "Karta tugmasi"]] },
       { id: "features", title: "Biz haqimizda va imkoniyatlar", fields: [["about_eyebrow", "Biz haqimizda kichik sarlavha"], ["about_title", "Biz haqimizda sarlavhasi"], ["about_description", "Biz haqimizda tavsifi"], ["about_check_1", "Afzallik ro'yxati 1"], ["about_check_2", "Afzallik ro'yxati 2"], ["about_check_3", "Afzallik ro'yxati 3"], ["about_check_4", "Afzallik ro'yxati 4"], ["about_card_title", "Yon kartadagi sarlavha"], ["about_card_description", "Yon kartadagi izoh"], ["feature_eyebrow", "Imkoniyatlar kichik sarlavhasi"], ["feature_title", "Imkoniyatlar sarlavhasi"], ["feature_pdf_title", "PDF karta sarlavhasi"], ["feature_pdf_description", "PDF karta tavsifi"], ["feature_video_title", "Video karta sarlavhasi"], ["feature_video_description", "Video karta tavsifi"], ["feature_test_title", "Test karta sarlavhasi"], ["feature_test_description", "Test karta tavsifi"]] },
-      { id: "program", title: "O'quv dasturi", fields: [["program_eyebrow", "Bo'lim kichik sarlavhasi"], ["program_title", "Bo'lim sarlavhasi"], ["program_accent", "Rangli sarlavha qismi"], ["program_description", "Bo'lim tavsifi"], ["program_direction_suffix", "Yo'nalishlar soni qo'shimchasi"], ["program_lesson_suffix", "Darslar soni qo'shimchasi"], ["program_course_button", "Dastur tugmasi"], ["program_attestation_tag", "1-bosqich yorlig'i"], ["program_tkt_tag", "2-bosqich yorlig'i"], ["program_practice_tag", "3-bosqich yorlig'i"], ["program_step_1_title", "Bosqich 1 sarlavhasi"], ["program_step_1_description", "Bosqich 1 tavsifi"], ["program_step_2_title", "Bosqich 2 sarlavhasi"], ["program_step_2_description", "Bosqich 2 tavsifi"], ["program_step_3_title", "Bosqich 3 sarlavhasi"], ["program_step_3_description", "Bosqich 3 tavsifi"]] },
+      { id: "program", title: "O'quv dasturi", fields: [["program_eyebrow", "Bo'lim kichik sarlavhasi"], ["program_title", "Bo'lim sarlavhasi"], ["program_accent", "Rangli sarlavha qismi"], ["program_description", "Bo'lim tavsifi"], ["program_direction_suffix", "Yo'nalishlar soni qo'shimchasi"], ["program_lesson_suffix", "Darslar soni qo'shimchasi"], ["program_attestation_tag", "1-bosqich yorlig'i"], ["program_tkt_tag", "2-bosqich yorlig'i"], ["program_practice_tag", "3-bosqich yorlig'i"], ["program_step_1_title", "Bosqich 1 sarlavhasi"], ["program_step_1_description", "Bosqich 1 tavsifi"], ["program_step_2_title", "Bosqich 2 sarlavhasi"], ["program_step_2_description", "Bosqich 2 tavsifi"], ["program_step_3_title", "Bosqich 3 sarlavhasi"], ["program_step_3_description", "Bosqich 3 tavsifi"]] },
       { id: "faq", title: "Tariflar va savol-javob", fields: [["pricing_eyebrow", "Tariflar kichik sarlavhasi"], ["pricing_title", "Tariflar sarlavhasi"], ["pricing_accent", "Rangli sarlavha qismi"], ["pricing_description", "Tariflar tavsifi"], ["pricing_all", "Barcha tariflar tugmasi"], ["pricing_button", "Tarif kartasi tugmasi"], ["faq_eyebrow", "Savol-javob kichik sarlavhasi"], ["faq_title", "Savol-javob sarlavhasi"], ["faq_accent", "Rangli sarlavha qismi"], ["faq_description", "Savol-javob tavsifi"], ["faq_contact", "Bog'lanish tugmasi"], ["faq_q1", "Savol 1"], ["faq_a1", "Javob 1"], ["faq_q2", "Savol 2"], ["faq_a2", "Javob 2"], ["faq_q3", "Savol 3"], ["faq_a3", "Javob 3"], ["faq_q4", "Savol 4"], ["faq_a4", "Javob 4"]] },
       { id: "footer", title: "Yakuniy chaqiriq va footer", fields: [["final_eyebrow", "Yakuniy bo'lim kichik sarlavhasi"], ["final_title", "Yakuniy sarlavha"], ["final_accent", "Rangli sarlavha qismi"], ["final_description", "Yakuniy bo'lim tavsifi"], ["final_button", "Tugma"], ["final_button_logged", "Kirish qilganlar tugmasi"], ["footer_tagline", "Pastki qism tavsifi"], ["footer_about", "Footer biz haqimizda havolasi"], ["footer_credit", "Footer muallif va huquq yozuvi"]] }
     ];
@@ -8369,20 +8267,18 @@ const server = http.createServer(async (req, res) => {
       <div class="page-head"><div><h1>Sayt sozlamalari</h1><p class="muted">Menyu va bosh sahifadagi asosiy matnlarni shu yerdan tahrirlang. O'zgarishlar saqlangandan so'ng darhol ko'rinadi.</p></div></div>
       ${url.searchParams.get("saved") === "1" ? alertBox("Sayt matnlari saqlandi.", "success") : ""}
       ${url.searchParams.get("button_removed") === "1" ? alertBox("Sayt tugmasi butunlay olib tashlandi. Uni ushbu paneldan qaytarib bo'lmaydi.", "success") : ""}
-      ${url.searchParams.get("cleared") === "1" ? alertBox("Multilevel darslari tozalandi. Kurslar bo'sh holatda saqlandi.", "success") : ""}
-      ${url.searchParams.get("err") === "clear" ? alertBox("Multilevel tarkibini tozalashda xatolik yuz berdi. Hech qanday qisman o'zgarish saqlanmadi.", "error") : ""}
       ${url.searchParams.get("err") === "length" ? alertBox("Qisqa yozuvlar 180, izohlar esa 500 belgigacha bo'lishi mumkin.", "error") : ""}
       <form method="post" action="/admin/site-settings" class="form site-copy-form">
         <input type="hidden" name="site_copy_removed" id="siteCopyRemoved" value="${h(JSON.stringify([...removedCopyKeys]))}">
         <input type="hidden" name="site_copy_extras" id="siteCopyExtras" value="${h(JSON.stringify(copyExtras))}">
-        <section class="card"><h2>Multilevel tugmasi</h2><label class="check-row"><input type="checkbox" name="course_nav_visible" value="1"${courseNavVisible() ? " checked" : ""}> Menyuda “${h(courseNavLabel())}” tugmasini ko'rsatish</label><p class="muted">Belgini olib tashlasangiz, Multilevel havolasi yuqori menyu va pastki havolalardan butunlay yo'qoladi.</p><p class="muted">Admin panel → kurs → darslar orqali video, PDF, matn yoki test qo'shish mumkin.</p><a class="btn btn-ghost btn-sm" href="/admin">Admin panelni ochish</a></section>
+        <section class="card"><h2>Yo'nalishlar</h2><p class="muted">Multilevel sahifasi olib tashlandi. Testlar Attestatsiya va TKT yo'nalishlarida saqlanadi.</p></section>
         <section class="card" style="margin-top:22px"><h2>Saytdagi tugmalarni butunlay olib tashlash</h2><p class="muted">Bu amal bosh sahifa, sayt menyusi va pastki qismdagi tashrif buyuruvchilar ko'radigan havola hamda tugmalar uchun. Olib tashlangan tugma bu paneldan qaytarilmaydi. Admin panelning saqlash va boshqaruv tugmalari o'zgarmaydi.</p><div class="site-copy-grid">${siteButtonSettings}</div></section>
         <button class="btn btn-primary" type="submit">Barcha matnlarni saqlash</button>
         <section class="home-section-settings"><div><h2>Bosh sahifa bo'limlari</h2><p class="muted">Bo'limlarni sudrab tartiblang, belgisini olib tashlab yashiring yoki yangi bo'lim qo'shing. Tartib saytga shu ko'rinishda chiqadi.</p></div><input type="hidden" name="home_section_order" id="homeSectionOrder" value="${sectionOrderJson}"><input type="hidden" name="home_custom_sections" id="homeCustomSections" value="${customSectionsJson}"><div class="home-order-list" id="homeSectionOrderList">${sectionFields}</div><button class="btn btn-ghost" id="addHomeSection" type="button">+ Yangi bo'lim qo'shish</button><small class="muted">Yangi bo'lim uchun sarlavha va tavsif kiriting. Ko'pi bilan 20 ta qo'shimcha bo'lim.</small></section>
         ${fields}
         <button class="btn btn-primary" type="submit">Barcha matnlarni saqlash</button>
       </form>
-      <section class="card" style="margin-top:22px;border-color:rgba(220,70,70,.45)"><h2>Multilevel darslarini tozalash</h2><p>${multilevelCourses.length} ta kursda jami ${multilevelLessonCount} ta dars bor. Tozalash kurslarni saqlab qoladi va ichidagi video, PDF, matn, testlar, materiallar, savollar hamda shu darslarga tegishli o'quvchi natijalarini o'chiradi.</p><form method="post" action="/admin/site-settings/clear-multilevel" onsubmit="return confirm('Multileveldagi ${multilevelLessonCount} ta dars va ularga tegishli materiallar, savollar va natijalar butunlay o‘chiriladi. Kurs nomlari qoladi. Davom etilsinmi?')"><button class="btn btn-danger" type="submit">Multilevel ichidagi barcha darslarni tozalash</button></form></section>`;
+      `;
     const sectionScript = `<script>(function(){var list=document.getElementById('homeSectionOrderList');var form=list&&list.closest('form');var add=document.getElementById('addHomeSection');var orderInput=document.getElementById('homeSectionOrder');var customInput=document.getElementById('homeCustomSections');if(!list||!form||!orderInput||!customInput)return;function updateTitle(row){var input=row.querySelector('[data-custom-title]');var label=row.querySelector('.home-order-label span');if(input&&label)label.textContent=input.value||'Yangi bo\\'lim'}function makeCustom(){var id='custom_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);var row=document.createElement('div');row.className='home-order-item home-custom-item';row.draggable=true;row.dataset.homeOrderItem='';row.dataset.sectionKey=id;row.innerHTML='<div class="home-order-head"><span class="home-drag-handle" aria-hidden="true">⠿</span><label class="home-order-label"><input type="checkbox" data-custom-visible checked><span>Yangi bo\\'lim</span></label><div class="home-order-buttons"><button type="button" data-order-move="up" aria-label="Yuqoriga">↑</button><button type="button" data-order-move="down" aria-label="Pastga">↓</button></div></div><details class="home-custom-editor" open><summary>Bo\\'lim matnlarini tahrirlash</summary><div class="home-custom-fields"><label>Sarlavha<input data-custom-title maxlength="180" value=""></label><label>Tavsif<textarea data-custom-description maxlength="2000" rows="3"></textarea></label><label>Tugma yozuvi (ixtiyoriy)<input data-custom-button maxlength="80" value=""></label><label>Tugma havolasi (ixtiyoriy)<input data-custom-url maxlength="500" placeholder="/courses yoki https://..."></label><button class="btn btn-sm" type="button" data-remove-custom>Bo\\'limni o\\'chirish</button></div></details>';list.appendChild(row);row.querySelector('[data-custom-title]').focus()}if(add)add.addEventListener('click',function(){if(list.querySelectorAll('.home-custom-item').length>=20){alert('Ko\\'pi bilan 20 ta yangi bo\\'lim qo\\'shish mumkin.');return}makeCustom()});list.addEventListener('input',function(event){var row=event.target.closest('.home-custom-item');if(row&&event.target.matches('[data-custom-title]'))updateTitle(row)});list.addEventListener('click',function(event){var row=event.target.closest('[data-home-order-item]');if(!row)return;if(event.target.closest('[data-remove-custom]')){row.remove();return}var move=event.target.closest('[data-order-move]');if(!move)return;if(move.dataset.orderMove==='up'&&row.previousElementSibling)list.insertBefore(row,row.previousElementSibling);if(move.dataset.orderMove==='down'&&row.nextElementSibling)list.insertBefore(row.nextElementSibling,row)});var dragging=null;list.addEventListener('dragstart',function(event){dragging=event.target.closest('[data-home-order-item]');if(dragging){dragging.classList.add('is-dragging');event.dataTransfer.effectAllowed='move'}});list.addEventListener('dragend',function(){if(dragging)dragging.classList.remove('is-dragging');dragging=null});list.addEventListener('dragover',function(event){if(!dragging)return;event.preventDefault();var target=event.target.closest('[data-home-order-item]');if(!target||target===dragging)return;var rect=target.getBoundingClientRect();list.insertBefore(dragging,event.clientY<rect.top+rect.height/2?target:target.nextElementSibling)});form.addEventListener('submit',function(){var rows=Array.from(list.querySelectorAll('[data-home-order-item]'));orderInput.value=JSON.stringify(rows.map(function(row){return row.dataset.sectionKey}));customInput.value=JSON.stringify(rows.filter(function(row){return row.classList.contains('home-custom-item')}).map(function(row){var val=function(selector){var el=row.querySelector(selector);return el?el.value.trim():''};var visible=row.querySelector('[data-custom-visible]');return{id:row.dataset.sectionKey.replace(/^custom_/,'').slice(0,40),title:val('[data-custom-title]'),description:val('[data-custom-description]'),buttonLabel:val('[data-custom-button]'),buttonUrl:val('[data-custom-url]'),visible:!!(visible&&visible.checked)}}))})})();</script>`;
     const copyScript = `<script>(function(){var form=document.querySelector('.site-copy-form');var removed=document.getElementById('siteCopyRemoved');var extras=document.getElementById('siteCopyExtras');if(!form||!removed||!extras)return;function addExtra(group){var row=document.createElement('div');row.className='site-copy-extra-row';row.dataset.copyExtra='';row.dataset.copyExtraId='copy_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);var label=document.createElement('label');label.textContent='Matn nomi';var name=document.createElement('input');name.maxLength=100;name.dataset.copyExtraLabel='';label.appendChild(name);var textLabel=document.createElement('label');textLabel.textContent='Saytda ko\\'rinadigan matn';var text=document.createElement('textarea');text.maxLength=1000;text.rows=2;text.dataset.copyExtraText='';textLabel.appendChild(text);var remove=document.createElement('button');remove.type='button';remove.className='btn btn-sm btn-danger';remove.dataset.copyExtraRemove='';remove.textContent='Olib tashlash';row.append(label,textLabel,remove);group.querySelector('[data-copy-extras]').appendChild(row);name.focus()}form.addEventListener('click',function(event){var remove=event.target.closest('[data-copy-remove]');if(remove){var row=remove.closest('[data-copy-row]');if(row){row.hidden=true;var list=row.closest('.site-copy-grid').querySelector('[data-copy-restore-list]');var restore=document.createElement('button');restore.type='button';restore.className='btn btn-sm';restore.dataset.copyRestore=row.dataset.copyKey;restore.textContent=row.querySelector('label').textContent+' — qaytarish';list.appendChild(restore)}return}var restore=event.target.closest('[data-copy-restore]');if(restore){var key=restore.dataset.copyRestore;var row=form.querySelector('[data-copy-key="'+key+'"]');if(row)row.hidden=false;restore.remove();return}var deleteExtra=event.target.closest('[data-copy-extra-remove]');if(deleteExtra){deleteExtra.closest('[data-copy-extra]').remove();return}var add=event.target.closest('[data-copy-add]');if(add)addExtra(add.closest('[data-copy-group]'))});form.addEventListener('submit',function(){var removedKeys=Array.from(form.querySelectorAll('[data-copy-row][hidden]')).map(function(row){return row.dataset.copyKey});removed.value=JSON.stringify(removedKeys);var rows=Array.from(form.querySelectorAll('[data-copy-extra]')).map(function(row){return{id:row.dataset.copyExtraId,group:row.closest('[data-copy-group]').dataset.copyGroup,label:(row.querySelector('[data-copy-extra-label]').value||'').trim(),text:(row.querySelector('[data-copy-extra-text]').value||'').trim()}}).filter(function(row){return row.label&&row.text});extras.value=JSON.stringify(rows.slice(0,100))})})();</script>`;
     const fullBody = body + sectionScript + copyScript;
@@ -8401,60 +8297,8 @@ const server = http.createServer(async (req, res) => {
     return redirect(res, "/admin/site-settings?button_removed=1");
   }
 
-  if (p === "/admin/site-settings/clear-multilevel" && method === "POST") {
-    if (!admin) return redirect(res, "/admin/login");
-    const lessons = db.prepare("SELECT l.id, l.file_id FROM lessons l JOIN courses c ON c.id = l.course_id WHERE c.is_test_group = 0").all();
-    const lessonIds = lessons.map((row) => Number(row.id));
-    if (lessonIds.length) {
-      const marks = lessonIds.map(() => "?").join(",");
-      const materialFileIds = db.prepare(`SELECT file_id FROM materials WHERE lesson_id IN (${marks}) AND file_id <> ''`).all(...lessonIds).map((row) => String(row.file_id));
-      const questionIds = db.prepare(`SELECT id FROM questions WHERE lesson_id IN (${marks})`).all(...lessonIds).map((row) => Number(row.id));
-      const duelIds = db.prepare(`SELECT id FROM duels WHERE lesson_id IN (${marks})`).all(...lessonIds).map((row) => Number(row.id));
-      const tournamentIds = db.prepare(`SELECT id FROM tournaments WHERE test_id IN (${marks})`).all(...lessonIds).map((row) => Number(row.id));
-      db.exec("BEGIN IMMEDIATE");
-      try {
-        if (duelIds.length) {
-          const duelMarks = duelIds.map(() => "?").join(",");
-          for (const table of ["duel_questions", "duel_starts", "duel_plays"]) db.prepare(`DELETE FROM ${table} WHERE duel_id IN (${duelMarks})`).run(...duelIds);
-          db.prepare(`DELETE FROM duels WHERE id IN (${duelMarks})`).run(...duelIds);
-        }
-        if (tournamentIds.length) {
-          const tournamentMarks = tournamentIds.map(() => "?").join(",");
-          const matchIds = db.prepare(`SELECT id FROM tournament_matches WHERE tournament_id IN (${tournamentMarks})`).all(...tournamentIds).map((row) => Number(row.id));
-          if (matchIds.length) {
-            const matchMarks = matchIds.map(() => "?").join(",");
-            db.prepare(`DELETE FROM tournament_starts WHERE match_id IN (${matchMarks})`).run(...matchIds);
-            db.prepare(`DELETE FROM tournament_matches WHERE id IN (${matchMarks})`).run(...matchIds);
-          }
-          for (const table of ["tournament_entries", "tournament_questions"]) db.prepare(`DELETE FROM ${table} WHERE tournament_id IN (${tournamentMarks})`).run(...tournamentIds);
-          db.prepare(`DELETE FROM tournaments WHERE id IN (${tournamentMarks})`).run(...tournamentIds);
-        }
-        if (questionIds.length) {
-          const questionMarks = questionIds.map(() => "?").join(",");
-          db.prepare(`DELETE FROM duel_questions WHERE question_id IN (${questionMarks})`).run(...questionIds);
-          db.prepare(`DELETE FROM tournament_questions WHERE question_id IN (${questionMarks})`).run(...questionIds);
-        }
-        for (const table of ["test_attempts", "progress", "purchases", "likes", "video_watch", "lesson_viewers", "test_sections", "materials", "questions"]) {
-          db.prepare(`DELETE FROM ${table} WHERE lesson_id IN (${marks})`).run(...lessonIds);
-        }
-        db.prepare(`DELETE FROM lessons WHERE id IN (${marks})`).run(...lessonIds);
-        db.exec("COMMIT");
-      } catch (error) {
-        db.exec("ROLLBACK");
-        console.error("[site-settings] Multilevel tozalash bajarilmadi:", error.message);
-        return redirect(res, "/admin/site-settings?err=clear");
-      }
-      const fileIds = new Set([...lessons.map((row) => String(row.file_id || "")).filter(Boolean), ...materialFileIds]);
-      for (const fileId of fileIds) {
-        try { fs.unlinkSync(path.join(STORAGE_DIR, fileId)); } catch (e) {}
-      }
-    }
-    return redirect(res, "/admin/site-settings?cleared=1");
-  }
-
   if (p === "/admin/site-settings" && method === "POST") {
     if (!admin) return redirect(res, "/admin/login");
-    metaSet("course_nav_visible", fields.course_nav_visible === "1" ? "1" : "0");
     let removedCopyKeys = [];
     try { removedCopyKeys = JSON.parse(String(fields.site_copy_removed || "[]")); } catch (e) {}
     const validCopyKeys = new Set(Object.keys(SITE_TEXT_DEFAULTS));
@@ -8482,7 +8326,6 @@ const server = http.createServer(async (req, res) => {
       return { id, group: row.group, label: String(row.label || "").trim().slice(0, 100), text: String(row.text || "").trim().slice(0, 1000) };
     }).filter((row) => row && row.label && row.text);
     metaSet("site_copy_extras_json", JSON.stringify(normalizedCopyExtras));
-    metaSet("course_nav_label", saved.nav_courses);
     const sectionVisibility = Object.fromEntries(Object.keys(HOME_SECTION_LABELS).map((key) => [key, fields[`home_section_${key}`] === "1"]));
     metaSet("home_sections_json", JSON.stringify(sectionVisibility));
     let submittedCustom = [];
@@ -9798,7 +9641,7 @@ function notFound(res, user, admin) {
   404,
   layout({
   title: "Topilmadi",
-  body: `<div class="card"><h1>Sahifa topilmadi</h1><p class="muted">Havola eskirgan yoki o'chirilgan.</p><a class="btn btn-primary" href="${admin ? "/admin": user ? "/courses": "/"}">Davom etish</a></div>`,
+  body: `<div class="card"><h1>Sahifa topilmadi</h1><p class="muted">Havola eskirgan yoki o'chirilgan.</p><a class="btn btn-primary" href="${admin ? "/admin": user ? "/attestation": "/"}">Davom etish</a></div>`,
   user,
   admin
   })
