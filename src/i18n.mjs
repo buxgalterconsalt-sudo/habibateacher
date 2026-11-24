@@ -142,8 +142,20 @@ const I18N = {
   "Attestatsiyaga tayyorlov, metodika, demo dars(video darslar hozircha yo'q) va testlar — barchasi bir joyda.": "Attestation preparation, teaching methods, demo lessons (video lessons coming soon), and tests — all in one place.",
   "Reading testlari": "Reading tests",
   "Grammar testlari": "Grammar tests",
+  "Vocabulary testi": "Vocabulary test",
+  "Vocabulary testlari": "Vocabulary tests",
+  "Pragmatika testlari": "Pragmatics tests",
+  "Pedagogik mahorat testlari": "Teaching skills tests",
   "Pedakogik mahorat testlari": "Teaching skills tests",
   "Kasbiy standart testlari": "Professional standards tests",
+  "Toifa testlari": "Qualification tests",
+  "Botga a'zo bo'ling va duelda bo'ladigan qiziqarli o'yinlar haqidagi xabarlarni oling.": "Join our Telegram bot to get updates about exciting duels on the platform.",
+  "🤖 Telegram botga o'tish va /start bosish": "🤖 Open the Telegram bot and press /start",
+  "Tug'ilgan kun.oy.yil": "Date of birth (DD.MM.YYYY)",
+  "Turnirda qatnashish uchun tizimga kiring.": "Log in to join the tournament.",
+  "Parolni ko'rsat": "Show password",
+  "Parolni yashir": "Hide password",
+  BOSHLASH: "START",
   "Barcha darslarni ko'rish": "View all lessons",
   "Habiba teacher — ingliz tili fani o'qituvchilarini attestatsiyaga tayyorlaydigan onlayn platforma. Testlar, metodika, demo dars(video darslar hozircha yo'q) va portfolio bo'yicha tizimli materiallar.": "Habiba Teacher is an online platform that helps English teachers prepare for attestation, with structured tests, teaching methods, demo lessons (video lessons coming soon), and portfolio resources.",
   "Video tushuntirishlar (video darslar hozircha yo'q)": "Video explanations (coming soon)",
@@ -325,7 +337,7 @@ const I18N = {
   "O'qituvchlar uchun mock testlar": "Mock tests for teachers",
   "Attestatsiya testlari": "Attestation tests",
   "TKT testlari": "TKT tests",
-  "Toifa testlari": "Category tests",
+  "Toifa testlari": "Qualification tests",
   "Ajratilgan vaqt:": "Time:",
   "Savollar soni:": "Questions:",
   "Eng yuqori ball:": "Max score:",
@@ -527,6 +539,12 @@ function translateCore(text, lang) {
   }
 
   let m;
+  if ((m = decoded.match(/^Attestatsiya (\d{4}) · Sinov (\d+)$/))) return put(`Attestation ${m[1]} · Practice test ${m[2]}`);
+  if ((m = decoded.match(/^(.+?) bo'limi\s*[—–-]\s*har bir testda (\d+) ta savol\.$/))) {
+    const names = { Reading: "Reading", Grammar: "Grammar", Vocabulary: "Vocabulary", Pragmatika: "Pragmatics", "Pedagogik mahorat": "Teaching skills", "Kasbiy standart": "Professional standards" };
+    const section = names[m[1]] || translateCore(m[1], lang);
+    return put(`${section} section — ${m[2]} questions per test.`);
+  }
   if ((m = decoded.match(/^Salom,\s*(.+?)(!\s*👋)$/)) || (m = decoded.match(/^Salom,\s*(.+?)(!?)$/))) {
     return put(`Hello, ${m[1]}${m[2]}`);
   }
@@ -571,7 +589,7 @@ export function translateHtml(html, lang) {
   /(<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>)|>([^<]*)</g,
   (match, skip, text) => (skip ? match: `>${translateCore(text, lang)}<`)
   );
-  out = out.replace(/\b(placeholder|aria-label|title)="([^"]*)"/g, (match, attr, value) => {
+  out = out.replace(/\b(placeholder|aria-label|title|alt|value)="([^"]*)"/g, (match, attr, value) => {
   const decoded = value
 .replace(/&amp;/g, "&")
 .replace(/&#39;/g, "'")

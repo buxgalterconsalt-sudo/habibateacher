@@ -1600,7 +1600,7 @@ function passwordRequirementsMarkup() {
   return '<small class="password-hint">Kamida 8 ta belgi: katta va kichik lotin harfi, raqam hamda maxsus belgi. Eng ko\'pi 64 ta belgi.</small>';
 }
 function registrationPasswordInput(name, autocomplete, placeholder = "") {
-  return `<span class="password-input-wrap"><input name="${h(name)}" type="password" required minlength="8" maxlength="64" autocomplete="${h(autocomplete)}"${placeholder ? ` placeholder="${h(placeholder)}"` : ""}><button class="password-toggle" type="button" data-password-toggle aria-label="Parolni ko'rsat" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button></span>`;
+  return `<span class="password-input-wrap"><input name="${h(name)}" type="password" required minlength="8" maxlength="64" autocomplete="${h(autocomplete)}"${placeholder ? ` placeholder="${h(placeholder)}"` : ""}><button class="password-toggle" type="button" data-password-toggle aria-label="Parolni ko'rsat" aria-pressed="false" onclick="var i=this.parentElement.querySelector('input');if(!i)return;var show=i.type==='password';i.type=show?'text':'password';this.setAttribute('aria-pressed',String(show));var en=document.documentElement.lang==='en';this.setAttribute('aria-label',show?(en?'Hide password':'Parolni yashir'):(en?'Show password':'Parolni ko\'rsat'))"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button></span>`;
 }
 
 function resetPasswordForm(phone, token, error = "") {
@@ -1855,7 +1855,7 @@ ${seoTags}
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%2312b5a6'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='18' font-weight='bold' text-anchor='middle' fill='%2303211d'%3EH%3C/text%3E%3C/svg%3E">
 <script async src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>try{document.documentElement.dataset.theme=localStorage.getItem('ht_theme')||'dark';}catch(e){document.documentElement.dataset.theme='dark';}</script>
-<link rel="stylesheet" href="/assets/platform.css?v=20261124attestation1">
+<link rel="stylesheet" href="/assets/platform.css?v=20261124locale2">
 </head>
 <body${admin && !publicPage ? ` class="admin-page"` : isStudentPage ? ` class="student-page${isDashboard ? " is-dashboard" : ""}"` : ""}>
 <header class="topbar">
@@ -2085,7 +2085,7 @@ c.addEventListener('change', function () { b.disabled = !c.checked; });
   var value = btn.getAttribute('data-copy');
   if (navigator.clipboard) navigator.clipboard.writeText(value).then(function () {
   var old = btn.textContent;
-  btn.textContent = 'Nusxalandi S ';
+  btn.textContent = document.documentElement.lang === 'en' ? 'Copied!' : 'Nusxalandi S ';
   setTimeout(function () { btn.textContent = old; }, 1600);
   });
   });
@@ -2104,7 +2104,7 @@ c.addEventListener('change', function () { b.disabled = !c.checked; });
   try { document.execCommand('copy'); } catch (e) {}
   document.body.removeChild(ta);
   var old = btn.textContent;
-  btn.textContent = 'Nusxalandi S ';
+  btn.textContent = document.documentElement.lang === 'en' ? 'Copied!' : 'Nusxalandi S ';
   setTimeout(function () { btn.textContent = old; }, 1600);
   }
   });
@@ -2143,30 +2143,20 @@ c.addEventListener('change', function () { b.disabled = !c.checked; });
 })();
 </script>
 <script>
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=18').then(function (registration) { registration.update().catch(function () {}); }).catch(function () {});
-document.addEventListener('click', function (event) {
-  var button = event.target.closest ? event.target.closest('[data-password-toggle]') : null;
-  if (!button) return;
-  var input = button.parentElement.querySelector('input');
-  if (!input) return;
-  var show = input.type === 'password';
-  input.type = show ? 'text' : 'password';
-  button.setAttribute('aria-pressed', String(show));
-  button.setAttribute('aria-label', show ? 'Parolni yashir' : 'Parolni ko\'rsat');
-});
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=19').then(function (registration) { registration.update().catch(function () {}); }).catch(function () {});
 document.querySelectorAll('[data-app-refresh]').forEach(function (button) {
   button.addEventListener('click', async function () {
     if (button.disabled) return;
     var oldText = button.innerHTML;
     button.disabled = true;
-    button.innerHTML = '<span aria-hidden="true">⟳</span><b>Yangilanmoqda...</b>';
+    button.innerHTML = '<span aria-hidden="true">⟳</span><b>' + (document.documentElement.lang === 'en' ? 'Updating...' : 'Yangilanmoqda...') + '</b>';
     try {
       if ('serviceWorker' in navigator) {
         var registration = await navigator.serviceWorker.getRegistration();
         if (registration) await registration.update();
       }
     } catch (e) {}
-    button.innerHTML = '<span aria-hidden="true">✓</span><b>Yangilandi</b>';
+    button.innerHTML = '<span aria-hidden="true">✓</span><b>' + (document.documentElement.lang === 'en' ? 'Updated' : 'Yangilandi') + '</b>';
     window.location.reload();
     setTimeout(function () { button.disabled = false; button.innerHTML = oldText; }, 2500);
   });
@@ -3725,7 +3715,7 @@ function tournamentMatchPage(match, tournament, questions, user) {
   slides.forEach(function (s, i) { var d = document.createElement('span'); d.className = 'q-dot' + (i === 0 ? ' active': ''); dots.appendChild(d); });
   var dotEls = Array.prototype.slice.call(dots.children);
   function refresh() {
-  counter.textContent = (index + 1) + ' / ' + slides.length + ' savol';
+  counter.textContent = (index + 1) + ' / ' + slides.length + (document.documentElement.lang === 'en' ? ' questions' : ' savol');
   prev.disabled = index === 0;
   next.hidden = index === slides.length - 1;
   finish.hidden = index !== slides.length - 1;
@@ -3737,7 +3727,7 @@ function tournamentMatchPage(match, tournament, questions, user) {
   document.querySelectorAll('.q-opt input').forEach(function (i) { i.addEventListener('change', refresh); });
   form.addEventListener('submit', function (e) {
   var unanswered = slides.filter(function (s) { return !s.querySelector('input:checked'); }).length;
-  if (unanswered && !confirm(unanswered + ' ta savol javobsiz. Baribir yakunlaysizmi?')) e.preventDefault();
+  if (unanswered && !confirm((document.documentElement.lang === 'en' ? unanswered + ' questions unanswered. Submit anyway?' : unanswered + ' ta savol javobsiz. Baribir yakunlaysizmi?'))) e.preventDefault();
   });
   var left = ${limit};
   var timer = document.getElementById('timer');
@@ -4351,7 +4341,7 @@ function dashboardPage(user) {
           uz: { installed: ${JSON.stringify(copy.dashboard_install_ready)}, help: ${JSON.stringify(copy.dashboard_install_help)} },
           en: { installed: "The app is already installed.", help: "Open your browser menu and choose Install app or Add to Home screen." }
         };
-        if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=18').catch(function () {});
+        if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=19').catch(function () {});
         window.addEventListener('beforeinstallprompt', function (event) {
           event.preventDefault();
           installPrompt = event;
@@ -4637,7 +4627,7 @@ function duelPlayPage(duel, lesson, questions) {
   });
   var dotEls = Array.prototype.slice.call(dots.children);
   function refresh() {
-  counter.textContent = (index + 1) + ' / ' + slides.length + ' savol';
+  counter.textContent = (index + 1) + ' / ' + slides.length + (document.documentElement.lang === 'en' ? ' questions' : ' savol');
   prev.disabled = index === 0;
   next.hidden = index === slides.length - 1;
   finish.hidden = index !== slides.length - 1;
@@ -4658,7 +4648,7 @@ function duelPlayPage(duel, lesson, questions) {
   });
   form.addEventListener('submit', function (e) {
   var unanswered = slides.filter(function (s) { return !s.querySelector('input:checked'); }).length;
-  if (unanswered && !confirm(unanswered + ' ta savol javobsiz. Baribir yakunlaysizmi?')) {
+  if (unanswered && !confirm((document.documentElement.lang === 'en' ? unanswered + ' questions unanswered. Submit anyway?' : unanswered + ' ta savol javobsiz. Baribir yakunlaysizmi?'))) {
   e.preventDefault();
   }
   });
@@ -4692,12 +4682,12 @@ function testDocument({ title, body }) {  return `<!DOCTYPE html>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%231e40af'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='18' font-weight='bold' text-anchor='middle' fill='white'%3EH%3C/text%3E%3C/svg%3E">
 <script async src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>try{document.documentElement.dataset.theme=localStorage.getItem('ht_theme')||'dark';}catch(e){document.documentElement.dataset.theme='dark';}</script>
-<link rel="stylesheet" href="/assets/platform.css?v=20261123home16">
+<link rel="stylesheet" href="/assets/platform.css?v=20261124locale2">
 </head>
 <body class="test-body student-page">
 ${body}
 <footer class="test-author-footer">Ustozlarimizga ko‘mak bo‘lsin deya, ushbu materiallar Habiba Mo'minjonovna tomonidan taqdim etildi.</footer>
-<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=18').then(function (registration) { registration.update().catch(function () {}); }).catch(function () {});</script>
+<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=19').then(function (registration) { registration.update().catch(function () {}); }).catch(function () {});</script>
 </body>
 </html>`;
 }
@@ -4916,7 +4906,7 @@ function testPage(lesson, questions, testSections = [], attemptId = 0) {
   }
 
   function refresh() {
-  counter.textContent = (index + 1) + ' / ' + slides.length + ' savol';
+  counter.textContent = (index + 1) + ' / ' + slides.length + (document.documentElement.lang === 'en' ? ' questions' : ' savol');
   prev.disabled = index === 0;
   next.disabled = index === slides.length - 1;
   palette.forEach(function (btn, i) {
@@ -4928,7 +4918,7 @@ function testPage(lesson, questions, testSections = [], attemptId = 0) {
   progressFill.style.width = (slides.length ? Math.round((count / slides.length) * 100): 0) + '%';
   if (hint) {
   var left = slides.length - count;
-  hint.textContent = left ? left + ' ta savol javobsiz.': 'Barcha savollarga javob berilgan.';
+  hint.textContent = document.documentElement.lang === 'en' ? (left ? left + ' questions unanswered.' : 'All questions have been answered.') : (left ? left + ' ta savol javobsiz.' : 'Barcha savollarga javob berilgan.');
   }
   }
 
