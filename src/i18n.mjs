@@ -157,6 +157,7 @@ const I18N = {
   "Parolni yashir": "Hide password",
   BOSHLASH: "START",
   "Barcha darslarni ko'rish": "View all lessons",
+  "Qolgan testlarni ko‘rish": "Show remaining tests",
   "Habiba teacher — ingliz tili fani o'qituvchilarini attestatsiyaga tayyorlaydigan onlayn platforma. Testlar, metodika, demo dars(video darslar hozircha yo'q) va portfolio bo'yicha tizimli materiallar.": "Habiba Teacher is an online platform that helps English teachers prepare for attestation, with structured tests, teaching methods, demo lessons (video lessons coming soon), and portfolio resources.",
   "Video tushuntirishlar (video darslar hozircha yo'q)": "Video explanations (coming soon)",
   "Video darslar(video darslar hozircha yo'q)": "Video lessons (coming soon)",

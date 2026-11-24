@@ -2080,6 +2080,8 @@ video.video {
 .attestation-group-title:hover h2, .attestation-test-group[open] > .attestation-group-title h2 { color: var(--primary); }
 .attestation-group-marker::after { content: "+"; display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background: rgba(18,181,166,.14); color: var(--primary-soft); font-weight: 800; }
 .attestation-test-group[open] > .attestation-group-title .attestation-group-marker::after { content: "−"; }
+.test-more { margin-top: 12px; }
+.test-more > summary { margin: 0 0 14px; color: var(--primary-soft); font-size: .92rem; font-weight: 700; cursor: pointer; }
 .test-locked { opacity: .72; }
 .test-locked .test-flag { background: rgba(130,140,151,.18); color: var(--muted); }
 .test-locked .test-price { font-size: .72rem; }

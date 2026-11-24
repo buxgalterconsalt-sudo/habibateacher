@@ -6442,7 +6442,18 @@ const server = http.createServer(async (req, res) => {
   const groupHeader = isAttestationGroup
     ? `<summary class="test-group-head attestation-group-title${groupHasTests ? " has-tests" : ""}"><h2>${h(course.title)}</h2>${groupHasTests ? `<span class="attestation-group-marker" aria-hidden="true"></span>` : ""}</summary>`
     : `<div class="test-group-head"><div><h2>${h(course.title)}</h2></div></div>`;
-  return `<${isAttestationGroup ? "details" : "section"} class="test-group${isAttestationGroup ? ` attestation-test-group${groupHasTests ? " has-tests" : ""}` : ""}">
+  const previewOneTest = isAttestationGroup && !admin && list.length > 1;
+  const visibleTests = previewOneTest ? list.slice(0, 1) : list;
+  const renderTest = (test) => {
+    const isComplete = sequence?.completed.has(Number(test.id)) || false;
+    const locked = !!sequence && !isComplete && Number(test.id) !== Number(nextTest?.id);
+    return testCard(test, Number(test.price) > 0 && userHasPlan, locked, nextTest?.id);
+  };
+  const remainingTests = previewOneTest
+    ? `<details class="test-more"><summary>Qolgan testlarni ko‘rish</summary><div class="grid test-grid">${list.slice(1).map(renderTest).join("")}</div></details>`
+    : "";
+  const openPreview = isAttestationGroup && !admin && list.length ? " open" : "";
+  return `<${isAttestationGroup ? "details" : "section"} class="test-group${isAttestationGroup ? ` attestation-test-group${groupHasTests ? " has-tests" : ""}` : ""}"${openPreview}>
   ${groupHeader}
   ${
   hasPaid && list.length > 1
@@ -6455,11 +6466,8 @@ const server = http.createServer(async (req, res) => {
   </div>`
 : ""
   }
-  <div class="grid test-grid">${list.map((t) => {
-    const isComplete = sequence?.completed.has(Number(t.id)) || false;
-    const locked = !!sequence && !isComplete && Number(t.id) !== Number(nextTest?.id);
-    return testCard(t, Number(t.price) > 0 && userHasPlan, locked, nextTest?.id);
-  }).join("")}${addCard}</div>
+  <div class="grid test-grid">${visibleTests.map(renderTest).join("")}${addCard}</div>
+  ${remainingTests}
   ${isAttestationGroup ? "</details>" : "</section>"}`;
   })
 .filter(Boolean)
