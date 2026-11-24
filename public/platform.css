@@ -5569,6 +5569,8 @@ body.is-dashboard .dl-search { min-height: 46px; }
   grid-template-columns: minmax(0, 1fr);
 }
 
+.dl-grid .dl-card[hidden] { display: none !important; }
+
 .dl-grid.list .dl-card {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
