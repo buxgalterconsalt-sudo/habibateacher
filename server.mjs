@@ -8511,7 +8511,7 @@ const server = http.createServer(async (req, res) => {
   const rows = lessons.length
   ? lessons
 .map(
-  (l, i) => `<tr>
+  (l, i) => `<tr id="lesson-${l.id}">
   <td>${i + 1}</td>
   <td><b>${h(l.title)}</b><br><small class="muted">${h(
   l.type === "pdf" ? l.file_name || "PDF": l.type === "video" ? l.video_url: ""
@@ -8552,6 +8552,7 @@ const server = http.createServer(async (req, res) => {
   ${l.type === "test" ? `<a class="btn btn-sm" href="/admin/lesson/${l.id}/questions">Savollar</a>`: ""}
   ${l.type === "test" ? `<a class="btn btn-sm" href="/admin/lesson/${l.id}/materials">Materiallar</a>`: ""}
   ${l.type === "test" && Number(l.price) > 0 ? `<a class="btn btn-sm" href="/admin/lesson/${l.id}/access">Ruxsat</a>`: ""}
+  ${l.type === "test" ? `<form method="post" action="/admin/lesson/${l.id}/duplicate" class="inline"><input name="copies" type="number" min="1" max="19" value="1" aria-label="Nechta nusxa" title="Nechta nusxa" style="width:4.5rem;padding:.45rem .35rem"><button class="btn btn-sm" type="submit" title="Sozlamalarini nusxalab, savollarsiz yangi test darslari yaratadi">＋ Nusxa</button></form>`: ""}
   <form method="post" action="/admin/lesson/${l.id}/delete" class="inline" onsubmit="return confirm('Dars ochirilsinmi?')">
   <button class="btn btn-sm btn-danger" type="submit">O'chirish</button>
   </form>
@@ -8567,6 +8568,7 @@ const server = http.createServer(async (req, res) => {
   <div><h1>${h(course.title)}</h1><p class="muted">${h(course.description || "")}</p></div>
   </div>
   ${url.searchParams.get("saved") === "1" ? alertBox("Saqlandi.", "success"): ""}
+  ${url.searchParams.has("duplicated") ? alertBox(`${h(url.searchParams.get("duplicated") || "1")} ta test darsi nusxalandi. Savollarni alohida Excel fayllardan yuklang.`, "success"): ""}
 
   <div class="card" id="edit-course">
   <h2>Kurs nomini tahrirlash</h2>
@@ -8859,6 +8861,58 @@ const server = http.createServer(async (req, res) => {
   if (type === "test") redirect(res, `/admin/lesson/${lessonId}/questions`);
   else redirect(res, `/admin/course/${courseId}`);
   return;
+  }
+
+  const duplicateLessonMatch = p.match(/^\/admin\/lesson\/(\d+)\/duplicate$/);
+  if (duplicateLessonMatch && method === "POST") {
+    if (!contentManager) return redirect(res, "/admin/login");
+    const source = db.prepare("SELECT * FROM lessons WHERE id = ? AND type = 'test'").get(Number(duplicateLessonMatch[1]));
+    if (!source) return redirect(res, "/admin");
+
+    const copies = Math.min(19, Math.max(1, Math.floor(Number(fields.copies) || 1)));
+    const baseTitle = (String(source.title || "Test").trim().replace(/\s+\(\d+\)$/, "") || "Test").slice(0, 180);
+    const price = Math.max(0, Number(source.price) || 0);
+    const existingTitles = new Set(db.prepare("SELECT title FROM lessons WHERE course_id = ?").all(source.course_id)
+      .map((row) => String(row.title || "").trim()));
+    let copyNo = 2;
+    let position = Number(db.prepare("SELECT COALESCE(MAX(position), 0) + 1 AS n FROM lessons WHERE course_id = ?")
+      .get(source.course_id).n);
+    let lastCopyId = 0;
+    const insertCopy = db.prepare(
+      `INSERT INTO lessons
+       (course_id, title, type, content, video_url, file_id, file_name, file_size, duration_min, price, is_pro, max_score, question_count, position, created_at)
+       VALUES (?, ?, 'test', '', '', '', '', 0, ?, ?, ?, ?, ?, ?, ?)`
+    );
+    db.exec("BEGIN IMMEDIATE");
+    try {
+      for (let i = 0; i < copies; i += 1) {
+        let title = `${baseTitle} (${copyNo})`;
+        while (existingTitles.has(title)) {
+          copyNo += 1;
+          title = `${baseTitle} (${copyNo})`;
+        }
+        copyNo += 1;
+        existingTitles.add(title);
+        const info = insertCopy.run(
+          source.course_id,
+          title,
+          Math.min(180, Math.max(1, Number(source.duration_min) || 30)),
+          price,
+          price > 0 ? 1 : 0,
+          Math.min(1000, Math.max(0, Number(source.max_score) || 100)),
+          Math.min(500, Math.max(0, Number(source.question_count) || 20)),
+          position,
+          nowISO()
+        );
+        lastCopyId = Number(info.lastInsertRowid);
+        position += 1;
+      }
+      db.exec("COMMIT");
+    } catch (error) {
+      db.exec("ROLLBACK");
+      throw error;
+    }
+    return redirect(res, `/admin/course/${source.course_id}?duplicated=${copies}#lesson-${lastCopyId}`);
   }
 
   const addVideoTestMatch = p.match(/^\/admin\/lesson\/(\d+)\/add-test$/);
