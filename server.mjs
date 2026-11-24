@@ -2494,7 +2494,7 @@ async function sendUserMessage(userId, text, path) {
   return !!(data && data.ok);
 }
 
-async function notifyTournamentMatchPlayers(tournamentId, round, matchId = null, phase = "ready") {
+async function notifyTournamentMatchPlayers(tournamentId, round) {
   const tournament = db.prepare("SELECT * FROM tournaments WHERE id = ?").get(tournamentId);
   if (!tournament) return;
   const matches = db
@@ -2503,20 +2503,20 @@ async function notifyTournamentMatchPlayers(tournamentId, round, matchId = null,
   FROM tournament_matches m
   LEFT JOIN users u1 ON u1.id = m.p1
   LEFT JOIN users u2 ON u2.id = m.p2
-  WHERE m.tournament_id = ? AND m.round = ? AND m.status = 'ready' ${matchId ? "AND m.id = ?" : ""}`
+  WHERE m.tournament_id = ? AND m.round = ? AND m.status = 'ready'`
   )
-.all(...(matchId ? [tournamentId, round, matchId] : [tournamentId, round]));
+.all(tournamentId, round);
   for (const match of matches) {
   const label = tournamentRoundName(tournament.size, round);
   for (const playerId of [match.p1, match.p2]) {
   if (!playerId) continue;
-  const flag = `tour_${phase}_${match.id}_${playerId}`;
+  const flag = `tour_ready_${match.id}_${playerId}`;
   if (metaGet(flag, "") === "1") continue;
   metaSet(flag, "1");
   const opponent = playerId === match.p1 ? match.p2name: match.p1name;
   await sendUserMessage(
   playerId,
-  `${phase === "reminder" ? "⏳ <b>Duelga 5 daqiqa qoldi!</b>" : phase === "started" ? "🔔 <b>Duel boshlandi!</b>" : `🏆 <b>${label} juftligi tayyor</b>`}\n${phase === "started" ? "30 daqiqa ichida kiring." : ""}\nRaqibingiz: <b>${h(opponent || "?")}</b>\n15 ta aralash savol. Har savolga 60 soniya.`,
+  `—  <b>${label} boshlandi</b>\nRaqibingiz: <b>${h(opponent || "?")}</b>\n15 ta aralash savol. Har savolga 60 soniya. Brauzerda oching.`,
   `/duel/tournament/match/${match.id}`
   );
   }
@@ -3183,7 +3183,7 @@ function ensureOpenTournament() {
 .prepare(
   `SELECT t.* FROM tournaments t
   WHERE t.day = ? AND t.status = 'open'
-  AND (SELECT COUNT(*) FROM tournament_entries e WHERE e.tournament_id = t.id) < 32
+  AND (SELECT COUNT(*) FROM tournament_entries e WHERE e.tournament_id = t.id) < 16
   ORDER BY t.group_no LIMIT 1`
   )
 .get(day);
@@ -3192,7 +3192,7 @@ function ensureOpenTournament() {
   const test = tournamentTest();
   const info = db
 .prepare(
-  "INSERT INTO tournaments (day, group_no, test_id, status, size, created_at) VALUES (?, ?, ?, 'open', 32, ?)"
+  "INSERT INTO tournaments (day, group_no, test_id, status, size, created_at) VALUES (?, ?, ?, 'open', 16, ?)"
   )
 .run(day, Number(last) + 1, test ? test.id: 0, nowISO());
   return db.prepare("SELECT * FROM tournaments WHERE id = ?").get(Number(info.lastInsertRowid));
@@ -3313,7 +3313,7 @@ function tournamentRoundName(size, round) {
   const left = size / 2 ** round;
   if (left === 2) return "1/2 FINAL";
   if (left === 4) return "1/4 FINAL";
-  return `1/${left} FINAL`;
+  return `1/${left}`;
 }
 
 function bracketRoundTimes(size) {
@@ -3366,10 +3366,7 @@ function propagateTournament(tid) {
   } else if (m.p1 && m.p2 && m.status === "pending") {
   db.prepare("UPDATE tournament_matches SET status = 'ready' WHERE id = ?").run(m.id);
   m.status = "ready";
-  const startsAt = bracketRoundTimes(tournament.size)[r].split(":").map(Number);
-  const startMinute = startsAt[0] * 60 + startsAt[1];
-  const phase = tashkentClock().minutes >= startMinute ? "started" : "ready";
-  notifyTournamentMatchPlayers(tid, r + 1, m.id, phase).catch(() => {});
+  notifyTournamentMatchPlayers(tid, r + 1).catch(() => {});
   }
   }
   }
@@ -3386,7 +3383,7 @@ function propagateTournament(tid) {
 }
 
 function nextPowerOfTwo(count) {
-  let size = 32;
+  let size = 8;
   while (size < count && size < 128) size *= 2;
   return size;
 }
@@ -3408,7 +3405,7 @@ function startTournament(tid) {
   const tournament = db.prepare("SELECT * FROM tournaments WHERE id = ?").get(tid);
   const entries = tournamentEntries(tid);
   if (!tournament || tournament.status !== "open" || entries.length < 2) return false;
-  const size = Math.max(32, nextPowerOfTwo(entries.length));
+  const size = Math.max(16, nextPowerOfTwo(entries.length));
   const order = seedOrder(size);
   const slots = new Array(size).fill(null);
   entries.slice(0, size).forEach((e, i) => {
@@ -3590,7 +3587,7 @@ function tournamentPage(tournament, user, admin, groups = []) {
   <div class="tour-participants">${participants}</div>
   ${
   tournament.status === "open"
-  ? `${bracketPreview(nextPowerOfTwo(Math.max(32, entries.length)))}<p class="muted small center">Barcha ro'yxatdan o'tgan a'zolar avtomatik qo'shiladi. Turnir 09:00 da boshlanadi.</p>`
+  ? `${bracketPreview(nextPowerOfTwo(Math.max(16, entries.length)))}<p class="muted small center">Barcha ro'yxatdan o'tgan a'zolar avtomatik qo'shiladi. Turnir 09:00 da boshlanadi.</p>`
 : `<div class="bracket-scroll"><div class="bracket">${columns.join("")}</div></div>`
   }
   <p class="muted small center" style="margin-top:16px">Har bir match ${TOURNAMENT_QUESTIONS} ta aralash savol. Har savolga 60 soniya. ko'proq to'g'ri javob, teng bo'lsa tezroq o'yinchi yutadi.</p>
@@ -3715,8 +3712,6 @@ function tournamentPairingLines(tournamentId, round) {
 
 async function sendTournamentSchedule(tournament) {
   const entries = tournamentEntries(tournament.id);
-  const times = bracketRoundTimes(tournament.size);
-  const schedule = times.map((time, i) => `${time}   ${tournamentRoundName(tournament.size, i + 1)}`).join("\n");
   const text = `x  <b>Bugungi duel kubogi</b>
 x & ${h(tournament.day)}
 x} Aralash test · ${TOURNAMENT_QUESTIONS} savol
@@ -3724,7 +3719,10 @@ x  ${entries.length} ishtirokchi
 
  <b>Kun jadvali</b>
 09:00   start
-${schedule}
+10:00   1/8 final
+12:00   1/4 final
+14:00   1/2 final
+16:00   final
 17:15   g'olib
 18:00   yakun
 
@@ -3815,25 +3813,12 @@ async function tournamentTick() {
 
   if (tournament.status === "live") {
   const rounds = Math.log2(tournament.size);
-  const roundTimes = bracketRoundTimes(tournament.size).map((time) => {
-  const [hour, minute] = time.split(":").map(Number);
-  return hour * 60 + minute;
-  });
-  for (let r = 1; r <= rounds; r += 1) {
+  const roundTimes = [600, 720, 840, 960, 990, 1020, 1035];
+  for (let r = 1; r <= Math.min(rounds, roundTimes.length); r += 1) {
   const key = `r${r}`;
   if (clock.minutes >= roundTimes[r - 1] && metaGet(flag(key)) !== "1") {
   metaSet(flag(key), "1");
   await sendTournamentRound(tournament, r);
-  }
-  if (clock.minutes >= roundTimes[r - 1] - 5 && clock.minutes < roundTimes[r - 1] && metaGet(flag(`r${r}_reminder`)) !== "1") {
-  metaSet(flag(`r${r}_reminder`), "1");
-  const matches = db.prepare("SELECT id FROM tournament_matches WHERE tournament_id = ? AND round = ? AND status = 'ready'").all(tournament.id, r);
-  for (const match of matches) await notifyTournamentMatchPlayers(tournament.id, r, match.id, "reminder");
-  }
-  if (clock.minutes >= roundTimes[r - 1] && metaGet(flag(`r${r}_started`)) !== "1") {
-  metaSet(flag(`r${r}_started`), "1");
-  const matches = db.prepare("SELECT id FROM tournament_matches WHERE tournament_id = ? AND round = ? AND status = 'ready'").all(tournament.id, r);
-  for (const match of matches) await notifyTournamentMatchPlayers(tournament.id, r, match.id, "started");
   }
   }
   if (clock.minutes >= 1035 && metaGet(flag("winner")) !== "1") {
@@ -5636,7 +5621,6 @@ const server = http.createServer(async (req, res) => {
   `<form method="post" action="/register" class="form" autocomplete="on">
   ${next ? `<input type="hidden" name="next" value="${h(next)}">`: ""}
   <input type="hidden" name="tg_init_data" value="">
-  <div class="field"><label>Telegram username</label><input name="telegram_username" maxlength="33" placeholder="@username" autocomplete="off"><small><a href="${h(botLink())}" target="_blank" rel="noopener">Avval botga o'ting va /start bosing</a>, so'ng shu yerga username'ingizni kiriting. Telegram username'ingiz bo'lmasa, bot ichidan ro'yxatdan o'ting.</small></div>
   <div class="field"><label>Ismingiz</label><input name="name" required maxlength="40" autocomplete="off" placeholder="Habiba"></div>
   <div class="field"><label>Familiyangiz</label><input name="surname" required maxlength="60" autocomplete="off" placeholder="Qoraboyeva"></div>
   <div class="field"><label>Otangizning ismi (otchestvo)</label><input name="father_name" required maxlength="60" autocomplete="off" placeholder="Muminjonovna / yoki / vich / qizi / o'g'li"></div>
@@ -5666,9 +5650,11 @@ const server = http.createServer(async (req, res) => {
   const passwordError = passwordPolicyError(password);
   const passwordConfirm = String(fields.password_confirm || "");
   const tgUser = telegramUserFromInitData(fields.tg_init_data);
-  const rawTelegram = String((tgUser && tgUser.id) || "").trim();
+  const rawTelegram = String((tgUser && tgUser.id) || fields.telegram_id || "").trim();
   const numericTelegramId = /^\d{5,15}$/.test(rawTelegram) ? rawTelegram : "";
-  const telegramUsername = normalizeTelegramUsername(fields.telegram_username) || normalizeTelegramUsername(tgUser && tgUser.username);
+  const telegramUsername = numericTelegramId
+    ? ""
+    : normalizeTelegramUsername(rawTelegram) || normalizeTelegramUsername(tgUser && tgUser.username);
   const mappedTelegram = telegramUsername
     ? db
         .prepare("SELECT chat_id FROM telegram_users WHERE username = ? COLLATE NOCASE")
@@ -5684,7 +5670,6 @@ const server = http.createServer(async (req, res) => {
   else if (!validPhoneInput(fields.phone) || !validPhone(phone)) error = "Telefon raqami faqat 9 ta raqamdan iborat bo'lishi kerak.";
   else if (passwordError) error = passwordError;
   else if (password !== passwordConfirm) error = "Parollar bir xil emas. Qayta tekshiring.";
-  else if (!telegramId) error = `Ro'yxatdan o'tish uchun ${botLink()} botiga /start yuboring va Telegram username'ingizni kiriting.`;
   else if (telegramId && db.prepare("SELECT 1 FROM users WHERE telegram_id = ?").get(telegramId))
   error = "Bu Telegram ID allaqachon ro'yxatdan o'tgan. Bir ID   bitta akkaunt.";
   else if (telegramUsername && db.prepare("SELECT 1 FROM users WHERE telegram_username = ? COLLATE NOCASE").get(telegramUsername))
@@ -5700,7 +5685,6 @@ const server = http.createServer(async (req, res) => {
   <form method="post" action="/register" class="form" autocomplete="on">
   ${next ? `<input type="hidden" name="next" value="${h(next)}">`: ""}
   <input type="hidden" name="tg_init_data" value="">
-  <div class="field"><label>Telegram username</label><input name="telegram_username" value="${h(fields.telegram_username || "")}" maxlength="33" placeholder="@username" autocomplete="off"><small><a href="${h(botLink())}" target="_blank" rel="noopener">Avval botga o'ting va /start bosing</a>, so'ng shu yerga username'ingizni kiriting.</small></div>
   <div class="field"><label>Ismingiz</label><input name="name" value="${h(firstName)}" required maxlength="40" autocomplete="off"></div>
   <div class="field"><label>Familiyangiz</label><input name="surname" value="${h(surname)}" required maxlength="60" autocomplete="off"></div>
   <div class="field"><label>Otangizning ismi (otchestvo)</label><input name="father_name" value="${h(fatherName)}" required maxlength="60" autocomplete="off"></div>
