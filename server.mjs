@@ -229,6 +229,31 @@ function courseNavVisible() {
   return metaGet("course_nav_visible", "0") !== "0";
 }
 
+const REMOVABLE_SITE_BUTTONS = [
+  ["nav_home", "Menyu: Bosh sahifa"], ["nav_attestation", "Menyu: Attestatsiya"], ["nav_tkt", "Menyu: TKT"],
+  ["nav_duel", "Menyu: Duel"], ["nav_courses", "Menyu: Multilevel"], ["nav_plans", "Menyu: Tariflar"],
+  ["nav_leaderboard", "Menyu: Reyting"], ["nav_login", "Menyu: Kirish"], ["hero_register", "Bosh sahifa: ro'yxatdan o'tish"],
+  ["hero_directions", "Bosh sahifa: yo'nalishni tanlash"], ["direction_open", "Yo'nalish kartalari: Ochish"],
+  ["home_courses", "Bosh sahifa: kurslarni ko'rish"],
+  ["program_courses", "Bosh sahifa: o'quv dasturi tugmasi"], ["pricing_all", "Bosh sahifa: barcha tariflar"],
+  ["pricing_plan", "Bosh sahifa: tarif kartasi tugmalari"], ["faq_contact", "Bosh sahifa: bog'lanish"],
+  ["final_cta", "Bosh sahifa: yakuniy chaqiriq"], ["custom_home_buttons", "Qo'shimcha bosh sahifa bo'limlaridagi tugmalar"],
+  ["footer_directions", "Pastki qism: Yo'nalishlar"], ["footer_about", "Pastki qism: Biz haqimizda"],
+  ["footer_telegram", "Pastki qism: Telegram"], ["footer_phone", "Pastki qism: telefon"]
+];
+
+function removedSiteButtons() {
+  try {
+    const keys = JSON.parse(metaGet("site_buttons_removed_json", "[]"));
+    const valid = new Set(REMOVABLE_SITE_BUTTONS.map(([key]) => key));
+    return Array.isArray(keys) ? [...new Set(keys.filter((key) => valid.has(key)))] : [];
+  } catch (e) { return []; }
+}
+
+function siteButtonVisible(key) {
+  return !removedSiteButtons().includes(key);
+}
+
 function siteBrandName() {
   return String(siteTexts().site_name || config.siteName || "Habiba teacher").trim().slice(0, 80);
 }
@@ -1786,7 +1811,7 @@ function clearFailures(ip) {
 /* ------------------------------------------------------------------ views */
 function navFor(user, admin, publicPage = false) {
   const copy = siteTexts();
-  const coursesLink = courseNavVisible() ? `<a href="/courses">${h(copy.nav_courses)}</a>` : "";
+  const coursesLink = courseNavVisible() && siteButtonVisible("nav_courses") ? `<a href="/courses">${h(copy.nav_courses)}</a>` : "";
   if (admin && !publicPage) {
   return `<nav class="nav">
   <a href="/admin" class="active">Admin</a>
@@ -1799,32 +1824,32 @@ function navFor(user, admin, publicPage = false) {
   }
 
   const links = `
-  <a href="/">${h(copy.nav_home)}</a>
-  <a href="/attestation">${h(copy.nav_attestation)}</a>
-  <a href="/tkt">${h(copy.nav_tkt)}</a>
-  <a href="/duel">${h(copy.nav_duel)}</a>
+  ${siteButtonVisible("nav_home") ? `<a href="/">${h(copy.nav_home)}</a>` : ""}
+  ${siteButtonVisible("nav_attestation") ? `<a href="/attestation">${h(copy.nav_attestation)}</a>` : ""}
+  ${siteButtonVisible("nav_tkt") ? `<a href="/tkt">${h(copy.nav_tkt)}</a>` : ""}
+  ${siteButtonVisible("nav_duel") ? `<a href="/duel">${h(copy.nav_duel)}</a>` : ""}
   ${coursesLink}
-  <a href="/plans">${h(copy.nav_plans)}</a>
-  <a href="/leaderboard">${h(copy.nav_leaderboard)}</a>`;
+  ${siteButtonVisible("nav_plans") ? `<a href="/plans">${h(copy.nav_plans)}</a>` : ""}
+  ${siteButtonVisible("nav_leaderboard") ? `<a href="/leaderboard">${h(copy.nav_leaderboard)}</a>` : ""}`;
 
   if (user) {
   return `<nav class="nav nav-student">
-  <a href="/">${h(copy.nav_home)}</a>
-  <a href="/attestation">${h(copy.nav_attestation)}</a>
-  <a href="/tkt">${h(copy.nav_tkt)}</a>
-  <a href="/duel">${h(copy.nav_duel)}</a>
+  ${siteButtonVisible("nav_home") ? `<a href="/">${h(copy.nav_home)}</a>` : ""}
+  ${siteButtonVisible("nav_attestation") ? `<a href="/attestation">${h(copy.nav_attestation)}</a>` : ""}
+  ${siteButtonVisible("nav_tkt") ? `<a href="/tkt">${h(copy.nav_tkt)}</a>` : ""}
+  ${siteButtonVisible("nav_duel") ? `<a href="/duel">${h(copy.nav_duel)}</a>` : ""}
   ${coursesLink}
   <a href="/dashboard">${h(siteTexts().dashboard_page_title || "Kabinet")}</a>
   ${Number(user.is_author) ? `<a href="/author">Muallif paneli</a>` : ""}
-  <a href="/leaderboard">${h(copy.nav_leaderboard)}</a>
-  <a class="btn btn-sm student-plan" href="/plans">${h(copy.nav_plans)}</a>
+  ${siteButtonVisible("nav_leaderboard") ? `<a href="/leaderboard">${h(copy.nav_leaderboard)}</a>` : ""}
+  ${siteButtonVisible("nav_plans") ? `<a class="btn btn-sm student-plan" href="/plans">${h(copy.nav_plans)}</a>` : ""}
   <span class="who">${h(user.name)}</span>
   <form method="post" action="/logout"><button class="link" type="submit">Chiqish</button></form>
   </nav>`;
   }
 
   return `<nav class="nav">${links}
-  <a class="btn btn-sm" href="/login">Kirish</a>
+  ${siteButtonVisible("nav_login") ? `<a class="btn btn-sm" href="/login">Kirish</a>` : ""}
   </nav>`;
 }
 
@@ -1890,7 +1915,7 @@ ${seoTags}
   </button>
   </div>
   ${isDashboard ? "" : `<button class="app-refresh" type="button" data-app-refresh aria-label="Ilovani serverdan yangilash" title="Serverdagi so'nggi o'zgarishlarni yuklash"><span aria-hidden="true">⟳</span><b>Yangilash</b></button>`}
-  ${publicPage ? `<a class="mobile-header-login" href="${user ? "/dashboard" : "/login"}">${user ? h(siteTexts().dashboard_page_title || "Kabinet") : "Kirish"}</a>` : ""}
+  ${publicPage && siteButtonVisible("nav_login") ? `<a class="mobile-header-login" href="${user ? "/dashboard" : "/login"}">${user ? h(siteTexts().dashboard_page_title || "Kabinet") : "Kirish"}</a>` : ""}
   <button class="menu-toggle" type="button" id="menuToggle" aria-label="Menyu" aria-expanded="false">
   <span></span><span></span><span></span>
   </button>
@@ -1902,13 +1927,13 @@ ${seoTags}
   admin && !publicPage
   ? `<a href="/admin">Admin</a><a href="/admin/students">O'quvchilar</a><a href="/admin/site-settings">Sayt sozlamalari</a><a href="/leaderboard">Reyting</a><a href="/">Saytni ko'rish</a>
   <form method="post" action="/admin/logout"><button class="mobile-link-btn" type="submit">Chiqish</button></form>`
-   : `<a href="/">${h(copy.nav_home)}</a>
-  <a href="/attestation">${h(copy.nav_attestation)}</a>
-  <a href="/tkt">${h(copy.nav_tkt)}</a>
-  <a href="/duel">${h(copy.nav_duel)}</a>
-  ${courseNavVisible() ? `<a href="/courses">${h(copy.nav_courses)}</a>` : ""}
-  <a href="/plans">${h(copy.nav_plans)}</a>
-  <a href="/leaderboard">${h(copy.nav_leaderboard)}</a>
+   : `${siteButtonVisible("nav_home") ? `<a href="/">${h(copy.nav_home)}</a>` : ""}
+  ${siteButtonVisible("nav_attestation") ? `<a href="/attestation">${h(copy.nav_attestation)}</a>` : ""}
+  ${siteButtonVisible("nav_tkt") ? `<a href="/tkt">${h(copy.nav_tkt)}</a>` : ""}
+  ${siteButtonVisible("nav_duel") ? `<a href="/duel">${h(copy.nav_duel)}</a>` : ""}
+  ${courseNavVisible() && siteButtonVisible("nav_courses") ? `<a href="/courses">${h(copy.nav_courses)}</a>` : ""}
+  ${siteButtonVisible("nav_plans") ? `<a href="/plans">${h(copy.nav_plans)}</a>` : ""}
+  ${siteButtonVisible("nav_leaderboard") ? `<a href="/leaderboard">${h(copy.nav_leaderboard)}</a>` : ""}
   ${
   user
   ? `<div class="mobile-user">${h(user.name)}</div>
@@ -1945,19 +1970,19 @@ ${body}
   <p class="footer-donation-note">Ustozlarimizga ko‘mak bo‘lsin deya, ushbu materiallar Habiba Mo'minjonovna tomonidan taqdim etildi.</p>
   </div>
   <nav class="footer-links">
-  <a href="/">${h(copy.nav_home)}</a>
-  <a href="/#directions">Yo'nalishlar</a>
-  <a href="/attestation">${h(copy.nav_attestation)}</a>
-  <a href="/tkt">${h(copy.nav_tkt)}</a>
-  <a href="/duel">${h(copy.nav_duel)}</a>
-  ${courseNavVisible() ? `<a href="/courses">${h(copy.nav_courses)}</a>` : ""}
-  <a href="/plans">${h(copy.nav_plans)}</a>
-  <a href="/leaderboard">${h(copy.nav_leaderboard)}</a>
-  <a href="/#about">${h(copy.footer_about)}</a>
+  ${siteButtonVisible("nav_home") ? `<a href="/">${h(copy.nav_home)}</a>` : ""}
+  ${siteButtonVisible("footer_directions") ? `<a href="/#directions">Yo'nalishlar</a>` : ""}
+  ${siteButtonVisible("nav_attestation") ? `<a href="/attestation">${h(copy.nav_attestation)}</a>` : ""}
+  ${siteButtonVisible("nav_tkt") ? `<a href="/tkt">${h(copy.nav_tkt)}</a>` : ""}
+  ${siteButtonVisible("nav_duel") ? `<a href="/duel">${h(copy.nav_duel)}</a>` : ""}
+  ${courseNavVisible() && siteButtonVisible("nav_courses") ? `<a href="/courses">${h(copy.nav_courses)}</a>` : ""}
+  ${siteButtonVisible("nav_plans") ? `<a href="/plans">${h(copy.nav_plans)}</a>` : ""}
+  ${siteButtonVisible("nav_leaderboard") ? `<a href="/leaderboard">${h(copy.nav_leaderboard)}</a>` : ""}
+  ${siteButtonVisible("footer_about") ? `<a href="/#about">${h(copy.footer_about)}</a>` : ""}
   </nav>
   <div class="footer-contact">
-  <a href="${h(config.telegram || "#")}" target="_blank" rel="noopener">Telegram</a>
-  <a href="tel:${h(String(config.phone || "").replace(/[^\d+]/g, ""))}">${h(config.phone || "")}</a>
+  ${siteButtonVisible("footer_telegram") ? `<a href="${h(config.telegram || "#")}" target="_blank" rel="noopener">Telegram</a>` : ""}
+  ${siteButtonVisible("footer_phone") ? `<a href="tel:${h(String(config.phone || "").replace(/[^\d+]/g, ""))}">${h(config.phone || "")}</a>` : ""}
   </div>
   </div>
 </footer>
@@ -5512,7 +5537,8 @@ const server = http.createServer(async (req, res) => {
   const directionCards = DIRECTIONS.map((direction) => {
     const counts = directionStats[direction.id];
     const detail = counts.tests ? `${counts.tests} ta test · ${counts.courses} ta kurs` : "Testlar tez orada qo'shiladi";
-    return `<a class="direction-card" href="/${direction.id}"><span class="home-direction-count">${counts.tests || "→"}</span><h3>${h(categoryLabel(direction.id))}</h3><p class="muted">${h(direction.description)}</p><small>${h(detail)}</small><span class="card-link">${h(copy.direction_open)}</span></a>`;
+    const isLink = siteButtonVisible("direction_open");
+    return `${isLink ? `<a class="direction-card" href="/${direction.id}">` : `<div class="direction-card">`}<span class="home-direction-count">${counts.tests || "→"}</span><h3>${h(categoryLabel(direction.id))}</h3><p class="muted">${h(direction.description)}</p><small>${h(detail)}</small>${isLink ? `<span class="card-link">${h(copy.direction_open)}</span></a>` : `</div>`}`;
   }).join("");
   const homeSections = homeSectionVisibility();
   const customHomeSections = homeCustomSections();
@@ -5533,7 +5559,7 @@ const server = http.createServer(async (req, res) => {
     <span class="home-kicker">${index === 0 ? "BOSHLASH" : index === 1 ? "MASHHUR TANLOV" : "UZLUKSIZ RIVOJLANISH"}</span>
     <h3>${h(plan.title)}</h3><p>${h(plan.description)}</p>
     <div class="home-plan-price">${formatSum(plan.price)} <small>so'm</small></div>
-    <a class="btn ${index === 1 ? "btn-primary" : "btn-ghost"}" href="/plans">${h(copy.pricing_button)} <span aria-hidden="true">↗</span></a>
+    ${siteButtonVisible("pricing_plan") ? `<a class="btn ${index === 1 ? "btn-primary" : "btn-ghost"}" href="/plans">${h(copy.pricing_button)} <span aria-hidden="true">↗</span></a>` : ""}
   </article>`).join("");
 
   let body = `
@@ -5545,8 +5571,8 @@ const server = http.createServer(async (req, res) => {
   <h1>${h(copy.hero_title)} <span class="accent">${h(copy.hero_accent)}</span> ${h(copy.hero_title_end)}</h1>
   <p class="lead">${h(copy.hero_description)}</p>
   <div class="landing-actions">
-  ${user ? "" : `<a class="btn btn-primary" href="/register">${h(copy.hero_primary)} <span aria-hidden="true">↗</span></a>`}
-  <button class="btn btn-ghost home-direction-toggle" type="button" data-direction-toggle aria-expanded="false" aria-controls="directions">${h(copy.hero_secondary)} <span aria-hidden="true">⌄</span></button>
+  ${user || !siteButtonVisible("hero_register") ? "" : `<a class="btn btn-primary" href="/register">${h(copy.hero_primary)} <span aria-hidden="true">↗</span></a>`}
+  ${siteButtonVisible("hero_directions") ? `<button class="btn btn-ghost home-direction-toggle" type="button" data-direction-toggle aria-expanded="false" aria-controls="directions">${h(copy.hero_secondary)} <span aria-hidden="true">⌄</span></button>` : ""}
   </div>
   <div class="home-direction-picker" id="directions" data-home-section="directions" hidden>
     <div class="grid home-direction-grid">${directionCards}</div>
@@ -5602,7 +5628,7 @@ const server = http.createServer(async (req, res) => {
   <p class="muted">${h(copy.course_section_description)}</p>
   </div>
   <div class="grid three">${courseCards}</div>
-  <div class="center-actions"><a class="btn btn-ghost" href="/courses">${h(copy.course_section_button)}</a></div>
+  ${siteButtonVisible("home_courses") ? `<div class="center-actions"><a class="btn btn-ghost" href="/courses">${h(copy.course_section_button)}</a></div>` : ""}
   </div>
   </section>
 
@@ -5659,7 +5685,7 @@ const server = http.createServer(async (req, res) => {
       <div><span class="eyebrow">${h(copy.program_eyebrow)}</span><h2>${h(copy.program_title)} <span class="accent">${h(copy.program_accent)}</span></h2>
         <p class="muted">${h(copy.program_description)}</p>
         <div class="home-program-meta"><b>${stats.courses} ${h(copy.program_direction_suffix)}</b><span></span><b>${stats.lessons} ${h(copy.program_lesson_suffix)}</b></div>
-        <a class="btn btn-ghost" href="/courses">${h(copy.program_course_button)} <span aria-hidden="true">↗</span></a>
+        ${siteButtonVisible("program_courses") ? `<a class="btn btn-ghost" href="/courses">${h(copy.program_course_button)} <span aria-hidden="true">↗</span></a>` : ""}
       </div>
       <div class="home-steps">
         <details open><summary><span>01</span><span><small>${h(copy.program_attestation_tag)}</small><b>${h(copy.program_step_1_title)}</b></span><i>⌄</i></summary><p>${h(copy.program_step_1_description)}</p></details>
@@ -5669,12 +5695,12 @@ const server = http.createServer(async (req, res) => {
     </div>
   </section>
   <section class="section home-pricing" data-home-section="pricing">
-    <div class="wrap"><div class="section-head home-section-head"><div><span class="eyebrow">${h(copy.pricing_eyebrow)}</span><h2>${h(copy.pricing_title)} <span class="accent">${h(copy.pricing_accent)}</span></h2><p class="muted">${h(copy.pricing_description)}</p></div><a class="btn btn-ghost" href="/plans">${h(copy.pricing_all)} <span aria-hidden="true">↗</span></a></div>
+    <div class="wrap"><div class="section-head home-section-head"><div><span class="eyebrow">${h(copy.pricing_eyebrow)}</span><h2>${h(copy.pricing_title)} <span class="accent">${h(copy.pricing_accent)}</span></h2><p class="muted">${h(copy.pricing_description)}</p></div>${siteButtonVisible("pricing_all") ? `<a class="btn btn-ghost" href="/plans">${h(copy.pricing_all)} <span aria-hidden="true">↗</span></a>` : ""}</div>
       <div class="home-plan-grid">${planCards}</div>
     </div>
   </section>
   <section class="section home-faq" data-home-section="faq">
-    <div class="wrap home-faq-grid"><div><span class="eyebrow">${h(copy.faq_eyebrow)}</span><h2>${h(copy.faq_title)} <span class="accent">${h(copy.faq_accent)}</span></h2><p class="muted">${h(copy.faq_description)}</p><a class="home-contact-link" href="${h(config.telegram || "#")}" target="_blank" rel="noopener">${h(copy.faq_contact)} ↗</a></div>
+    <div class="wrap home-faq-grid"><div><span class="eyebrow">${h(copy.faq_eyebrow)}</span><h2>${h(copy.faq_title)} <span class="accent">${h(copy.faq_accent)}</span></h2><p class="muted">${h(copy.faq_description)}</p>${siteButtonVisible("faq_contact") ? `<a class="home-contact-link" href="${h(config.telegram || "#")}" target="_blank" rel="noopener">${h(copy.faq_contact)} ↗</a>` : ""}</div>
       <div class="home-faq-list">
         <details><summary>${h(copy.faq_q1)}<span>+</span></summary><p>${h(copy.faq_a1)}</p></details>
         <details><summary>${h(copy.faq_q2)}<span>+</span></summary><p>${h(copy.faq_a2)}</p></details>
@@ -5683,7 +5709,7 @@ const server = http.createServer(async (req, res) => {
       </div>
     </div>
   </section>
-  <section class="section home-final-cta" data-home-section="final"><div class="wrap home-final-card"><div><span class="eyebrow">${h(copy.final_eyebrow)}</span><h2>${h(copy.final_title)} <span class="accent">${h(copy.final_accent)}</span></h2><p class="muted">${h(copy.final_description)}</p></div><a class="btn btn-primary" href="${user ? "/courses" : "/register"}">${h(user ? copy.final_button_logged : copy.final_button)} <span aria-hidden="true">↗</span></a></div></section>
+  <section class="section home-final-cta" data-home-section="final"><div class="wrap home-final-card"><div><span class="eyebrow">${h(copy.final_eyebrow)}</span><h2>${h(copy.final_title)} <span class="accent">${h(copy.final_accent)}</span></h2><p class="muted">${h(copy.final_description)}</p></div>${siteButtonVisible("final_cta") ? `<a class="btn btn-primary" href="${user ? "/courses" : "/register"}">${h(user ? copy.final_button_logged : copy.final_button)} <span aria-hidden="true">↗</span></a>` : ""}</div></section>
   </div>`;
 
   body += additions;
@@ -5703,7 +5729,7 @@ const server = http.createServer(async (req, res) => {
     const key = `custom_${section.id}`;
     const rawUrl = section.buttonUrl.trim();
     const safeUrl = (rawUrl.startsWith("/") && !rawUrl.startsWith("//")) || /^https:\/\//i.test(rawUrl) ? rawUrl : "";
-    sectionBlocks.set(key, `<section class="section home-custom-section" data-home-section="${key}"><div class="wrap"><div class="home-custom-copy"><span class="eyebrow">${h(copy.site_name)}</span><h2>${h(section.title)}</h2>${section.description ? `<p class="muted">${nl2br(section.description)}</p>` : ""}${safeUrl && section.buttonLabel ? `<a class="btn btn-ghost" href="${h(safeUrl)}">${h(section.buttonLabel)} <span aria-hidden="true">↗</span></a>` : ""}</div></div></section>`);
+    sectionBlocks.set(key, `<section class="section home-custom-section" data-home-section="${key}"><div class="wrap"><div class="home-custom-copy"><span class="eyebrow">${h(copy.site_name)}</span><h2>${h(section.title)}</h2>${section.description ? `<p class="muted">${nl2br(section.description)}</p>` : ""}${safeUrl && section.buttonLabel && siteButtonVisible("custom_home_buttons") ? `<a class="btn btn-ghost" href="${h(safeUrl)}">${h(section.buttonLabel)} <span aria-hidden="true">↗</span></a>` : ""}</div></div></section>`);
   }
   const orderedBlocks = [...savedHomeSectionOrder, ...[...sectionBlocks.keys()].filter((key) => !savedHomeSectionOrder.includes(key))]
     .map((key) => sectionBlocks.get(key)).filter(Boolean).join("\n");
@@ -8334,9 +8360,15 @@ const server = http.createServer(async (req, res) => {
     }).join("");
     const sectionOrderJson = h(JSON.stringify(sectionOrder));
     const customSectionsJson = h(JSON.stringify(customHomeSections));
+    const permanentlyRemovedButtons = new Set(removedSiteButtons());
+    const siteButtonSettings = REMOVABLE_SITE_BUTTONS.map(([key, label]) => {
+      const removed = permanentlyRemovedButtons.has(key);
+      return `<div class="field site-copy-field"><label>${h(label)}</label>${removed ? `<span class="muted">Butunlay olib tashlangan</span>` : `<button class="btn btn-sm btn-danger" type="submit" formmethod="post" formaction="/admin/site-settings/remove-button" formnovalidate name="button_key" value="${h(key)}" onclick="return confirm('“${h(label)}” tugmasi saytdan butunlay olib tashlanadi va bu panel orqali qayta tiklab bo‘lmaydi. Davom etilsinmi?')">Butunlay olib tashlash</button>`}</div>`;
+    }).join("");
     const body = `<a class="back" href="/admin">&larr; Admin panel</a>
       <div class="page-head"><div><h1>Sayt sozlamalari</h1><p class="muted">Menyu va bosh sahifadagi asosiy matnlarni shu yerdan tahrirlang. O'zgarishlar saqlangandan so'ng darhol ko'rinadi.</p></div></div>
       ${url.searchParams.get("saved") === "1" ? alertBox("Sayt matnlari saqlandi.", "success") : ""}
+      ${url.searchParams.get("button_removed") === "1" ? alertBox("Sayt tugmasi butunlay olib tashlandi. Uni ushbu paneldan qaytarib bo'lmaydi.", "success") : ""}
       ${url.searchParams.get("cleared") === "1" ? alertBox("Multilevel darslari tozalandi. Kurslar bo'sh holatda saqlandi.", "success") : ""}
       ${url.searchParams.get("err") === "clear" ? alertBox("Multilevel tarkibini tozalashda xatolik yuz berdi. Hech qanday qisman o'zgarish saqlanmadi.", "error") : ""}
       ${url.searchParams.get("err") === "length" ? alertBox("Qisqa yozuvlar 180, izohlar esa 500 belgigacha bo'lishi mumkin.", "error") : ""}
@@ -8344,6 +8376,7 @@ const server = http.createServer(async (req, res) => {
         <input type="hidden" name="site_copy_removed" id="siteCopyRemoved" value="${h(JSON.stringify([...removedCopyKeys]))}">
         <input type="hidden" name="site_copy_extras" id="siteCopyExtras" value="${h(JSON.stringify(copyExtras))}">
         <section class="card"><h2>Multilevel tugmasi</h2><label class="check-row"><input type="checkbox" name="course_nav_visible" value="1"${courseNavVisible() ? " checked" : ""}> Menyuda “${h(courseNavLabel())}” tugmasini ko'rsatish</label><p class="muted">Belgini olib tashlasangiz, Multilevel havolasi yuqori menyu va pastki havolalardan butunlay yo'qoladi.</p><p class="muted">Admin panel → kurs → darslar orqali video, PDF, matn yoki test qo'shish mumkin.</p><a class="btn btn-ghost btn-sm" href="/admin">Admin panelni ochish</a></section>
+        <section class="card" style="margin-top:22px"><h2>Saytdagi tugmalarni butunlay olib tashlash</h2><p class="muted">Bu amal bosh sahifa, sayt menyusi va pastki qismdagi tashrif buyuruvchilar ko'radigan havola hamda tugmalar uchun. Olib tashlangan tugma bu paneldan qaytarilmaydi. Admin panelning saqlash va boshqaruv tugmalari o'zgarmaydi.</p><div class="site-copy-grid">${siteButtonSettings}</div></section>
         <button class="btn btn-primary" type="submit">Barcha matnlarni saqlash</button>
         <section class="home-section-settings"><div><h2>Bosh sahifa bo'limlari</h2><p class="muted">Bo'limlarni sudrab tartiblang, belgisini olib tashlab yashiring yoki yangi bo'lim qo'shing. Tartib saytga shu ko'rinishda chiqadi.</p></div><input type="hidden" name="home_section_order" id="homeSectionOrder" value="${sectionOrderJson}"><input type="hidden" name="home_custom_sections" id="homeCustomSections" value="${customSectionsJson}"><div class="home-order-list" id="homeSectionOrderList">${sectionFields}</div><button class="btn btn-ghost" id="addHomeSection" type="button">+ Yangi bo'lim qo'shish</button><small class="muted">Yangi bo'lim uchun sarlavha va tavsif kiriting. Ko'pi bilan 20 ta qo'shimcha bo'lim.</small></section>
         ${fields}
@@ -8355,6 +8388,17 @@ const server = http.createServer(async (req, res) => {
     const fullBody = body + sectionScript + copyScript;
     send(res, 200, layout({ title: "Sayt sozlamalari", body: fullBody, admin }));
     return;
+  }
+
+  if (p === "/admin/site-settings/remove-button" && method === "POST") {
+    if (!admin) return redirect(res, "/admin/login");
+    const key = String(fields.button_key || "");
+    const valid = new Set(REMOVABLE_SITE_BUTTONS.map(([buttonKey]) => buttonKey));
+    if (!valid.has(key)) return redirect(res, "/admin/site-settings?err=button");
+    const removed = new Set(removedSiteButtons());
+    removed.add(key);
+    metaSet("site_buttons_removed_json", JSON.stringify([...removed]));
+    return redirect(res, "/admin/site-settings?button_removed=1");
   }
 
   if (p === "/admin/site-settings/clear-multilevel" && method === "POST") {
