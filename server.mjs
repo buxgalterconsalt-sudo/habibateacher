@@ -891,6 +891,46 @@ function ensureDemoContent() {
 
 ensureDemoContent();
 
+const normalizeAttestationGroupName = (value) => String(value || "").toLocaleLowerCase()
+  .replace(/[’'`]/g, "")
+  .replace(/\s+/g, " ")
+  .trim();
+
+const ATTESTATION_GROUPS = [
+  { title: "Reading testlari", aliases: ["reading", "reading testlari", "attestatsiya readinglari"], description: "Reading bo'limi — har bir testda 15 ta savol." },
+  { title: "Grammar testlari", aliases: ["grammar", "grammar testlari", "grammatika testlari"], description: "Grammar bo'limi — har bir testda 7 ta savol." },
+  { title: "Vocabulary testlari", aliases: ["vocabulary", "vocabulary testi", "vocabulary testlari"], description: "Vocabulary bo'limi — har bir testda 7 ta savol." },
+  { title: "Pragmatika testlari", aliases: ["pragmatika", "pragmatika testi", "pragmatika testlari"], description: "Pragmatika bo'limi — har bir testda 6 ta savol." },
+  { title: "Pedagogik mahorat testlari", aliases: ["pedagogik mahorat", "pedagogik mahorat testlari", "pedagogik testlari"], description: "Pedagogik mahorat bo'limi — har bir testda 10 ta savol." },
+  { title: "Kasbiy standart testlari", aliases: ["kasbiy standart", "kasbiy standart testlari", "kasb mahorat testlari"], description: "Kasbiy standart bo'limi — har bir testda 5 ta savol." }
+].map((group) => ({ ...group, aliases: group.aliases.map(normalizeAttestationGroupName) }));
+
+const ATTESTATION_GROUP_PRIORITY = new Map(
+  ATTESTATION_GROUPS.flatMap((group, index) => group.aliases.map((alias) => [alias, index]))
+);
+
+function ensureAttestationGroups() {
+  const courses = db.prepare("SELECT * FROM courses WHERE category = 'attestation'").all();
+  for (const group of ATTESTATION_GROUPS) {
+    const existing = courses.find((course) => group.aliases.includes(normalizeAttestationGroupName(course.title)));
+    if (existing) {
+      db.prepare(
+        `UPDATE courses SET title = ?, category = 'attestation', is_published = 1,
+         description = CASE WHEN TRIM(COALESCE(description, '')) = '' THEN ? ELSE description END
+         WHERE id = ?`
+      ).run(group.title, group.description, existing.id);
+      existing.title = group.title;
+      continue;
+    }
+    const info = db.prepare(
+      "INSERT INTO courses (title, description, category, created_at) VALUES (?, ?, 'attestation', ?)"
+    ).run(group.title, group.description, nowISO());
+    courses.push({ id: Number(info.lastInsertRowid), title: group.title, category: "attestation" });
+  }
+}
+
+ensureAttestationGroups();
+
 for (const [title, description] of [
   ["TKT MODULE 1", "TKT 1-modul: til tizimi va o'qitish metodikasi asoslari. Har bir testda 80 ta savol."],
   ["TKT MODULE 2", "TKT 2-modul: dars rejalashtirish va resurslardan foydalanish. Har bir testda 80 ta savol."],
@@ -6343,9 +6383,9 @@ const server = http.createServer(async (req, res) => {
 .all(...queryCategories, cat);
   if (cat === "attestation") {
     courses.sort((a, b) => {
-      const aIsToifa = String(a.title || "").trim().toLocaleLowerCase() === "toifa testlari";
-      const bIsToifa = String(b.title || "").trim().toLocaleLowerCase() === "toifa testlari";
-      return Number(aIsToifa) - Number(bIsToifa);
+      const aPriority = ATTESTATION_GROUP_PRIORITY.get(normalizeAttestationGroupName(a.title)) ?? 99;
+      const bPriority = ATTESTATION_GROUP_PRIORITY.get(normalizeAttestationGroupName(b.title)) ?? 99;
+      return aPriority - bPriority || Number(a.id) - Number(b.id);
     });
   }
 
@@ -6371,7 +6411,9 @@ const server = http.createServer(async (req, res) => {
   const sections = courses
 .map((course) => {
   const list = byCourse.get(course.id) || [];
-  if (!list.length && !admin) return "";
+  const isAttestationGroup = cat === "attestation" &&
+    ATTESTATION_GROUP_PRIORITY.has(normalizeAttestationGroupName(course.title));
+  if (!list.length && !admin && !isAttestationGroup) return "";
   const hasPaid = list.some((t) => Number(t.price) > 0);
   const addCard = admin
   ? `<a class="test-card test-add" href="/admin/course/${course.id}#new-lesson">
