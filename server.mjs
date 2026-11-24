@@ -5659,7 +5659,7 @@ const server = http.createServer(async (req, res) => {
   <input type="hidden" name="registration_token" value="${registrationToken}">
   <input type="hidden" name="tg_init_data" value="">
   ${alertBox("Botga a'zo bo'ling va duelda bo'ladigan qiziqarli o'yinlar haqidagi xabarlarni oling.", "success")}
-  <div class="field"><a href="${h(botStartLink(`register_${registrationToken}`))}" target="_blank" rel="noopener">Botga o'tish va /start bosish</a><small>Botdan tasdiq xabari kelgach, shu sahifaga qayting.</small></div>
+  <div class="field"><a class="btn btn-primary" href="${h(botStartLink(`register_${registrationToken}`))}" target="_blank" rel="noopener">🤖 Telegram botga o'tish va /start bosish</a><small>Botda Start tugmasini bosing. Tasdiq xabari kelgach, shu sahifaga qayting.</small></div>
   <div class="field"><label>Ismingiz</label><input name="name" required maxlength="40" autocomplete="off" placeholder="Habiba"></div>
   <div class="field"><label>Familiyangiz</label><input name="surname" required maxlength="60" autocomplete="off" placeholder="Qoraboyeva"></div>
   <div class="field"><label>Otangizning ismi (otchestvo)</label><input name="father_name" required maxlength="60" autocomplete="off" placeholder="Muminjonovna / yoki / vich / qizi / o'g'li"></div>
@@ -5720,7 +5720,7 @@ const server = http.createServer(async (req, res) => {
   <input type="hidden" name="registration_token" value="${h(registrationToken)}">
   <input type="hidden" name="tg_init_data" value="">
   ${alertBox("Botga a'zo bo'ling va duelda bo'ladigan qiziqarli o'yinlar haqidagi xabarlarni oling.", "success")}
-  <div class="field"><a href="${h(botStartLink(`register_${registrationToken}`))}" target="_blank" rel="noopener">Botga o'tish va /start bosish</a><small>Botdan tasdiq xabari kelgach, shu sahifaga qayting.</small></div>
+  <div class="field"><a class="btn btn-primary" href="${h(botStartLink(`register_${registrationToken}`))}" target="_blank" rel="noopener">🤖 Telegram botga o'tish va /start bosish</a><small>Botda Start tugmasini bosing. Tasdiq xabari kelgach, shu sahifaga qayting.</small></div>
   <div class="field"><label>Ismingiz</label><input name="name" value="${h(firstName)}" required maxlength="40" autocomplete="off"></div>
   <div class="field"><label>Familiyangiz</label><input name="surname" value="${h(surname)}" required maxlength="60" autocomplete="off"></div>
   <div class="field"><label>Otangizning ismi (otchestvo)</label><input name="father_name" value="${h(fatherName)}" required maxlength="60" autocomplete="off"></div>
