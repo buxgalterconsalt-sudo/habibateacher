@@ -1827,6 +1827,7 @@ function layout(opts) {
   const seo = opts.seo || {};
   const description = seo.description || "Habiba teacher — O'zbekistondagi ingliz tili o'qituvchilari uchun attestatsiya testlari, TKT tayyorgarligi, metodika va onlayn kurslar.";
   const canonical = seo.path ? `https://habibateacher.uz${seo.path}` : "";
+  const openGraphUrl = seo.ogUrl || canonical;
   const robots = seo.noindex || !seo.path || !publicPage || user ? "noindex, nofollow" : "index, follow, max-image-preview:large";
   const seoTags = `
 <meta name="description" content="${h(description)}">
@@ -1839,7 +1840,7 @@ ${canonical ? `<link rel="canonical" href="${canonical}">` : ""}
 <meta property="og:site_name" content="${h(siteBrandName())}">
 <meta property="og:title" content="${h(seo.title || `${title} | ${siteBrandName()}`)}">
 <meta property="og:description" content="${h(description)}">
-${canonical ? `<meta property="og:url" content="${canonical}">` : ""}
+${openGraphUrl ? `<meta property="og:url" content="${openGraphUrl}">` : ""}
 ${canonical === "https://habibateacher.uz/" ? '<meta property="og:image" content="https://habibateacher.uz/img/habiba-stage.jpg">' : ""}
 <meta name="twitter:card" content="summary_large_image">`;
   return `<!DOCTYPE html>
@@ -5707,7 +5708,8 @@ const server = http.createServer(async (req, res) => {
   body += `<script>(function(){var home=document.querySelector('.landing-home');if(!home||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;var selectors=['.home-hero .landing-hero-copy > *','.home-hero .landing-hero-art > *','.home-statbar > *','.home-overview-grid > *','.home-overview-copy > *','.home-orbit-tags > *','.home-pillar-list > *','.landing-home .section-head > *','.landing-home .direction-card','.landing-home .course-card','.landing-home .about-grid > *','.landing-home .check-list > *','.landing-home .home-features .grid > *','.landing-home .home-journey-grid > *','.landing-home .home-steps > *','.landing-home .home-plan-card','.landing-home .home-faq-grid > *','.landing-home .home-faq-list > *','.landing-home .home-final-card > *','.landing-home [data-home-section^="custom_"] .home-custom-copy > *','.landing-home img'];var rows=new Set();selectors.forEach(function(selector){home.querySelectorAll(selector).forEach(function(row){if(row.textContent.trim()||row.matches('img'))rows.add(row)})});var items=Array.from(rows);items.forEach(function(row){var index=Array.prototype.indexOf.call(row.parentElement.children,row);row.classList.add('scroll-row');row.style.setProperty('--scroll-in-x',index%2?'34px':'-34px');row.style.setProperty('--scroll-delay',(index%4)*65+'ms')});if(!('IntersectionObserver' in window)){items.forEach(function(row){row.classList.add('is-in-view')});return}var observer=new IntersectionObserver(function(entries){entries.forEach(function(entry){if(entry.isIntersecting){entry.target.classList.add('is-in-view');observer.unobserve(entry.target)}})},{threshold:.08,rootMargin:'0px 0px -4% 0px'});items.forEach(function(row){observer.observe(row)})})();</script>`;
   body += `<script>(function(){var orbit=document.querySelector('[data-scroll-orbit]');if(!orbit||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;var card=orbit.closest('.home-orbit-card');var rings=[].slice.call(orbit.querySelectorAll('i'));var base=[-26,40,-55];var pending=false;function draw(){pending=false;var r=card.getBoundingClientRect();var p=Math.max(-1,Math.min(1,(window.innerHeight*.52-(r.top+r.height/2))/(window.innerHeight*.78)));rings.forEach(function(el,i){var direction=i===1?1:-1;var angle=base[i]+p*56*direction;var scales=[.73,.68,.75];el.style.transform='translate3d('+(p*(i-1)*20)+'px,'+(-p*30*(i+1))+'px,0) rotate('+angle+'deg) scaleX('+scales[i]+')'});orbit.style.transform='translate3d('+(p*24)+'px,'+(-p*48)+'px,0) rotate('+(p*18)+'deg)'}function schedule(){if(pending)return;pending=true;window.requestAnimationFrame(draw)}window.addEventListener('scroll',schedule,{passive:true});window.addEventListener('resize',schedule,{passive:true});schedule()})();</script>`;
 
-  send(res, 200, layout({ title: "Ingliz tili attestatsiya testlari va TKT", body, user, admin, seo: { path: "/", title: "Ingliz tili attestatsiya testlari va TKT | Habiba teacher", description: "Ingliz tili o'qituvchilari uchun attestatsiya testlari, TKT modullari, onlayn mock testlar va metodika. Toifa sinoviga amaliy tayyorgarlikni boshlang.", keywords: "ingliz tili attestatsiya testlari, pedagog attestatsiya testlari, o'qituvchi toifa testi, imtihonlarga tayyorlov, TKT testlari, TKT 1-modul, TKT 2-modul, TKT 3-modul" } }));
+  body += `<script>(function(){if(location.hash)return;try{history.scrollRestoration='manual'}catch(e){}function toTop(){if(!location.hash)window.scrollTo(0,0)}toTop();window.addEventListener('pageshow',toTop)})();</script>`;
+  send(res, 200, layout({ title: "Habiba Teacher — Attestatsiya va TKT test platformasi", body, user, admin, seo: { path: "/", ogUrl: "https://habibateacher.uz/?share=20261124b", title: "Habiba Teacher — Attestatsiya va TKT testlari", description: "Ingliz tili o'qituvchilari uchun Toifa attestatsiyasi va TKT: Reading, Grammar, Vocabulary, Pragmatika, pedagogik mahorat hamda kasbiy standart testlari. Har kuni mashq qiling va natijangizni kuzating.", keywords: "ingliz tili attestatsiya testlari, pedagog attestatsiya testlari, o'qituvchi toifa testi, imtihonlarga tayyorlov, TKT testlari, TKT 1-modul, TKT 2-modul, TKT 3-modul" } }));
   return;
   }
 
@@ -6999,7 +7001,11 @@ const server = http.createServer(async (req, res) => {
 .map((r) => [r.lesson_id, r.score])
   );
   const courseTests = lessons.filter((lesson) => lesson.type === "test");
-  const nextCourseTest = courseTests.find((lesson) => !Object.prototype.hasOwnProperty.call(progress, lesson.id));
+  const isCourseTestComplete = (lesson) => {
+    if (!Object.prototype.hasOwnProperty.call(progress, lesson.id)) return false;
+    return course.category === "attestation" ? progress[lesson.id] !== null : Number(progress[lesson.id]) >= 80;
+  };
+  const nextCourseTest = courseTests.find((lesson) => !isCourseTestComplete(lesson));
   const { total, done } = courseProgress(user.id, course.id);
 
   const rows = visibleLessons.length
@@ -7045,6 +7051,12 @@ const server = http.createServer(async (req, res) => {
     const currentIndex = sequence.tests.findIndex((item) => Number(item.id) === Number(lesson.id));
     if (currentIndex < 0) return redirect(res, "/dashboard");
     const isFirstCategoryTest = isFirstAttestationCategoryTest(sequence.tests[currentIndex], sequence.tests) || isFirstCourseTest(sequence.tests[currentIndex], sequence.tests);
+    const currentTest = sequence.tests[currentIndex];
+    const unmetCourseTest = sequence.tests.slice(0, currentIndex).filter((item) => Number(item.course_id) === Number(currentTest.course_id)).find((item) => {
+      const result = db.prepare("SELECT score FROM progress WHERE user_id = ? AND lesson_id = ?").get(user.id, item.id);
+      return currentTest.course_category === "attestation" ? !result || result.score === null : !result || Number(result.score) < 80;
+    });
+    if (unmetCourseTest) return redirect(res, `/test/${unmetCourseTest.id}?start=1`);
     const unmetPrevious = !isFirstCategoryTest && currentIndex > 0 ? sequence.tests.slice(0, currentIndex).find((item) => !sequence.completed.has(Number(item.id))) : null;
     if (unmetPrevious) return redirect(res, `/test/${unmetPrevious.id}`);
   }
@@ -7278,7 +7290,9 @@ const server = http.createServer(async (req, res) => {
       .get(lesson.course_id, lesson.position, lesson.position, lesson.id);
     if (previous && previous.type === "test") {
       const result = db.prepare("SELECT score FROM progress WHERE user_id = ? AND lesson_id = ?").get(user.id, previous.id);
-      if (!result || Number(result.score) < 80) return redirect(res, `/test/${previous.id}?start=1`);
+      const courseCategory = db.prepare("SELECT category FROM courses WHERE id = ?").get(lesson.course_id)?.category;
+      const previousComplete = courseCategory === "attestation" ? result && result.score !== null : result && Number(result.score) >= 80;
+      if (!previousComplete) return redirect(res, `/test/${previous.id}?start=1`);
     }
   }
   if (lesson.type === "test" && !lessonMatch[2]) {
