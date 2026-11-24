@@ -5464,7 +5464,7 @@ const server = http.createServer(async (req, res) => {
   <h1>${h(copy.hero_title)} <span class="accent">${h(copy.hero_accent)}</span> ${h(copy.hero_title_end)}</h1>
   <p class="lead">${h(copy.hero_description)}</p>
   <div class="landing-actions">
-  <a class="btn btn-primary" href="${user ? "/courses": "/register"}">${h(user ? copy.hero_primary_logged : copy.hero_primary)} <span aria-hidden="true">↗</span></a>
+  ${user ? "" : `<a class="btn btn-primary" href="/register">${h(copy.hero_primary)} <span aria-hidden="true">↗</span></a>`}
   <button class="btn btn-ghost home-direction-toggle" type="button" data-direction-toggle aria-expanded="false" aria-controls="directions">${h(copy.hero_secondary)} <span aria-hidden="true">⌄</span></button>
   </div>
   <div class="home-direction-picker" id="directions" data-home-section="directions" hidden>
