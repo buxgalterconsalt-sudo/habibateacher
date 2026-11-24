@@ -1067,6 +1067,22 @@ function seedPreparedTests() {
         lesson = { id: Number(info.lastInsertRowid), question_count: 0 };
       }
       const currentCount = Number(db.prepare("SELECT COUNT(*) AS n FROM questions WHERE lesson_id = ?").get(lesson.id)?.n || 0);
+      if (set.category === "attestation" && set.bankVersion === "unique-v2" &&
+          metaGet("attestation_120_questions_v2", "") !== "1" && currentCount >= set.questions.length) {
+        const existingRows = db.prepare("SELECT id FROM questions WHERE lesson_id = ? ORDER BY id").all(lesson.id);
+        const updatePreparedQuestion = db.prepare(
+          "UPDATE questions SET text = ?, o1 = ?, o2 = ?, o3 = ?, o4 = ?, correct = ?, passage = ? WHERE id = ?"
+        );
+        set.questions.forEach((question, index) => {
+          const row = existingRows[index];
+          if (!row) return;
+          const correct = typeof question.answer === "string" ? "ABCD".indexOf(question.answer.toUpperCase()) + 1 : Number(question.correct);
+          updatePreparedQuestion.run(question.q || question.text, question.a || question.options?.[0], question.b || question.options?.[1],
+            question.c || question.options?.[2], question.d || question.options?.[3], correct, question.passage || "", row.id);
+        });
+        db.prepare("UPDATE lessons SET question_count = ?, max_score = ?, duration_min = ? WHERE id = ?")
+          .run(set.questions.length, set.questions.length, Number(set.duration) || 90, lesson.id);
+      }
       if (isAttestationFifty && readingMigrationNeeded && currentCount >= preparedReading.length) {
         const existingReading = db.prepare("SELECT id FROM questions WHERE lesson_id = ? ORDER BY id LIMIT 15").all(lesson.id);
         existingReading.forEach((row, index) => {
@@ -1155,6 +1171,15 @@ function seedPreparedTests() {
   const expectedReadingSets = sources[0].filter((set) => set.category === "attestation" &&
     set.questions.length === 50 && ((Number(set.number) >= 1 && Number(set.number) <= 10) || set.layout === "attestation-50-sections")).length;
   if (readingMigrationNeeded && migratedReadingSets >= expectedReadingSets) metaSet("attestation_reading_layout", "2026-11-22-v2");
+  const expectedUniqueSets = sources[0].filter((set) => set.category === "attestation" && set.bankVersion === "unique-v2");
+  const refreshedUniqueSets = expectedUniqueSets.filter((set) => {
+    const lesson = db.prepare("SELECT id FROM lessons WHERE course_id = ? AND title = ? ORDER BY id LIMIT 1")
+      .get(db.prepare("SELECT id FROM courses WHERE title = ? ORDER BY id LIMIT 1").get(set.course)?.id, set.lesson);
+    return lesson && Number(db.prepare("SELECT COUNT(*) AS n FROM questions WHERE lesson_id = ?").get(lesson.id)?.n || 0) >= set.questions.length;
+  });
+  if (expectedUniqueSets.length === 120 && refreshedUniqueSets.length === expectedUniqueSets.length) {
+    metaSet("attestation_120_questions_v2", "1");
+  }
   if (addedSets) console.log(`[seed] ${addedSets} new test sets added from prepared question banks`);
 }
 
