@@ -4385,7 +4385,7 @@ function dashboardPage(user) {
         var search = document.getElementById('dlSearch');
         if (!grid || !pager) return;
         var cards = Array.prototype.slice.call(grid.querySelectorAll('.dl-card'));
-        var per = 5;
+        var per = 4;
         var page = 1;
         function filtered() {
           var q = (search && search.value ? search.value : '').toLowerCase().trim();
