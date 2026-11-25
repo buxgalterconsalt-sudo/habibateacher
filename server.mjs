@@ -2668,9 +2668,11 @@ async function telegramApi(method, payload) {
   }
 }
 
-async function notifyNewsSubscribers(title) {
+async function notifyNewsSubscribers(title, body) {
   const cleanTitle = String(title || "").trim().slice(0, 180);
-  if (!cleanTitle) return;
+  const cleanBody = String(body || "").trim().slice(0, 3800);
+  if (!cleanTitle || !cleanBody) return;
+  const message = `${cleanTitle}\n\n${cleanBody}`;
   const token = config.telegramBotToken || process.env.TELEGRAM_BOT_TOKEN || "";
   if (!token) {
     console.error("[telegram] news broadcast skipped: bot token is not configured");
@@ -2687,7 +2689,7 @@ async function notifyNewsSubscribers(title) {
   }
   let sent = 0;
   for (const chatId of targets) {
-    const result = await telegramApi("sendMessage", { chat_id: chatId, text: cleanTitle });
+    const result = await telegramApi("sendMessage", { chat_id: chatId, text: message });
     if (result && result.ok) sent += 1;
     await new Promise((resolve) => setTimeout(resolve, 80));
   }
@@ -5650,7 +5652,7 @@ const server = http.createServer(async (req, res) => {
     if (index >= 0) posts[index] = post;
     else posts.unshift(post);
     metaSet("news_posts_json", JSON.stringify(posts.slice(0, 60)));
-    if (index < 0) notifyNewsSubscribers(post.title).catch((error) => console.error("[telegram] news broadcast failed", error.message));
+    if (index < 0) notifyNewsSubscribers(post.title, post.body).catch((error) => console.error("[telegram] news broadcast failed", error.message));
     return redirect(res, "/news?saved=1");
   }
 
