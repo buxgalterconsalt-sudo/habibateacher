@@ -494,7 +494,41 @@ const I18N = {
   "Hozirgi savol": "Current question",
   "Testni tugatishni tasdiqlaysizmi?": "Finish the test?",
   "ta savol javobsiz.": "questions unanswered.",
-  "Barcha savollarga javob berilgan.": "All questions answered."
+  "Barcha savollarga javob berilgan.": "All questions answered.",
+  "Attestatsiya va TKT test platformasi": "Attestation and TKT practice platform",
+  "Muhim sinovlarga yolg‘iz tayyorlanish oson emas — hamisha yonida ishonchli tayanch va amaliy mashq maydoni bo‘lsa, yo‘l ancha yengillashadi. Shu yerda muntazam mashq qiling, xatolaringizni xotirjam tahlil qiling va o‘zingizdagi o‘sishni har kuni ko‘rib boring. Birgalikda ishonch bilan harakat qilsak, albatta yuqori natijalarga chiqamiz.": "Preparing for important exams alone is not easy. With reliable support and a place to practise, the journey gets easier. Practise here regularly, review your mistakes calmly, and see your progress each day. By moving forward together with confidence, we can reach excellent results.",
+  "Ustozlar tajribasi baham ko‘rilganda, bilim ham, natija ham yuksaladi.": "When teachers share their experience, knowledge grows and results improve.",
+  "Har bir savol real vaziyatga tayanadi, shuning uchun bilim amalda sinaladi.": "Every question is based on a real situation, so knowledge is tested in practice.",
+  "Har bir bo‘lim bilimni mustahkamlash, sinab ko‘rish va dars jarayonida qo‘llashga yordam beradi.": "Each section helps you strengthen your knowledge, test yourself, and apply what you learn in class.",
+  "O'QUV DASTURI": "LEARNING PROGRAM",
+  "O'ZINGIZGA MOS TARIF": "A PLAN THAT FITS YOU",
+  "HABIBA TEACHER ILOVASI": "HABIBA TEACHER APP",
+  "Ilovani qurilmangizga o'rnating": "Install the app on your device",
+  "Platformaga tez kirish va testlarni qulay ishlatish uchun Habiba Teacher ilovasini bosh ekranga qo'shing.": "Add Habiba Teacher to your home screen for quick access and a better test experience.",
+  "Ilovani o'rnatish": "Install the app",
+  "Hozircha davom etish": "Continue for now",
+  "iPhone yoki iPad'da Share tugmasini bosib, “Add to Home Screen”ni tanlang.": "On iPhone or iPad, tap Share and choose “Add to Home Screen.”",
+  "Davom etish orqali": "By continuing",
+  "foydalanish shartlariga": "the terms of use",
+  "rozilik bildirasiz": "you agree",
+  "Yangiliklar": "News",
+  "Yangiliklar | Habiba Teacher": "News | Habiba Teacher",
+  "120 ta yangi mashq testi joylandi": "120 new practice tests are now available",
+  "Yangilik saqlandi.": "News post saved.",
+  "Yangilik o'chirildi.": "News post removed.",
+  "Hozircha yangiliklar yo'q": "No news yet",
+  "Yangi xabarlar shu bo'limda e'lon qilinadi.": "New updates will appear here.",
+  "O‘zbekcha va inglizcha sarlavha hamda matnni to‘ldiring.": "Enter the title and text in both Uzbek and English.",
+  "Sarlavha (inglizcha)": "Title (English)",
+  "Matn (inglizcha)": "Text (English)",
+  "Yangilikni olib tashlash": "Remove news post",
+  "Yangilikni tahrirlash": "Edit news post",
+  "Mualliflar uchun: yangilik qo'shish va boshqarish": "For authors: add and manage news",
+  "Yangiliklar sahifasining o'zida xabar kiriting va e'lon qiling.": "Write and publish updates directly on the News page.",
+  "Yangilikni e'lon qilish": "Publish news",
+  "29,30 noyabr, 1,2 dekabr kunlarida Eksklusiv 4 kunlik Intensiv dars": "Exclusive 4-day intensive course on November 29, 30 and December 1 and 2",
+  "Attestatsiyaga tayyorlanishga vaqtingiz oz qoldimi, demak siz bu darsda qatnashishingiz kerak.": "Short on time to prepare for attestation? Then this course is for you.",
+  "Reading, Grammar, Vocabulary, Pragmatika, Pedagogik mahorat va Kasbiy standart yo'nalishlarida yangi testlar bilan muntazam mashq qiling.": "Practise regularly with new tests in Reading, Grammar, Vocabulary, Pragmatics, Teaching Skills, and Professional Standards."
   }
 };
 
@@ -539,6 +573,8 @@ function translateCore(text, lang) {
   }
 
   let m;
+  if ((m = decoded.match(/^(\d+)\s*ta test\s*·\s*(\d+)\s*ta kurs$/i))) return put(`${m[1]} tests · ${m[2]} courses`);
+  if ((m = decoded.match(/^(\d+)\s*ta yo'?nalish$/i))) return put(`${m[1]} learning paths`);
   if ((m = decoded.match(/^Attestatsiya (\d{4}) · Sinov (\d+)$/))) return put(`Attestation ${m[1]} · Practice test ${m[2]}`);
   if ((m = decoded.match(/^(.+?) bo'limi\s*[—–-]\s*har bir testda (\d+) ta savol\.$/))) {
     const names = { Reading: "Reading", Grammar: "Grammar", Vocabulary: "Vocabulary", Pragmatika: "Pragmatics", "Pedagogik mahorat": "Teaching skills", "Kasbiy standart": "Professional standards" };
