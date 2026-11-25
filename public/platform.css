@@ -979,6 +979,18 @@ html:not([data-theme="light"]) .theme-moon {
   margin-bottom: 14px;
 }
 
+.course-duration-form {
+  position: relative;
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+.course-duration-form label { font-size: .8rem; font-weight: 750; }
+.course-duration-form input { width: 100%; }
+.course-duration-form .btn { justify-self: start; }
+
 .card-link {
   color: var(--primary-soft);
   font-size: 0.85rem;
