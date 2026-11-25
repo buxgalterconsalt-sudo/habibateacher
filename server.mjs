@@ -8318,6 +8318,9 @@ const server = http.createServer(async (req, res) => {
   if (p === "/author" && method === "GET") {
     if (!user) return redirect(res, "/login?next=/author");
     if (!author && !admin) return redirect(res, "/attestation");
+    const durationNotice = url.searchParams.has("times_updated")
+      ? alertBox(`${Math.max(0, Number(url.searchParams.get("times_updated")) || 0)} ta test vaqti yangilandi.`, "success")
+      : "";
     const courses = db.prepare(`SELECT c.id, c.title, c.category, c.is_published,
       (SELECT COUNT(*) FROM lessons l WHERE l.course_id = c.id) AS lesson_count
       FROM courses c ORDER BY c.id DESC`).all();
@@ -8326,6 +8329,8 @@ const server = http.createServer(async (req, res) => {
       <h3>${h(course.title)}</h3><p class="muted">${h(categoryLabel(course.category))} · ${Number(course.is_published) ? "E'lon qilingan" : "Qoralama"}</p><span class="card-link">Tahrirlash</span>
       </a>`).join("") : `<div class="card empty">Hozircha kurs yo'q.</div>`;
     const body = `<div class="page-head"><div><h1>Muallif paneli</h1><p class="muted">Kurslar, darslar va test materiallarini boshqaring.</p></div></div>
+      ${durationNotice}
+      <div class="card" style="margin:18px 0 24px"><h2>Barcha testlar vaqtini bir marta o‘zgartirish</h2><p class="muted">Tanlangan vaqt barcha kurslardagi testlarga qo‘llanadi.</p><form method="post" action="/author/tests/duration" class="form" onsubmit="return confirm('Barcha kurslardagi testlar vaqtini tanlangan qiymatga o‘zgartirasizmi?')"><div class="field" style="max-width:260px"><label>Test vaqti (daqiqa)</label><input type="number" name="duration_min" min="1" max="180" value="30" required></div><button class="btn btn-primary" type="submit">Barcha test vaqtini yangilash</button></form></div>
       <div class="grid three">${courseRows}</div>
       <div class="card" style="margin-top:22px"><h2>Yangi kurs</h2><form method="post" action="/admin/course" class="form">
       <div class="field"><label>Yo'nalish</label><select name="category"><option value="attestation">Attestatsiya</option><option value="tkt">TKT</option></select></div>
@@ -8333,6 +8338,17 @@ const server = http.createServer(async (req, res) => {
       <button class="btn btn-primary" type="submit">Kurs yaratish</button></form></div>`;
     send(res, 200, layout({ title: "Muallif paneli", body, user, admin }));
     return;
+  }
+
+  if (p === "/author/tests/duration" && method === "POST") {
+    if (!user) return redirect(res, "/login?next=/author");
+    if (!author && !admin) return redirect(res, "/attestation");
+    const durationMin = Number(fields.duration_min);
+    if (!Number.isInteger(durationMin) || durationMin < 1 || durationMin > 180) {
+      return redirect(res, "/author?err=duration");
+    }
+    const result = db.prepare("UPDATE lessons SET duration_min = ? WHERE type = 'test'").run(durationMin);
+    return redirect(res, `/author?times_updated=${result.changes}`);
   }
 
   if (p === "/admin" && method === "GET") {
