@@ -979,31 +979,22 @@ html:not([data-theme="light"]) .theme-moon {
   margin-bottom: 14px;
 }
 
-.course-bulk-actions {
+.course-bulk-form {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  gap: 9px;
   margin-top: 14px;
   padding-top: 12px;
   border-top: 1px solid var(--line);
 }
-
-.course-duration-form {
-  position: relative;
+.course-bulk-fields {
   display: grid;
-  gap: 8px;
-  align-content: start;
-  min-width: 0;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
 }
-.course-duration-form label { font-size: .8rem; font-weight: 750; }
-.course-duration-form input { width: 100%; }
-.course-duration-form .btn { justify-self: stretch; padding-inline: 8px; }
-
-@media (max-width: 480px) {
-  .course-bulk-actions { gap: 8px; }
-  .course-duration-form { gap: 6px; }
-  .course-duration-form .btn { font-size: .78rem; }
-}
+.course-bulk-field { display: grid; gap: 6px; min-width: 0; }
+.course-bulk-field label { font-size: .8rem; font-weight: 750; }
+.course-bulk-field input { width: 100%; }
+.course-bulk-form > .btn { justify-self: stretch; padding: 7px 10px; font-size: .82rem; }
 
 .card-link {
   color: var(--primary-soft);

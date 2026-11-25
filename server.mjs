@@ -8324,27 +8324,22 @@ const server = http.createServer(async (req, res) => {
       FROM courses c ORDER BY c.id DESC`).all();
     const updatedCourseId = Number(url.searchParams.get("course")) || 0;
     const updatedCourse = courses.find((course) => Number(course.id) === updatedCourseId);
-    const durationNotice = url.searchParams.has("times_updated")
-      ? alertBox(`${Math.max(0, Number(url.searchParams.get("times_updated")) || 0)} ta test vaqti${updatedCourse ? ` “${updatedCourse.title}” kursida` : ""} yangilandi.`, "success")
+    const settingsNotice = url.searchParams.has("settings_updated")
+      ? alertBox(`${Math.max(0, Number(url.searchParams.get("settings_updated")) || 0)} ta testning vaqti va bali${updatedCourse ? ` “${updatedCourse.title}” kursida` : ""} saqlandi.`, "success")
       : "";
-    const scoreNotice = url.searchParams.has("scores_updated")
-      ? alertBox(`${Math.max(0, Number(url.searchParams.get("scores_updated")) || 0)} ta test bali${updatedCourse ? ` “${updatedCourse.title}” kursida` : ""} yangilandi.`, "success")
-      : "";
-    const durationError = url.searchParams.get("err") === "duration" ? alertBox("Test vaqti 1–180 daqiqa oralig'ida bo'lishi kerak.", "error") : "";
-    const scoreError = url.searchParams.get("err") === "score" ? alertBox("Test bali 0–1000 oralig'ida bo'lishi kerak.", "error") : "";
+    const settingsError = url.searchParams.get("err") === "course_settings" ? alertBox("Vaqt 1–180 daqiqa, ball esa 0–1000 oralig'ida bo'lishi kerak.", "error") : "";
     const courseRows = courses.length ? courses.map((course) => `<div class="card course-card">
       <div class="course-top"><div class="course-ico">${icon("layers")}</div><span class="badge">${course.lesson_count} dars</span></div>
       <h3>${h(course.title)}</h3><p class="muted">${h(categoryLabel(course.category))} · ${Number(course.is_published) ? "E'lon qilingan" : "Qoralama"}</p><a class="card-link" href="/admin/course/${course.id}">Tahrirlash</a>
-      <div class="course-bulk-actions">
-        <form method="post" action="/author/course/${course.id}/test-duration" class="course-duration-form" onsubmit="return confirm('Shu kursdagi barcha testlar vaqtini tanlangan qiymatga o‘zgartirasizmi?')"><label>Daqiqa</label><input aria-label="Test vaqti daqiqada" type="number" name="duration_min" min="1" max="180" value="30" required ${Number(course.test_count) ? "" : "disabled"}><button class="btn btn-sm btn-primary" type="submit" ${Number(course.test_count) ? "" : "disabled"}>Saqlash</button></form>
-        <form method="post" action="/author/course/${course.id}/test-score" class="course-duration-form" onsubmit="return confirm('Shu kursdagi barcha testlar balini tanlangan qiymatga o‘zgartirasizmi?')"><label>Ball</label><input aria-label="Test bali" type="number" name="max_score" min="0" max="1000" value="15" required ${Number(course.test_count) ? "" : "disabled"}><button class="btn btn-sm btn-primary" type="submit" ${Number(course.test_count) ? "" : "disabled"}>Saqlash</button></form>
-      </div>
+      <form method="post" action="/author/course/${course.id}/test-settings" class="course-bulk-form" onsubmit="return confirm('Shu kursdagi barcha testlarning vaqt va ball qiymatlarini saqlaysizmi?')">
+        <div class="course-bulk-fields"><div class="course-bulk-field"><label for="duration-${course.id}">Daqiqa</label><input id="duration-${course.id}" aria-label="Test vaqti daqiqada" type="number" name="duration_min" min="1" max="180" value="30" required ${Number(course.test_count) ? "" : "disabled"}></div>
+        <div class="course-bulk-field"><label for="score-${course.id}">Ball</label><input id="score-${course.id}" aria-label="Test bali" type="number" name="max_score" min="0" max="1000" value="15" required ${Number(course.test_count) ? "" : "disabled"}></div></div>
+        <button class="btn btn-sm btn-primary" type="submit" ${Number(course.test_count) ? "" : "disabled"}>Saqlash</button>
+      </form>
       </div>`).join("") : `<div class="card empty">Hozircha kurs yo'q.</div>`;
     const body = `<div class="page-head"><div><h1>Muallif paneli</h1><p class="muted">Kurslar, darslar va test materiallarini boshqaring.</p></div></div>
-      ${durationNotice}
-      ${scoreNotice}
-      ${durationError}
-      ${scoreError}
+      ${settingsNotice}
+      ${settingsError}
       <div class="grid three">${courseRows}</div>
       <div class="card" style="margin-top:22px"><h2>Yangi kurs</h2><form method="post" action="/admin/course" class="form">
       <div class="field"><label>Yo'nalish</label><select name="category"><option value="attestation">Attestatsiya</option><option value="tkt">TKT</option></select></div>
@@ -8380,6 +8375,25 @@ const server = http.createServer(async (req, res) => {
     }
     const result = db.prepare("UPDATE lessons SET max_score = ? WHERE course_id = ? AND type = 'test'").run(maxScore, courseId);
     return redirect(res, `/author?scores_updated=${result.changes}&course=${courseId}`);
+  }
+
+  const authorCourseSettingsMatch = p.match(/^\/author\/course\/(\d+)\/test-settings$/);
+  if (authorCourseSettingsMatch && method === "POST") {
+    if (!user) return redirect(res, "/login?next=/author");
+    if (!author && !admin) return redirect(res, "/attestation");
+    const courseId = Number(authorCourseSettingsMatch[1]);
+    if (!db.prepare("SELECT id FROM courses WHERE id = ?").get(courseId)) return redirect(res, "/author");
+    const durationMin = Number(fields.duration_min);
+    const maxScore = Number(fields.max_score);
+    if (!Number.isInteger(durationMin) || durationMin < 1 || durationMin > 180 || !Number.isInteger(maxScore) || maxScore < 0 || maxScore > 1000) {
+      return redirect(res, "/author?err=course_settings");
+    }
+    const saveCourseSettings = db.transaction(() => {
+      db.prepare("UPDATE lessons SET duration_min = ?, max_score = ? WHERE course_id = ? AND type = 'test'").run(durationMin, maxScore, courseId);
+      return db.prepare("SELECT changes() AS count").get().count;
+    });
+    const updatedTests = saveCourseSettings();
+    return redirect(res, `/author?settings_updated=${updatedTests}&course=${courseId}`);
   }
 
   if (p === "/admin" && method === "GET") {
