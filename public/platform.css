@@ -6740,7 +6740,7 @@ html[data-theme="light"] .home-final-card { background: linear-gradient(120deg, 
 .landing-home .home-teacher-marquee-track { display: flex; width: max-content; animation: homeTeacherMarquee 34s linear infinite; will-change: transform; }
 .landing-home .home-teacher-marquee-track span { display: block; flex: 0 0 auto; padding: 16px clamp(30px, 6vw, 86px); color: inherit; font-size: clamp(1rem, 1.45vw, 1.2rem); font-weight: 650; letter-spacing: .015em; white-space: nowrap; }
 .landing-home .home-teacher-marquee-track span::after { content: "✦"; margin-left: clamp(30px, 6vw, 86px); color: #55d2d4; }
-@keyframes homeTeacherMarquee { from { transform: translateX(-50%); } to { transform: translateX(0); } }
+@keyframes homeTeacherMarquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 @media (prefers-reduced-motion: reduce) { .landing-home .home-teacher-marquee-track { width: 100%; justify-content: center; animation: none; } .landing-home .home-teacher-marquee-track span { padding-inline: 16px; text-align: center; white-space: normal; } .landing-home .home-teacher-marquee-track span[aria-hidden="true"] { display: none; } }
 @media (max-width: 640px) { .landing-home .home-teachers-photo img { height: clamp(220px, 65vw, 380px); object-position: center; } .landing-home .home-teacher-marquee-track span { padding-block: 14px; padding-inline: 26px; font-size: 1rem; } .landing-home .home-teacher-marquee-track span::after { margin-left: 26px; } }
 
