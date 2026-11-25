@@ -332,7 +332,12 @@ function hasDeviceLimitReached(userId, req) {
   return activeDevices >= 2;
 }
 
-const TEST_PASS_PERCENT = 70;
+const TEST_PASS_PERCENT = 80;
+const ATTESTATION_TEST_PASS_PERCENT = 60;
+
+function testPassPercent(category) {
+  return category === "attestation" ? ATTESTATION_TEST_PASS_PERCENT : TEST_PASS_PERCENT;
+}
 
 function firstVideoTasksGate(userId, courseId) {
   const videos = db.prepare("SELECT id, position FROM lessons WHERE course_id = ? AND type = 'video' ORDER BY position, id LIMIT 2").all(courseId);
@@ -2414,7 +2419,7 @@ function courseProgress(userId, courseId) {
   `SELECT
   (SELECT COUNT(*) FROM lessons WHERE course_id = ?) AS total,
   (SELECT COUNT(*) FROM progress p JOIN lessons l ON l.id = p.lesson_id JOIN courses c ON c.id = l.course_id
-  WHERE l.course_id = ? AND p.user_id = ? AND (l.type <> 'test' OR p.score >= ${TEST_PASS_PERCENT})) AS done`
+  WHERE l.course_id = ? AND p.user_id = ? AND (l.type <> 'test' OR p.score >= CASE WHEN c.category = 'attestation' THEN ${ATTESTATION_TEST_PASS_PERCENT} ELSE ${TEST_PASS_PERCENT} END)) AS done`
   )
 .get(courseId, courseId, userId);
   return { total: row.total || 0, done: row.done || 0 };
@@ -4343,8 +4348,10 @@ function dashboardTestSequence(userId) {
   const completed = new Set(db.prepare(
     `SELECT p.lesson_id FROM progress p JOIN lessons l ON l.id = p.lesson_id
      JOIN courses c ON c.id = l.course_id
-     WHERE p.user_id = ? AND l.type = 'test' AND p.score >= ? AND c.is_published = 1`
-  ).all(userId, TEST_PASS_PERCENT).map((row) => Number(row.lesson_id)));
+     WHERE p.user_id = ? AND l.type = 'test'
+       AND p.score >= CASE WHEN c.category = 'attestation' THEN ? ELSE ? END
+       AND c.is_published = 1`
+  ).all(userId, ATTESTATION_TEST_PASS_PERCENT, TEST_PASS_PERCENT).map((row) => Number(row.lesson_id)));
   return { tests, completed };
 }
 
@@ -5261,17 +5268,18 @@ function testPage(lesson, questions, testSections = [], attemptId = 0) {
   return testDocument({ title: lesson.title, body });
 }
 
-function testResultPage(lesson, questions, score, answers = {}, passMark = TEST_PASS_PERCENT) {
+function testResultPage(lesson, questions, score, answers = {}, passMark = null) {
   const total = questions.length;
   const correct = total ? Math.round((score / 100) * total): 0;
   const course = db.prepare("SELECT category FROM courses WHERE id = ?").get(lesson.course_id);
   const isAttestation = course && course.category === "attestation";
-  const passed = score >= passMark;
+  const requiredPercent = passMark !== null && passMark !== undefined && Number.isFinite(Number(passMark)) ? Number(passMark) : testPassPercent(course?.category);
+  const passed = score >= requiredPercent;
   const attestationGrade = score >= 80
     ? "Oliy toifaga o'tdingiz"
     : score >= 70
       ? "Birinchi toifaga o'tdingiz"
-      : "Ikkinchi toifa";
+      : score >= 60 ? "Ikkinchi toifaga o'tdingiz" : "Yana urinib ko'ring";
   const mistakes = questions.filter((q) => String(answers[`q${q.id}`] || "") !== String(q.correct));
   const review = Object.keys(answers).length
     ? `<section class="answer-review"><h2>Xatolarni ko'rib chiqing</h2>${mistakes.length ? mistakes.map((q) => `<article class="answer-mistake"><b>${h(q.text)}</b><p class="wrong-answer">Sizning javobingiz: ${h(q[`o${Number(answers[`q${q.id}`])}`] || "Javob berilmadi")}</p><p class="right-answer">To'g'ri javob: ${h(q[`o${q.correct}`])}</p>${q.passage ? `<details><summary>Matnni ko'rish</summary><p>${nl2br(q.passage)}</p></details>` : ""}</article>`).join("") : `<p class="muted">Xato javob yo'q — a'lo!</p>`}</section>`
@@ -5288,7 +5296,7 @@ function testResultPage(lesson, questions, score, answers = {}, passMark = TEST_
   <div class="score-circle">${score}%</div>
   <h1>${isAttestation && passed ? attestationGrade : passed ? "Yaxshi natija!": "Yana urinib ko'ring"}</h1>
   <p class="muted">${correct} / ${total} to'g'ri javob</p>
-  ${isAttestation ? `<p class="muted">${score >= 80 ? "80–100% natija" : score >= 70 ? "70–79% natija" : `70% dan kam. Keyingi testga o'tish uchun ${passMark}% kerak.`}</p>` : `<p class="muted">O'tish uchun ${passMark}% kerak.</p>`}
+  ${isAttestation ? `<p class="muted">${score >= 80 ? "80–100% — oliy toifa" : score >= 70 ? "70–79% — birinchi toifa" : score >= 60 ? "60–69% — ikkinchi toifa" : `60% dan kam. Ikkinchi toifa va keyingi test uchun 60% kerak.`}</p>` : `<p class="muted">O'tish uchun ${requiredPercent}% kerak.</p>`}
   <div class="actions">
   ${passed ? `<a class="btn btn-primary" href="${moduleHref(lesson)}">Testlarga qaytish</a>` : `<a class="btn btn-primary" href="/test/${lesson.id}?start=1">Qayta topshirish</a>`}
   ${passed ? `<a class="btn btn-ghost" href="/test/${lesson.id}?start=1">Yana topshirish</a>` : ""}
@@ -7179,7 +7187,7 @@ const server = http.createServer(async (req, res) => {
   const courseTests = lessons.filter((lesson) => lesson.type === "test");
   const isCourseTestComplete = (lesson) => {
     if (!Object.prototype.hasOwnProperty.call(progress, lesson.id)) return false;
-    return progress[lesson.id] !== null && Number(progress[lesson.id]) >= TEST_PASS_PERCENT;
+    return progress[lesson.id] !== null && Number(progress[lesson.id]) >= testPassPercent(course.category);
   };
   const nextCourseTest = courseTests.find((lesson) => !isCourseTestComplete(lesson));
   const { total, done } = courseProgress(user.id, course.id);
@@ -7188,7 +7196,7 @@ const server = http.createServer(async (req, res) => {
   ? visibleLessons
 .map((l, i) => {
   const hasProgress = Object.prototype.hasOwnProperty.call(progress, l.id);
-  const finished = hasProgress && (l.type !== "test" || (progress[l.id] !== null && Number(progress[l.id]) >= TEST_PASS_PERCENT));
+  const finished = hasProgress && (l.type !== "test" || (progress[l.id] !== null && Number(progress[l.id]) >= testPassPercent(course.category)));
   const sequenceLocked = !admin && l.type === "test" && !finished && nextCourseTest && Number(l.id) !== Number(nextCourseTest.id);
   const firstVideoGate = l.type === "video" && !admin && !isIntroVideoLesson(l.id) && !hasLessonPermission(user.id, l.id) ? { locked: true } : { locked: false };
   const rowTag = sequenceLocked ? "div" : "a";
@@ -7230,7 +7238,7 @@ const server = http.createServer(async (req, res) => {
     const currentTest = sequence.tests[currentIndex];
     const unmetCourseTest = sequence.tests.slice(0, currentIndex).filter((item) => Number(item.course_id) === Number(currentTest.course_id)).find((item) => {
       const result = db.prepare("SELECT score FROM progress WHERE user_id = ? AND lesson_id = ?").get(user.id, item.id);
-      return !result || result.score === null || Number(result.score) < TEST_PASS_PERCENT;
+      return !result || result.score === null || Number(result.score) < testPassPercent(currentTest.course_category);
     });
     if (unmetCourseTest) return redirect(res, `/test/${unmetCourseTest.id}?start=1`);
     const unmetPrevious = !isFirstCategoryTest && currentIndex > 0 ? sequence.tests.slice(0, currentIndex).find((item) => !sequence.completed.has(Number(item.id))) : null;
@@ -7356,7 +7364,7 @@ const server = http.createServer(async (req, res) => {
       answers = JSON.parse(resultAttempt.answers_json || "{}");
     } catch (e) {}
   }
-  send(res, 200, testResultPage(lesson, resultQuestions, score, answers, TEST_PASS_PERCENT));
+  send(res, 200, testResultPage(lesson, resultQuestions, score, answers));
   return;
   }
 
@@ -7467,7 +7475,7 @@ const server = http.createServer(async (req, res) => {
     if (previous && previous.type === "test") {
       const result = db.prepare("SELECT score FROM progress WHERE user_id = ? AND lesson_id = ?").get(user.id, previous.id);
       const courseCategory = db.prepare("SELECT category FROM courses WHERE id = ?").get(lesson.course_id)?.category;
-      const previousComplete = result && result.score !== null && Number(result.score) >= TEST_PASS_PERCENT;
+      const previousComplete = result && result.score !== null && Number(result.score) >= testPassPercent(courseCategory);
       if (!previousComplete) return redirect(res, `/test/${previous.id}?start=1`);
     }
   }
@@ -7578,7 +7586,7 @@ const server = http.createServer(async (req, res) => {
   const testProgress = relatedTest
     ? db.prepare("SELECT score FROM progress WHERE user_id = ? AND lesson_id = ?").get(user.id, relatedTest.id)
     : null;
-  const testDone = !!(testProgress && Number(testProgress.score) >= TEST_PASS_PERCENT);
+  const testDone = !!(testProgress && Number(testProgress.score) >= testPassPercent(course.category));
   // A video lesson's first following test is its checkpoint. Once passed,
   // the next-lesson control must advance beyond that test instead of reopening it.
   const relatedTestIndex = relatedTest ? lessonList.findIndex((item) => item.id === relatedTest.id) : -1;
@@ -7650,7 +7658,7 @@ const server = http.createServer(async (req, res) => {
     url.searchParams.get("err") === "watch"
       ? alertBox("Avval videoni to'liq ko'ring — keyin dars tugaydi.", "error")
       : result !== null
-      ? `${alertBox(`Test yakunlandi: ${result}% to'g'ri javob.`, Number(result) >= TEST_PASS_PERCENT ? "success" : "error")}${lessonReviewHtml}`
+      ? `${alertBox(`Test yakunlandi: ${result}% to'g'ri javob.`, Number(result) >= testPassPercent(course.category) ? "success" : "error")}${lessonReviewHtml}`
       : progressRow && lesson.type === "test"
       ? alertBox(
           `Bu testni tugatgansiz${progressRow.score != null ? ` | natija: ${progressRow.score}%` : ""}.`,
