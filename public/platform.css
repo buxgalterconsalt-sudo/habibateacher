@@ -6475,25 +6475,25 @@ body:not(.is-dashboard):not(.admin-page) .hero-trust span::before { background: 
 .page-home { max-width: none; padding: 0; overflow: hidden; }
 .landing-home {
   --home-panel: rgba(17, 13, 34, .78);
-  --home-line: rgba(177, 155, 255, .16);
-  --home-accent: #8a6cff;
-  --home-cyan: #4bd0d3;
+  --home-line: rgba(177, 155, 255, .22);
+  --home-accent: #a28aff;
+  --home-cyan: #59dfe2;
   position: relative;
   isolation: isolate;
   overflow: hidden;
   background-color: var(--bg);
   background-image:
-    radial-gradient(850px 560px at 78% 5%, rgba(105, 62, 230, .17), transparent 65%),
-    radial-gradient(820px 600px at 8% 38%, rgba(12, 126, 139, .09), transparent 68%),
-    linear-gradient(rgba(162, 147, 226, .035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(162, 147, 226, .035) 1px, transparent 1px);
+    radial-gradient(850px 560px at 78% 5%, rgba(125, 87, 250, .23), transparent 65%),
+    radial-gradient(820px 600px at 8% 38%, rgba(34, 190, 205, .13), transparent 68%),
+    linear-gradient(rgba(175, 164, 245, .045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(175, 164, 245, .045) 1px, transparent 1px);
   background-size: auto, auto, 54px 54px, 54px 54px;
 }
 .landing-home > section { position: relative; }
 .landing-home .wrap { max-width: 1260px; }
 .landing-home .home-hero {
   border-bottom: 1px solid var(--home-line);
-  background: linear-gradient(180deg, rgba(7, 5, 20, .9), rgba(8, 7, 24, .7));
+  background: radial-gradient(700px 430px at 83% 18%, rgba(42, 192, 210, .15), transparent 70%), linear-gradient(180deg, rgba(13, 9, 36, .94), rgba(8, 18, 36, .78));
 }
 .landing-home .landing-hero-grid { padding-block: clamp(52px, 7vw, 88px) 48px; }
 .landing-home .landing-hero-copy { max-width: 610px; }
@@ -6503,11 +6503,11 @@ body:not(.is-dashboard):not(.admin-page) .hero-trust span::before { background: 
 .landing-home .landing-hero-copy h1 { max-width: 11ch; font-size: clamp(3rem, 6.1vw, 5.35rem); line-height: 1.01; letter-spacing: -.065em; }
 .landing-home .landing-hero-copy h1.home-hero-message { max-width: 46ch; margin: 20px 0 18px; font-size: clamp(1.15rem, 1.65vw, 1.42rem); line-height: 1.65; letter-spacing: -.02em; font-weight: 600; }
 .landing-home .landing-hero-copy h1 .accent,
-.landing-home .accent { background: linear-gradient(100deg, #a783ff 10%, #63baff 58%, #51d8d2 100%); color: transparent; background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.landing-home .accent { background: linear-gradient(100deg, #b39cff 10%, #72d0ff 58%, #63ece2 100%); color: transparent; background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 .landing-home .landing-hero-copy .lead { max-width: 56ch; margin-top: 22px; color: #bbb5d1; }
 .landing-home .landing-actions { margin-top: 28px; }
-.landing-home .btn-primary { background: linear-gradient(110deg, #7652eb, #168fbd); border-color: transparent; box-shadow: 0 12px 34px rgba(104, 74, 224, .28); }
-.landing-home .btn-primary:hover { background: linear-gradient(110deg, #8868f6, #22a8d2); }
+.landing-home .btn-primary { background: linear-gradient(110deg, #855ff4, #159fc7); border-color: transparent; box-shadow: 0 12px 34px rgba(104, 74, 224, .34); }
+.landing-home .btn-primary:hover { background: linear-gradient(110deg, #9a7bff, #28b4d9); }
 .landing-home .btn-ghost { border-color: var(--home-line); background: rgba(17, 13, 34, .42); }
 .landing-home .hero-trust { margin-top: 22px; color: #bdb6d2; }
 .landing-home .hero-trust span::before { background: rgba(71, 206, 211, .12); color: var(--home-cyan); }

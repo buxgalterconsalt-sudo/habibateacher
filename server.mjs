@@ -1926,8 +1926,8 @@ function navFor(user, admin, publicPage = false) {
   }
 
   const links = `
-  ${newsNavigationLink(user)}
   ${siteButtonVisible("nav_home") && String(copy.nav_home || "").trim() ? `<a href="/">${h(copy.nav_home)}</a>` : ""}
+  ${newsNavigationLink(user)}
   ${siteButtonVisible("nav_attestation") && String(copy.nav_attestation || "").trim() ? `<a href="/attestation">${h(copy.nav_attestation)}</a>` : ""}
   ${siteButtonVisible("nav_tkt") && String(copy.nav_tkt || "").trim() ? `<a href="/tkt">${h(copy.nav_tkt)}</a>` : ""}
   ${siteButtonVisible("nav_duel") && String(copy.nav_duel || "").trim() ? `<a href="/duel">${h(copy.nav_duel)}</a>` : ""}
@@ -1936,8 +1936,8 @@ function navFor(user, admin, publicPage = false) {
 
   if (user) {
   return `<nav class="nav nav-student">
-  ${newsNavigationLink(user)}
   ${siteButtonVisible("nav_home") && String(copy.nav_home || "").trim() ? `<a href="/">${h(copy.nav_home)}</a>` : ""}
+  ${newsNavigationLink(user)}
   ${siteButtonVisible("nav_attestation") && String(copy.nav_attestation || "").trim() ? `<a href="/attestation">${h(copy.nav_attestation)}</a>` : ""}
   ${siteButtonVisible("nav_tkt") && String(copy.nav_tkt || "").trim() ? `<a href="/tkt">${h(copy.nav_tkt)}</a>` : ""}
   ${siteButtonVisible("nav_duel") && String(copy.nav_duel || "").trim() ? `<a href="/duel">${h(copy.nav_duel)}</a>` : ""}
@@ -1995,7 +1995,7 @@ ${seoTags}
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%2312b5a6'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='18' font-weight='bold' text-anchor='middle' fill='%2303211d'%3EH%3C/text%3E%3C/svg%3E">
 <script async src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>try{document.documentElement.dataset.theme=localStorage.getItem('ht_theme')||'dark';}catch(e){document.documentElement.dataset.theme='dark';}</script>
-<link rel="stylesheet" href="/assets/platform.css?v=20261125ticker1">
+<link rel="stylesheet" href="/assets/platform.css?v=20261125bright1">
 </head>
 <body${admin && !publicPage ? ` class="admin-page"` : isStudentPage ? ` class="student-page${isDashboard ? " is-dashboard" : ""}"` : ""}>
 <header class="topbar">
@@ -2030,7 +2030,7 @@ ${seoTags}
   admin && !publicPage
   ? `<a href="/admin">Admin</a><a href="/admin/students">O'quvchilar</a><a href="/admin/site-settings">Sayt sozlamalari</a><a href="/leaderboard">Reyting</a><a href="/">Saytni ko'rish</a>
   <form method="post" action="/admin/logout"><button class="mobile-link-btn" type="submit">Chiqish</button></form>`
-   : `${newsNavigationLink(user)}${siteButtonVisible("nav_home") && String(copy.nav_home || "").trim() ? `<a href="/">${h(copy.nav_home)}</a>` : ""}
+   : `${siteButtonVisible("nav_home") && String(copy.nav_home || "").trim() ? `<a href="/">${h(copy.nav_home)}</a>` : ""}${newsNavigationLink(user)}
   ${siteButtonVisible("nav_attestation") && String(copy.nav_attestation || "").trim() ? `<a href="/attestation">${h(copy.nav_attestation)}</a>` : ""}
   ${siteButtonVisible("nav_tkt") && String(copy.nav_tkt || "").trim() ? `<a href="/tkt">${h(copy.nav_tkt)}</a>` : ""}
   ${siteButtonVisible("nav_duel") && String(copy.nav_duel || "").trim() ? `<a href="/duel">${h(copy.nav_duel)}</a>` : ""}
@@ -2072,8 +2072,8 @@ ${body}
   <p class="footer-donation-note">Ustozlarimizga ko‘mak bo‘lsin deya, ushbu materiallar Habiba Mo'minjonovna tomonidan taqdim etildi.</p>
   </div>
   <nav class="footer-links">
-  ${newsNavigationLink(user)}
   ${siteButtonVisible("nav_home") && String(copy.nav_home || "").trim() ? `<a href="/">${h(copy.nav_home)}</a>` : ""}
+  ${newsNavigationLink(user)}
   ${siteButtonVisible("footer_directions") ? `<a href="/#directions">Yo'nalishlar</a>` : ""}
   ${siteButtonVisible("nav_attestation") && String(copy.nav_attestation || "").trim() ? `<a href="/attestation">${h(copy.nav_attestation)}</a>` : ""}
   ${siteButtonVisible("nav_tkt") && String(copy.nav_tkt || "").trim() ? `<a href="/tkt">${h(copy.nav_tkt)}</a>` : ""}
@@ -4841,7 +4841,7 @@ function testDocument({ title, body }) {  return `<!DOCTYPE html>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%231e40af'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='18' font-weight='bold' text-anchor='middle' fill='white'%3EH%3C/text%3E%3C/svg%3E">
 <script async src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>try{document.documentElement.dataset.theme=localStorage.getItem('ht_theme')||'dark';}catch(e){document.documentElement.dataset.theme='dark';}</script>
-<link rel="stylesheet" href="/assets/platform.css?v=20261125ticker1">
+<link rel="stylesheet" href="/assets/platform.css?v=20261125bright1">
 </head>
 <body class="test-body student-page">
 ${body}
