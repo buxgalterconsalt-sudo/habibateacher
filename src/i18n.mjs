@@ -496,6 +496,9 @@ const I18N = {
   "ta savol javobsiz.": "questions unanswered.",
   "Barcha savollarga javob berilgan.": "All questions answered.",
   "Attestatsiya va TKT test platformasi": "Attestation and TKT practice platform",
+  "Habiba teacher — ingliz tili fani o'qituvchilarini ingliz tili imtihonlariga tayyorlaydigan onlayn platforma.": "Habiba Teacher is an online platform that helps English teachers prepare for English-language exams.",
+  "Platformadagi yangilanish va e'lonlarni kuzatib boring.": "Keep up with platform updates and announcements.",
+  "Telegram orqali bog'lanish ↗": "Contact us on Telegram ↗",
   "Muhim sinovlarga yolg‘iz tayyorlanish oson emas — hamisha yonida ishonchli tayanch va amaliy mashq maydoni bo‘lsa, yo‘l ancha yengillashadi. Shu yerda muntazam mashq qiling, xatolaringizni xotirjam tahlil qiling va o‘zingizdagi o‘sishni har kuni ko‘rib boring. Birgalikda ishonch bilan harakat qilsak, albatta yuqori natijalarga chiqamiz.": "Preparing for important exams alone is not easy. With reliable support and a place to practise, the journey gets easier. Practise here regularly, review your mistakes calmly, and see your progress each day. By moving forward together with confidence, we can reach excellent results.",
   "Ustozlar tajribasi baham ko‘rilganda, bilim ham, natija ham yuksaladi.": "When teachers share their experience, knowledge grows and results improve.",
   "Har bir savol real vaziyatga tayanadi, shuning uchun bilim amalda sinaladi.": "Every question is based on a real situation, so knowledge is tested in practice.",
@@ -536,6 +539,7 @@ const NORM_CACHE = new WeakMap();
 function normKey(value) {
   return String(value || "")
     .replace(/[\u0000-\u001f]/g, " ")
+    .replace(/[\u2018\u2019\u02bc]/g, "'")
     .replace(/[\u2014\u2013]/g, " ")
     .replace(/\s+-\s+/g, " ")
     .replace(/\s+/g, " ")
@@ -549,6 +553,7 @@ function translateCore(text, lang) {
   if (!source) return text;
   const put = (value) => text.replace(source, value);
   const decoded = source
+    .replace(/&amp;#39;/g, "'")
     .replace(/&#39;/g, "'")
     .replace(/&amp;/g, "&")
     .replace(/&quot;/g, '"')
@@ -575,6 +580,11 @@ function translateCore(text, lang) {
   let m;
   if ((m = decoded.match(/^(\d+)\s*ta test\s*·\s*(\d+)\s*ta kurs$/i))) return put(`${m[1]} tests · ${m[2]} courses`);
   if ((m = decoded.match(/^(\d+)\s*ta yo'?nalish$/i))) return put(`${m[1]} learning paths`);
+  if ((m = decoded.match(/^(\d+)\s*ta dars$/i))) return put(`${m[1]} lessons`);
+  if ((m = decoded.match(/^(\d+)\s*ta kurs$/i))) return put(`${m[1]} courses`);
+  if ((m = decoded.match(/^(\d+)\s*ta o'?quvchi$/i))) return put(`${m[1]} learners`);
+  if ((m = decoded.match(/^(\d+)\s*ta o'?qituvchi$/i))) return put(`${m[1]} teachers`);
+  if ((m = decoded.match(/^(\d+)\s*ta savol$/i))) return put(`${m[1]} questions`);
   if ((m = decoded.match(/^Attestatsiya (\d{4}) · Sinov (\d+)$/))) return put(`Attestation ${m[1]} · Practice test ${m[2]}`);
   if ((m = decoded.match(/^(.+?) bo'limi\s*[—–-]\s*har bir testda (\d+) ta savol\.$/))) {
     const names = { Reading: "Reading", Grammar: "Grammar", Vocabulary: "Vocabulary", Pragmatika: "Pragmatics", "Pedagogik mahorat": "Teaching skills", "Kasbiy standart": "Professional standards" };
@@ -627,8 +637,9 @@ export function translateHtml(html, lang) {
   );
   out = out.replace(/\b(placeholder|aria-label|title|alt|value)="([^"]*)"/g, (match, attr, value) => {
   const decoded = value
-.replace(/&amp;/g, "&")
+.replace(/&amp;#39;/g, "'")
 .replace(/&#39;/g, "'")
+.replace(/&amp;/g, "&")
 .replace(/&quot;/g, '"')
 .replace(/&lt;/g, "<")
 .replace(/&gt;/g, ">");

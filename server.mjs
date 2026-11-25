@@ -194,8 +194,8 @@ function newsPosts() {
   if (!Array.isArray(saved)) return [];
   return saved.slice(0, 60).map((post, index) => ({
     id: String(post.id || `news-${index + 1}`).replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 48),
-    title: String(post.title || "").trim().slice(0, 180),
-    body: String(post.body || "").trim().slice(0, 4000),
+    title: String(post.title || "").replace(/&(?:amp;)?#39;/g, "'").trim().slice(0, 180),
+    body: String(post.body || "").replace(/&(?:amp;)?#39;/g, "'").trim().slice(0, 4000),
     titleEn: String(post.titleEn || "").trim().slice(0, 180),
     bodyEn: String(post.bodyEn || "").trim().slice(0, 4000),
     date: /^\d{4}-\d{2}-\d{2}$/.test(String(post.date || "")) ? String(post.date) : "",
