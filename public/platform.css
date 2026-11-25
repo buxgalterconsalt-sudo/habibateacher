@@ -5972,7 +5972,7 @@ body.student-page .topbar { background: rgba(8,6,17,.9); border-color: var(--lin
 html[data-theme="light"] body.student-page .topbar { background: rgba(255,255,255,.9); }
 body.student-page .mark { background: linear-gradient(135deg,#7541dc,#1b9bd7); color: #fff; }
 body.student-page .nav-student { gap: 2px; }
-body.student-page .nav-student a { padding-inline: 10px; font-size: .82rem; }
+body.student-page .nav-student a { padding-inline: 10px; font-size: 1rem; }
 body.student-page .nav-student .student-plan { border: 0; background: linear-gradient(100deg,#12b887,#11abc4); color: #fff; }
 body.student-page .nav-student .who { max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 body.student-page .nav-student .link { color: var(--muted); }
