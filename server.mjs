@@ -2672,11 +2672,26 @@ async function notifyNewsSubscribers(title) {
   const cleanTitle = String(title || "").trim().slice(0, 180);
   if (!cleanTitle) return;
   const token = config.telegramBotToken || process.env.TELEGRAM_BOT_TOKEN || "";
-  if (!token) return;
-  const subscribers = db.prepare("SELECT chat_id FROM telegram_bot_subscribers").all();
-  for (const subscriber of subscribers) {
-    await telegramApi("sendMessage", { chat_id: subscriber.chat_id, text: cleanTitle });
+  if (!token) {
+    console.error("[telegram] news broadcast skipped: bot token is not configured");
+    return;
   }
+  const targets = new Set([
+    ...db.prepare("SELECT chat_id FROM telegram_bot_subscribers").all().map((row) => String(row.chat_id || "").trim()),
+    ...db.prepare("SELECT telegram_id FROM users WHERE telegram_id IS NOT NULL AND telegram_id <> ''").all().map((row) => String(row.telegram_id || "").trim()),
+    String(config.telegramChatId || process.env.TELEGRAM_CHAT_ID || "").trim()
+  ].filter(Boolean));
+  if (!targets.size) {
+    console.error("[telegram] news broadcast skipped: no bot subscribers or linked Telegram users");
+    return;
+  }
+  let sent = 0;
+  for (const chatId of targets) {
+    const result = await telegramApi("sendMessage", { chat_id: chatId, text: cleanTitle });
+    if (result && result.ok) sent += 1;
+    await new Promise((resolve) => setTimeout(resolve, 80));
+  }
+  console.log(`[telegram] news broadcast finished: ${sent}/${targets.size} delivered`);
 }
 
 async function sendLoginCode(chatId, code) {
