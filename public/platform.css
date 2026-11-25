@@ -177,8 +177,8 @@ ul {
   padding: 8px 12px;
   border-radius: 9px;
   color: var(--muted);
-  font-size: 0.88rem;
-  font-weight: 600;
+  font-size: 1rem;
+  font-weight: 700;
 }
 
 .nav a:hover {
@@ -6737,3 +6737,30 @@ html[data-theme="light"] .home-final-card { background: linear-gradient(120deg, 
 .landing-home .home-teachers-photo { position: relative; left: 50%; width: 100vw; max-width: 100vw; margin: 0 0 0 -50vw; overflow: hidden; background: #0b1527; }
 .landing-home .home-teachers-photo img { display: block; width: 100%; height: clamp(250px, 48vw, 680px); object-fit: cover; object-position: center 54%; }
 @media (max-width: 640px) { .landing-home .home-teachers-photo img { height: clamp(220px, 65vw, 380px); object-position: center; } }
+
+/* Public news, the dashboard news counter, and the app install prompt */
+.home-news-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.home-news-card, .news-post { border: 1px solid var(--line); border-radius: 18px; padding: 22px; background: var(--surface); }
+.home-news-card time, .news-post time { color: var(--primary); font-size: .9rem; font-weight: 700; }
+.home-news-card h3, .news-post h2 { margin: 10px 0 8px; }
+.home-news-card p, .news-post p { margin: 0; color: var(--muted); line-height: 1.65; }
+.news-list { display: grid; gap: 16px; max-width: 900px; margin-inline: auto; }
+.admin-news-list { margin-top: 20px; }
+.admin-news-editor { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 16px; }
+.admin-news-editor > form:last-child { padding-top: 48px; }
+.home-news-stat { text-decoration: none; }
+.home-news-stat:hover { border-color: var(--primary); color: var(--text); }
+.install-gate[hidden] { display: none !important; }
+.install-gate { position: fixed; inset: 0; z-index: 1200; display: grid; place-items: center; padding: 20px; background: rgba(2, 10, 18, .78); backdrop-filter: blur(10px); }
+.install-gate-card { width: min(100%, 480px); padding: clamp(24px, 5vw, 40px); border: 1px solid var(--line); border-radius: 24px; background: var(--surface); box-shadow: 0 28px 100px rgba(0, 0, 0, .42); }
+.install-gate-card h2 { margin: 12px 0; font-size: clamp(1.5rem, 4vw, 2rem); }
+.install-gate-card > p { color: var(--muted); line-height: 1.65; }
+.install-gate-card .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+.install-gate-card .install-gate-help { margin: 20px 0 0; }
+body.install-gate-open { overflow: hidden; }
+@media (max-width: 720px) {
+  .home-news-grid { grid-template-columns: 1fr; }
+  .admin-news-editor { grid-template-columns: 1fr; }
+  .admin-news-editor > form:last-child { padding-top: 0; }
+  .nav a, .nav .who { font-size: 1rem; }
+}

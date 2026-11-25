@@ -107,7 +107,7 @@ const SITE_TEXT_DEFAULTS = {
   orbit_kicker: "HABIBA TEACHER · TA'LIM PLATFORMASI", orbit_test: "TEST", orbit_lesson: "DARS", orbit_result: "NATIJA", orbit_tag_1: "Attestatsiya", orbit_tag_2: "TKT", orbit_tag_3: "Metodika", orbit_tag_4: "Amaliy mashq",
   nav_home: "Bosh sahifa", nav_attestation: "Attestatsiya", nav_tkt: "TKT", nav_duel: "Duel", nav_plans: "Tariflar", nav_leaderboard: "Reyting",
   hero_eyebrow: "O'QITUVCHILAR UCHUN ONLAYN TA'LIM", hero_title: "Bilimingizni", hero_accent: "mustahkamlang.", hero_title_end: "Imtihonga tayyor bo'ling.", hero_description: "Attestatsiya va TKT uchun testlar, video darslar hamda metodik materiallar. O'z maqsadingizga mos yo'nalishni tanlab, o'z sur'atingizda o'rganing.", hero_primary: "Bepul ro'yxatdan o'tish", hero_primary_logged: "O'qishni davom ettirish", hero_secondary: "Yo'nalishni tanlang", hero_trust_1: "O'zbek tilida", hero_trust_2: "Istalgan qurilmada", hero_trust_3: "Natija va progress nazorati", hero_note: "Yangi darslar va sinovlar platformada muntazam yangilanadi", hero_image_caption: "Ustozlar uchun amaliy tayyorlov", hero_float_mark: "TKT", hero_float_title: "TKT: 3 ta modul", hero_float_description: "Har bir modul bo'yicha alohida tayyorgarlik",
-  stat_directions: "Yo'nalishlar", stat_lessons: "Video va o'quv darslari", stat_tests: "Sinov testlari", stat_test_attestation: "Attestatsiya testlari", stat_test_tkt: "TKT testlari", stat_test_cpd: "CPD testlari", stat_students: "O'quvchilar", stat_note_title: "Bir maqsad sari", stat_note_description: "Reja, mashq va natija — bir joyda", program_direction_suffix: "ta yo'nalish", program_lesson_suffix: "ta dars", program_attestation_tag: "ATTESTATSIYA", program_tkt_tag: "TKT", program_practice_tag: "AMALIYOT", footer_about: "Biz haqimizda",
+  stat_directions: "Yo'nalishlar", stat_lessons: "Video va o'quv darslari", stat_tests: "Sinov testlari", stat_test_attestation: "Attestatsiya testlari", stat_test_tkt: "TKT testlari", stat_students: "O'quvchilar", stat_note_title: "Bir maqsad sari", stat_note_description: "Reja, mashq va natija — bir joyda", program_direction_suffix: "ta yo'nalish", program_lesson_suffix: "ta dars", program_attestation_tag: "ATTESTATSIYA", program_tkt_tag: "TKT", program_practice_tag: "AMALIYOT", footer_about: "Biz haqimizda",
   overview_eyebrow: "01 / MAQSADGA QADAM", overview_title: "O'rganing. Mashq qiling.", overview_accent: "O'sishni kuzating.", overview_description: "Tayyorgarlikni kichik, tushunarli bosqichlarga ajrating. Har bir mavzu sizni bilimni amalda qo'llashga yaqinlashtiradi.", pillar_1_title: "Bilimni yangilang", pillar_1_description: "Video dars va metodik qo'llanma bilan asosiy mavzularni takrorlang.", pillar_2_title: "O'zingizni sinang", pillar_2_description: "Test va mashqlar orqali tushunganingizni tekshirib boring.", pillar_3_title: "Natijani kuzating", pillar_3_description: "Shaxsiy kabinetda progress va yakunlangan darslarni ko'ring.",
   direction_heading: "Yo'nalishni tanlang", direction_description: "Attestatsiya yoki TKT — o'zingizga kerakli yo'nalishdan boshlang.", direction_attestation_title: "Attestatsiya testlari", direction_attestation_description: "Ingliz tili fani o'qituvchilari uchun testlar, metodika va demo dars.", direction_tkt_title: "TKT testlari", direction_tkt_description: "Teaching Knowledge Test formatidagi metodika va sinf boshqaruvi testlari.", direction_open: "Ochish",
   about_eyebrow: "Biz haqimizda", about_title: "O'qituvchilar uchun amaliy tayyorlov", about_description: "Habiba teacher — ingliz tili fani o'qituvchilarini attestatsiyaga tayyorlaydigan onlayn platforma. Testlar, metodika, demo dars va portfolio bo'yicha tizimli materiallar.", about_check_1: "Haqiqiy formatdagi mock testlar", about_check_2: "PDF darslik va qo'llanmalar", about_check_3: "Video tushuntirishlar", about_check_4: "Progress va natijalar nazorati", about_card_title: "Bilim — amaliyotda kuch.", about_card_description: "Har bir dars sinfdagi haqiqiy vaziyatlarga moslashtirilgan.",
@@ -133,6 +133,7 @@ Object.assign(SITE_TEXT_DEFAULTS, {
 
 const HOME_SECTION_LABELS = {
   hero: "Bosh sahifa yuqori qismi",
+  news: "Yangiliklar bo'limi",
   "teachers-photo": "O'qituvchilar jamoasi rasmi",
   overview: "Orbita va afzalliklar",
   directions: "Yo'nalish kartalari",
@@ -170,14 +171,39 @@ function homeSectionOrder(customSections = homeCustomSections()) {
   const allKeys = [...Object.keys(HOME_SECTION_LABELS), ...customSections.map((row) => `custom_${row.id}`)];
   let saved = [];
   try { saved = JSON.parse(metaGet("home_section_order_json", "[]")); } catch (e) {}
-  const order = Array.isArray(saved) ? saved.filter((key) => allKeys.includes(key)) : [];
+  const order = Array.isArray(saved) && saved.length ? saved.filter((key) => allKeys.includes(key)) : [...allKeys];
   if (!order.includes("teachers-photo")) {
     const heroIndex = order.indexOf("hero");
     if (heroIndex >= 0) order.splice(heroIndex + 1, 0, "teachers-photo");
     else order.push("teachers-photo");
   }
   for (const key of allKeys) if (!order.includes(key)) order.push(key);
+  const newsIndex = order.indexOf("news");
+  if (newsIndex >= 0) {
+    order.splice(newsIndex, 1);
+    const heroIndex = order.indexOf("hero");
+    order.splice(heroIndex >= 0 ? heroIndex + 1 : 0, 0, "news");
+  }
   return order;
+}
+
+const DEFAULT_NEWS_POSTS = [{
+  id: "attestation-practice-120",
+  title: "120 ta yangi mashq testi joylandi",
+  body: "Reading, Grammar, Vocabulary, Pragmatika, Pedagogik mahorat va Kasbiy standart yo'nalishlarida yangi testlar bilan muntazam mashq qiling.",
+  date: "2026-11-25"
+}];
+
+function newsPosts() {
+  let saved;
+  try { saved = JSON.parse(metaGet("news_posts_json", JSON.stringify(DEFAULT_NEWS_POSTS))); } catch (e) { saved = DEFAULT_NEWS_POSTS; }
+  if (!Array.isArray(saved)) return [];
+  return saved.slice(0, 60).map((post, index) => ({
+    id: String(post.id || `news-${index + 1}`).replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 48),
+    title: String(post.title || "").trim().slice(0, 180),
+    body: String(post.body || "").trim().slice(0, 4000),
+    date: /^\d{4}-\d{2}-\d{2}$/.test(String(post.date || "")) ? String(post.date) : ""
+  })).filter((post) => post.id && post.title && post.body).sort((a, b) => b.date.localeCompare(a.date));
 }
 
 function siteTexts(includeRemoved = false) {
@@ -1305,6 +1331,62 @@ function removeAttestationMockTests() {
 
 removeAttestationMockTests();
 
+function removeLegacyDirections() {
+  const migrationKey = "legacy_cpd_bsb_chsb_removed_2026_11";
+  if (metaGet(migrationKey, "") === "1") return;
+  const courseIds = db.prepare("SELECT id FROM courses WHERE category IN ('cpd','other','bsb-chsb','bsb','chsb')")
+    .all().map((row) => Number(row.id));
+  db.exec("BEGIN IMMEDIATE");
+  try {
+    if (courseIds.length) {
+      const marks = courseIds.map(() => "?").join(",");
+      const lessonIds = db.prepare(`SELECT id FROM lessons WHERE course_id IN (${marks})`).all(...courseIds).map((row) => Number(row.id));
+      if (lessonIds.length) {
+        const lessonMarks = lessonIds.map(() => "?").join(",");
+        const questionIds = db.prepare(`SELECT id FROM questions WHERE lesson_id IN (${lessonMarks})`).all(...lessonIds).map((row) => Number(row.id));
+        const duelIds = db.prepare(`SELECT id FROM duels WHERE lesson_id IN (${lessonMarks})`).all(...lessonIds).map((row) => Number(row.id));
+        const tournamentIds = db.prepare(`SELECT id FROM tournaments WHERE test_id IN (${lessonMarks})`).all(...lessonIds).map((row) => Number(row.id));
+        if (duelIds.length) {
+          const duelMarks = duelIds.map(() => "?").join(",");
+          for (const table of ["duel_questions", "duel_starts", "duel_plays", "duels"]) {
+            db.prepare(`DELETE FROM ${table} WHERE duel_id IN (${duelMarks})`).run(...duelIds);
+          }
+        }
+        if (tournamentIds.length) {
+          const tournamentMarks = tournamentIds.map(() => "?").join(",");
+          const matchIds = db.prepare(`SELECT id FROM tournament_matches WHERE tournament_id IN (${tournamentMarks})`).all(...tournamentIds).map((row) => Number(row.id));
+          if (matchIds.length) {
+            const matchMarks = matchIds.map(() => "?").join(",");
+            db.prepare(`DELETE FROM tournament_starts WHERE match_id IN (${matchMarks})`).run(...matchIds);
+          }
+          for (const table of ["tournament_matches", "tournament_entries", "tournament_questions", "tournaments"]) {
+            db.prepare(`DELETE FROM ${table} WHERE tournament_id IN (${tournamentMarks})`).run(...tournamentIds);
+          }
+        }
+        if (questionIds.length) {
+          const questionMarks = questionIds.map(() => "?").join(",");
+          db.prepare(`DELETE FROM duel_questions WHERE question_id IN (${questionMarks})`).run(...questionIds);
+          db.prepare(`DELETE FROM tournament_questions WHERE question_id IN (${questionMarks})`).run(...questionIds);
+        }
+        for (const table of ["test_attempts", "progress", "purchases", "likes", "video_watch", "lesson_viewers", "test_sections", "materials", "questions"]) {
+          db.prepare(`DELETE FROM ${table} WHERE lesson_id IN (${lessonMarks})`).run(...lessonIds);
+        }
+        db.prepare(`DELETE FROM lessons WHERE id IN (${lessonMarks})`).run(...lessonIds);
+      }
+      db.prepare(`DELETE FROM enrollments WHERE course_id IN (${marks})`).run(...courseIds);
+      db.prepare(`DELETE FROM courses WHERE id IN (${marks})`).run(...courseIds);
+    }
+    metaSet(migrationKey, "1");
+    db.exec("COMMIT");
+    if (courseIds.length) console.log(`[migration] removed ${courseIds.length} CPD/BSB/CHSB courses and their content`);
+  } catch (error) {
+    db.exec("ROLLBACK");
+    throw error;
+  }
+}
+
+removeLegacyDirections();
+
 /* Test guruhi kurslarini umumiy kurslar ro'yxatidan yashirish */
 db.prepare(
   `UPDATE courses SET is_test_group = 1
@@ -1426,20 +1508,15 @@ function adminBulkSaveBar(itemLabel, count) {
 }
 const DIRECTIONS = [
   { id: "attestation", title: "Attestatsiya", description: "Ingliz tili o'qituvchilari uchun toifa attestatsiyasiga tayyorgarlik." },
-  { id: "tkt", title: "TKT", description: "Teaching Knowledge Test modullari va metodika bo'yicha sinovlar." },
-  { id: "cpd", title: "CPD", description: "Uzluksiz kasbiy rivojlanish uchun test va materiallar." },
-  { id: "bsb-chsb", title: "BSB va CHSB", description: "BSB va CHSB bo'yicha sinovlar hamda tayyorlov materiallari." }
+  { id: "tkt", title: "TKT", description: "Teaching Knowledge Test modullari va metodika bo'yicha sinovlar." }
 ];
 const DIRECTION_IDS = DIRECTIONS.map((direction) => direction.id);
-const CAT_LABEL = { attestation: "Attestatsiya", tkt: "TKT", cpd: "CPD", "bsb-chsb": "BSB va CHSB", bsb: "BSB va CHSB", chsb: "BSB va CHSB", other: "CPD" };
+const CAT_LABEL = { attestation: "Attestatsiya", tkt: "TKT" };
 function categoryLabel(category) {
-  if (category === "other" || category === "cpd") return metaGet("other_category_label", "CPD") || "CPD";
   return CAT_LABEL[category] || "Attestatsiya";
 }
 
 function directionCategories(category) {
-  if (category === "cpd") return ["cpd", "other"];
-  if (category === "bsb-chsb") return ["bsb-chsb", "bsb", "chsb"];
   return [category];
 }
 
@@ -1839,6 +1916,7 @@ function navFor(user, admin, publicPage = false) {
   if (admin && !publicPage) {
   return `<nav class="nav">
   <a href="/admin" class="active">Admin</a>
+  <a href="/admin/news">Yangiliklar</a>
   <a href="/admin/students">O'quvchilar</a>
   <a href="/admin/site-settings">Sayt sozlamalari</a>
   <a href="/leaderboard">Reyting</a>
@@ -1848,6 +1926,7 @@ function navFor(user, admin, publicPage = false) {
   }
 
   const links = `
+  <a href="/news">Yangiliklar</a>
   ${siteButtonVisible("nav_home") && String(copy.nav_home || "").trim() ? `<a href="/">${h(copy.nav_home)}</a>` : ""}
   ${siteButtonVisible("nav_attestation") && String(copy.nav_attestation || "").trim() ? `<a href="/attestation">${h(copy.nav_attestation)}</a>` : ""}
   ${siteButtonVisible("nav_tkt") && String(copy.nav_tkt || "").trim() ? `<a href="/tkt">${h(copy.nav_tkt)}</a>` : ""}
@@ -1857,6 +1936,7 @@ function navFor(user, admin, publicPage = false) {
 
   if (user) {
   return `<nav class="nav nav-student">
+  <a href="/news">Yangiliklar</a>
   ${siteButtonVisible("nav_home") && String(copy.nav_home || "").trim() ? `<a href="/">${h(copy.nav_home)}</a>` : ""}
   ${siteButtonVisible("nav_attestation") && String(copy.nav_attestation || "").trim() ? `<a href="/attestation">${h(copy.nav_attestation)}</a>` : ""}
   ${siteButtonVisible("nav_tkt") && String(copy.nav_tkt || "").trim() ? `<a href="/tkt">${h(copy.nav_tkt)}</a>` : ""}
@@ -1882,6 +1962,7 @@ function layout(opts) {
   const isStudentPage = Boolean(user) && !admin;
   const isDashboard = body.includes('class="dash-hero"');
   const publicPage = Object.prototype.hasOwnProperty.call(opts, "user");
+  const appInstallGate = !admin && !String(title).startsWith("Admin") && (!user || user.contract_accepted_at) ? `<div class="install-gate" id="appInstallGate" hidden role="dialog" aria-modal="true" aria-labelledby="appInstallTitle"><div class="install-gate-card"><span class="eyebrow">HABIBA TEACHER ILOVASI</span><h2 id="appInstallTitle">Ilovani qurilmangizga o'rnating</h2><p>Platformaga tez kirish va testlarni qulay ishlatish uchun Habiba Teacher ilovasini bosh ekranga qo'shing.</p><div class="actions"><button class="btn btn-primary" type="button" data-install-now>Ilovani o'rnatish</button><button class="btn btn-ghost" type="button" data-install-later>Hozircha davom etish</button></div><p class="muted small install-gate-help">iPhone yoki iPad'da Share tugmasini bosib, “Add to Home Screen”ni tanlang.</p></div></div><script>(function(){var gate=document.getElementById('appInstallGate');if(!gate)return;var installPrompt=null;var standalone=window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone;if(standalone)return;try{if(sessionStorage.getItem('ht_install_gate_seen')==='1')return}catch(e){}if('serviceWorker' in navigator)navigator.serviceWorker.register('/service-worker.js?v=26').catch(function(){});window.addEventListener('beforeinstallprompt',function(event){event.preventDefault();installPrompt=event});function close(){gate.hidden=true;document.body.classList.remove('install-gate-open');try{sessionStorage.setItem('ht_install_gate_seen','1')}catch(e){}}gate.hidden=false;document.body.classList.add('install-gate-open');gate.querySelector('[data-install-later]').addEventListener('click',close);gate.querySelector('[data-install-now]').addEventListener('click',async function(){if(installPrompt){var prompt=installPrompt;installPrompt=null;await prompt.prompt();await prompt.userChoice;close();return}window.alert(/iPhone|iPad|iPod/i.test(navigator.userAgent)?"Share tugmasini bosing va 'Add to Home Screen'ni tanlang.":"Brauzer menyusidan 'Ilovani o'rnatish' yoki 'Bosh ekranga qo'shish'ni tanlang.");close()})})();</script>` : "";
   const seo = opts.seo || {};
   const description = seo.description || "Habiba teacher — O'zbekistondagi ingliz tili o'qituvchilari uchun attestatsiya testlari, TKT tayyorgarligi, metodika va onlayn kurslar.";
   const canonical = seo.path ? `https://habibateacher.uz${seo.path}` : "";
@@ -1914,7 +1995,7 @@ ${seoTags}
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%2312b5a6'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='18' font-weight='bold' text-anchor='middle' fill='%2303211d'%3EH%3C/text%3E%3C/svg%3E">
 <script async src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>try{document.documentElement.dataset.theme=localStorage.getItem('ht_theme')||'dark';}catch(e){document.documentElement.dataset.theme='dark';}</script>
-<link rel="stylesheet" href="/assets/platform.css?v=20261124home2">
+<link rel="stylesheet" href="/assets/platform.css?v=20261125news1">
 </head>
 <body${admin && !publicPage ? ` class="admin-page"` : isStudentPage ? ` class="student-page${isDashboard ? " is-dashboard" : ""}"` : ""}>
 <header class="topbar">
@@ -1947,9 +2028,9 @@ ${seoTags}
   <nav class="mobile-links">
   ${
   admin && !publicPage
-  ? `<a href="/admin">Admin</a><a href="/admin/students">O'quvchilar</a><a href="/admin/site-settings">Sayt sozlamalari</a><a href="/leaderboard">Reyting</a><a href="/">Saytni ko'rish</a>
+  ? `<a href="/admin">Admin</a><a href="/admin/news">Yangiliklar</a><a href="/admin/students">O'quvchilar</a><a href="/admin/site-settings">Sayt sozlamalari</a><a href="/leaderboard">Reyting</a><a href="/">Saytni ko'rish</a>
   <form method="post" action="/admin/logout"><button class="mobile-link-btn" type="submit">Chiqish</button></form>`
-   : `${siteButtonVisible("nav_home") && String(copy.nav_home || "").trim() ? `<a href="/">${h(copy.nav_home)}</a>` : ""}
+   : `<a href="/news">Yangiliklar</a>${siteButtonVisible("nav_home") && String(copy.nav_home || "").trim() ? `<a href="/">${h(copy.nav_home)}</a>` : ""}
   ${siteButtonVisible("nav_attestation") && String(copy.nav_attestation || "").trim() ? `<a href="/attestation">${h(copy.nav_attestation)}</a>` : ""}
   ${siteButtonVisible("nav_tkt") && String(copy.nav_tkt || "").trim() ? `<a href="/tkt">${h(copy.nav_tkt)}</a>` : ""}
   ${siteButtonVisible("nav_duel") && String(copy.nav_duel || "").trim() ? `<a href="/duel">${h(copy.nav_duel)}</a>` : ""}
@@ -1991,6 +2072,7 @@ ${body}
   <p class="footer-donation-note">Ustozlarimizga ko‘mak bo‘lsin deya, ushbu materiallar Habiba Mo'minjonovna tomonidan taqdim etildi.</p>
   </div>
   <nav class="footer-links">
+  <a href="/news">Yangiliklar</a>
   ${siteButtonVisible("nav_home") && String(copy.nav_home || "").trim() ? `<a href="/">${h(copy.nav_home)}</a>` : ""}
   ${siteButtonVisible("footer_directions") ? `<a href="/#directions">Yo'nalishlar</a>` : ""}
   ${siteButtonVisible("nav_attestation") && String(copy.nav_attestation || "").trim() ? `<a href="/attestation">${h(copy.nav_attestation)}</a>` : ""}
@@ -2031,6 +2113,7 @@ c.addEventListener('change', function () { b.disabled = !c.checked; });
 </script>`
 : ""
 }
+${appInstallGate}
 <script>
 (function () {
   document.querySelectorAll('input[data-phone]').forEach(function (input) {
@@ -2200,7 +2283,7 @@ c.addEventListener('change', function () { b.disabled = !c.checked; });
 })();
 </script>
 <script>
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=25').then(function (registration) { registration.update().catch(function () {}); }).catch(function () {});
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=26').then(function (registration) { registration.update().catch(function () {}); }).catch(function () {});
 document.querySelectorAll('[data-app-refresh]').forEach(function (button) {
   button.addEventListener('click', async function () {
     if (button.disabled) return;
@@ -2362,7 +2445,7 @@ function testOwned(userId, lessonId) {
 
 function moduleHref(lesson) {
   const course = db.prepare("SELECT category FROM courses WHERE id = ?").get(lesson.course_id);
-  const category = course && course.category === "other" ? "cpd" : course && ["bsb", "chsb"].includes(course.category) ? "bsb-chsb" : course && DIRECTION_IDS.includes(course.category) ? course.category : "attestation";
+  const category = course && DIRECTION_IDS.includes(course.category) ? course.category : "attestation";
   return `/${category}`;
 }
 
@@ -4416,7 +4499,7 @@ function dashboardPage(user) {
           uz: { installed: ${JSON.stringify(copy.dashboard_install_ready)}, help: ${JSON.stringify(copy.dashboard_install_help)} },
           en: { installed: "The app is already installed.", help: "Open your browser menu and choose Install app or Add to Home screen." }
         };
-        if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=25').catch(function () {});
+        if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=26').catch(function () {});
         window.addEventListener('beforeinstallprompt', function (event) {
           event.preventDefault();
           installPrompt = event;
@@ -4757,12 +4840,12 @@ function testDocument({ title, body }) {  return `<!DOCTYPE html>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%231e40af'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='18' font-weight='bold' text-anchor='middle' fill='white'%3EH%3C/text%3E%3C/svg%3E">
 <script async src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>try{document.documentElement.dataset.theme=localStorage.getItem('ht_theme')||'dark';}catch(e){document.documentElement.dataset.theme='dark';}</script>
-<link rel="stylesheet" href="/assets/platform.css?v=20261124home2">
+<link rel="stylesheet" href="/assets/platform.css?v=20261125news1">
 </head>
 <body class="test-body student-page">
 ${body}
 <footer class="test-author-footer">Ustozlarimizga ko‘mak bo‘lsin deya, ushbu materiallar Habiba Mo'minjonovna tomonidan taqdim etildi.</footer>
-<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=25').then(function (registration) { registration.update().catch(function () {}); }).catch(function () {});</script>
+<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js?v=26').then(function (registration) { registration.update().catch(function () {}); }).catch(function () {});</script>
 </body>
 </html>`;
 }
@@ -5179,7 +5262,7 @@ const server = http.createServer(async (req, res) => {
     return;
   }
   if (method === "GET" && p === "/sitemap.xml") {
-    const urls = ["/", ...DIRECTION_IDS.map((id) => `/${id}`), "/plans"];
+    const urls = ["/", "/news", ...DIRECTION_IDS.map((id) => `/${id}`), "/plans"];
     const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls.map((route) => `<url><loc>https://habibateacher.uz${route}</loc></url>`).join("")}</urlset>`;
     res.writeHead(200, { "Content-Type": "application/xml; charset=utf-8", "Cache-Control": "public, max-age=3600" });
     res.end(xml);
@@ -5480,6 +5563,31 @@ const server = http.createServer(async (req, res) => {
   const fields = form.fields;
   const files = form.files;
 
+  if (p === "/admin/news/save" && method === "POST") {
+    if (!admin) return redirect(res, "/admin/login");
+    const posts = newsPosts();
+    const id = String(fields.id || "").replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 48);
+    const post = {
+      id: id || `news-${randomBytes(8).toString("hex")}`,
+      title: String(fields.title || "").trim().slice(0, 180),
+      body: String(fields.body || "").trim().slice(0, 4000),
+      date: /^\d{4}-\d{2}-\d{2}$/.test(String(fields.date || "")) ? String(fields.date) : new Date().toISOString().slice(0, 10)
+    };
+    if (!post.title || !post.body) return redirect(res, "/admin/news?err=required");
+    const index = posts.findIndex((item) => item.id === id);
+    if (index >= 0) posts[index] = post;
+    else posts.unshift(post);
+    metaSet("news_posts_json", JSON.stringify(posts.slice(0, 60)));
+    return redirect(res, "/admin/news?saved=1");
+  }
+
+  const deleteNewsMatch = p.match(/^\/admin\/news\/delete\/([a-zA-Z0-9_-]{1,48})$/);
+  if (deleteNewsMatch && method === "POST") {
+    if (!admin) return redirect(res, "/admin/login");
+    metaSet("news_posts_json", JSON.stringify(newsPosts().filter((post) => post.id !== deleteNewsMatch[1])));
+    return redirect(res, "/admin/news?deleted=1");
+  }
+
   if (p === "/admin/video-upload/start" && method === "POST") {
     if (!contentManager) return json(res, 401, { error: "Tizimga kiring." });
     const fileName = path.basename(String(fields.name || "video.mp4")).slice(0, 180);
@@ -5524,6 +5632,14 @@ const server = http.createServer(async (req, res) => {
     return json(res, 200, { offset: session.offset, complete: session.offset === session.size });
   }
 
+  if (p === "/news" && method === "GET") {
+    const posts = newsPosts();
+    const postCards = posts.length ? posts.map((post) => `<article class="card news-post"><time datetime="${h(post.date)}">${h(post.date || "Yangi")}</time><h2>${h(post.title)}</h2><p>${nl2br(h(post.body))}</p></article>`).join("") : `<div class="card empty"><h2>Hozircha yangiliklar yo'q</h2><p class="muted">Yangi xabarlar shu bo'limda e'lon qilinadi.</p></div>`;
+    const body = `<section class="news-page"><div class="page-head"><div><span class="eyebrow">PLATFORMADAN XABARLAR</span><h1>Yangiliklar</h1><p class="lead">Platformadagi yangilanish va e'lonlarni kuzatib boring.</p></div></div><div class="news-list">${postCards}</div></section>`;
+    send(res, 200, layout({ title: "Yangiliklar", body, user, admin, seo: { path: "/news", title: "Yangiliklar | Habiba Teacher", description: "Habiba Teacher platformasidagi yangilanishlar, testlar va e'lonlar." } }));
+    return;
+  }
+
   /* --------------------------------------------------------------- home */
   if (p === "/" && method === "GET") {
   const stats = db
@@ -5535,19 +5651,17 @@ const server = http.createServer(async (req, res) => {
   (SELECT COUNT(*) FROM lessons l JOIN courses c ON c.id = l.course_id WHERE l.type = 'test' AND c.is_published = 1) AS tests,
   (SELECT COUNT(*) FROM lessons l JOIN courses c ON c.id = l.course_id WHERE l.type = 'test' AND c.is_published = 1 AND c.category = 'attestation') AS tests_attestation,
   (SELECT COUNT(*) FROM lessons l JOIN courses c ON c.id = l.course_id WHERE l.type = 'test' AND c.is_published = 1 AND c.category = 'tkt') AS tests_tkt,
-  (SELECT COUNT(*) FROM lessons l JOIN courses c ON c.id = l.course_id WHERE l.type = 'test' AND c.is_published = 1 AND c.category IN ('cpd', 'other')) AS tests_cpd,
-  (SELECT COUNT(*) FROM lessons l JOIN courses c ON c.id = l.course_id WHERE l.type = 'test' AND c.is_published = 1 AND c.category IN ('bsb-chsb','bsb','chsb')) AS tests_bsb_chsb,
   (SELECT COUNT(*) FROM progress) AS done`
   )
 .get();
   stats.courses = DIRECTIONS.length;
   const directionCourseRows = db.prepare(`SELECT c.category, COUNT(DISTINCT c.id) AS courses, COUNT(l.id) AS tests
     FROM courses c LEFT JOIN lessons l ON l.course_id = c.id AND l.type = 'test'
-    WHERE c.is_published = 1 AND c.category IN ('attestation','tkt','cpd','other','bsb-chsb','bsb','chsb')
+    WHERE c.is_published = 1 AND c.category IN ('attestation','tkt')
     GROUP BY c.category`).all();
   const directionStats = Object.fromEntries(DIRECTIONS.map((direction) => [direction.id, { courses: 0, tests: 0 }]));
   for (const row of directionCourseRows) {
-    const directionId = row.category === "other" ? "cpd" : ["bsb", "chsb"].includes(row.category) ? "bsb-chsb" : row.category;
+    const directionId = row.category;
     if (directionStats[directionId]) {
       directionStats[directionId].courses += Number(row.courses) || 0;
       directionStats[directionId].tests += Number(row.tests) || 0;
@@ -5575,6 +5689,8 @@ const server = http.createServer(async (req, res) => {
   const homeSections = homeSectionVisibility();
   const customHomeSections = homeCustomSections();
   const savedHomeSectionOrder = homeSectionOrder(customHomeSections);
+  const currentNews = newsPosts();
+  const latestNewsCards = currentNews.slice(0, 3).map((post) => `<article class="home-news-card"><time datetime="${h(post.date)}">${h(post.date || "Yangi")}</time><h3>${h(post.title)}</h3><p>${h(post.body)}</p></article>`).join("");
 
   const planCards = getPlans().map((plan, index) => `<article class="home-plan-card${index === 1 ? " featured" : ""}">
     <span class="home-kicker">${index === 0 ? "BOSHLASH" : index === 1 ? "MASHHUR TANLOV" : "UZLUKSIZ RIVOJLANISH"}</span>
@@ -5621,6 +5737,13 @@ const server = http.createServer(async (req, res) => {
     <img src="/img/teachers-group.jpg" alt="O'zbekistonlik o'qituvchilar British Council treningida">
   </section>
 
+  <section class="section home-news" data-home-section="news">
+    <div class="wrap">
+      <div class="section-head"><div><span class="eyebrow">PLATFORMADAGI SO'NGGI XABARLAR</span><h2>Yangiliklar</h2></div><a class="btn btn-ghost" href="/news">Barcha yangiliklar</a></div>
+      <div class="home-news-grid">${latestNewsCards || `<p class="muted">Hozircha yangiliklar yo'q.</p>`}</div>
+    </div>
+  </section>
+
   <section class="section home-overview" id="program" data-home-section="overview">
     <div class="wrap home-overview-grid">
       <div class="home-orbit-card" aria-label="O'rganishdan natijagacha bo'lgan bosqichlar">
@@ -5664,8 +5787,7 @@ const server = http.createServer(async (req, res) => {
   ${String(copy.stat_lessons || "").trim() ? `<div class="stat"><b>${stats.lessons}</b><span>${h(copy.stat_lessons)}</span></div>` : ""}
   ${String(copy.stat_test_attestation || "").trim() ? `<div class="stat"><b>${stats.tests_attestation}</b><span>${h(copy.stat_test_attestation)}</span></div>` : ""}
   ${String(copy.stat_test_tkt || "").trim() ? `<div class="stat"><b>${stats.tests_tkt}</b><span>${h(copy.stat_test_tkt)}</span></div>` : ""}
-  ${String(copy.stat_test_cpd || "").trim() ? `<div class="stat"><b>${stats.tests_cpd}</b><span>${h(copy.stat_test_cpd)}</span></div>` : ""}
-  <div class="stat"><b>${stats.tests_bsb_chsb}</b><span>BSB va CHSB testlari</span></div>
+  <a class="stat home-news-stat" href="/news"><b>${currentNews.length}</b><span>Yangiliklar</span></a>
   </div>
   </section>
 
@@ -6367,9 +6489,9 @@ const server = http.createServer(async (req, res) => {
   }
 
   /* ---------------------------------------------------------- categories */
-  if (["/attestation", ...DIRECTION_IDS.filter((id) => id !== "attestation").map((id) => `/${id}`), "/bsb", "/chsb"].includes(p) && method === "GET") {
+  if (["/attestation", "/tkt"].includes(p) && method === "GET") {
   const requestedCategory = p.slice(1);
-  const cat = ["bsb", "chsb"].includes(requestedCategory) ? "bsb-chsb" : requestedCategory;
+  const cat = requestedCategory;
   const direction = DIRECTIONS.find((item) => item.id === cat) || DIRECTIONS[0];
   const directionTitle = categoryLabel(cat);
   const meta = cat === "attestation"
@@ -8147,10 +8269,19 @@ const server = http.createServer(async (req, res) => {
     const body = `<div class="page-head"><div><h1>Muallif paneli</h1><p class="muted">Kurslar, darslar va test materiallarini boshqaring.</p></div></div>
       <div class="grid three">${courseRows}</div>
       <div class="card" style="margin-top:22px"><h2>Yangi kurs</h2><form method="post" action="/admin/course" class="form">
-      <div class="field"><label>Yo'nalish</label><select name="category"><option value="attestation">Attestatsiya</option><option value="tkt">TKT</option><option value="cpd">${h(categoryLabel("cpd"))}</option><option value="bsb-chsb">BSB va CHSB</option></select></div>
+      <div class="field"><label>Yo'nalish</label><select name="category"><option value="attestation">Attestatsiya</option><option value="tkt">TKT</option></select></div>
       <div class="field"><label>Kurs nomi</label><input name="title" required maxlength="160"></div><div class="field"><label>Tavsif</label><textarea name="description" rows="2"></textarea></div>
       <button class="btn btn-primary" type="submit">Kurs yaratish</button></form></div>`;
     send(res, 200, layout({ title: "Muallif paneli", body, user, admin }));
+    return;
+  }
+
+  if (p === "/admin/news" && method === "GET") {
+    if (!admin) return redirect(res, "/admin/login");
+    const posts = newsPosts();
+    const postForms = posts.map((post) => `<article class="card admin-news-editor"><form method="post" action="/admin/news/save" class="form"><input type="hidden" name="id" value="${h(post.id)}"><h2>${h(post.title)}</h2><div class="field"><label>Sana</label><input type="date" name="date" value="${h(post.date)}"></div><div class="field"><label>Sarlavha</label><input name="title" maxlength="180" required value="${h(post.title)}"></div><div class="field"><label>Matn</label><textarea name="body" maxlength="4000" rows="4" required>${h(post.body)}</textarea></div><div class="actions"><button class="btn btn-primary" type="submit">Yangilikni saqlash</button></div></form><form method="post" action="/admin/news/delete/${h(post.id)}" onsubmit="return confirm('Bu yangilik o\'chirilsinmi?')"><button class="btn btn-danger btn-sm" type="submit">O'chirish</button></form></article>`).join("");
+    const body = `<a class="back" href="/admin">Admin panel</a><div class="page-head"><div><h1>Yangiliklar bo'limi</h1><p class="muted">Bu xabarlar barcha tashrif buyuruvchilarga ko'rinadi. Bosh sahifadagi hisoblagich avtomatik yangilanadi.</p></div><a class="btn btn-ghost" href="/news">Ommaviy sahifa</a></div>${url.searchParams.get("saved") === "1" ? alertBox("Yangilik saqlandi.", "success") : ""}${url.searchParams.get("deleted") === "1" ? alertBox("Yangilik o'chirildi.", "success") : ""}${url.searchParams.get("err") === "required" ? alertBox("Sarlavha va matnni to'ldiring.", "error") : ""}<section class="card"><h2>Yangi xabar</h2><form method="post" action="/admin/news/save" class="form"><div class="field"><label>Sana</label><input type="date" name="date" value="${new Date().toISOString().slice(0, 10)}"></div><div class="field"><label>Sarlavha</label><input name="title" maxlength="180" required></div><div class="field"><label>Matn</label><textarea name="body" maxlength="4000" rows="4" required></textarea></div><button class="btn btn-primary" type="submit">Yangilikni e'lon qilish</button></form></section><div class="news-list admin-news-list">${postForms || `<p class="muted">Hozircha yangiliklar yo'q.</p>`}</div>`;
+    send(res, 200, layout({ title: "Yangiliklar boshqaruvi", body, admin }));
     return;
   }
 
@@ -8202,15 +8333,6 @@ const server = http.createServer(async (req, res) => {
   <div class="stat"><b>${stats.done}</b><span>Tugatilgan darslar</span></div>
   </div>
 
-  ${url.searchParams.get("category_saved") === "1" ? alertBox("Yo'nalish nomi saqlandi.", "success") : ""}
-  <div class="card">
-  <h2>Yo'nalish nomini boshqarish</h2>
-  <form method="post" action="/admin/category-label" class="form">
-  <div class="field"><label>CPD yo'nalishining ko'rinadigan nomi</label><input name="label" value="${h(categoryLabel("cpd"))}" maxlength="40" required placeholder="CPD"></div>
-  <button class="btn btn-primary" type="submit">Nomni saqlash</button>
-  </form>
-  </div>
-
   <div class="card">
   <h2>Kurslar</h2>
   <div class="table-wrap">
@@ -8229,8 +8351,6 @@ const server = http.createServer(async (req, res) => {
   <select name="category">
   <option value="attestation">Attestatsiya</option>
   <option value="tkt">TKT</option>
-  <option value="cpd">${h(categoryLabel("cpd"))}</option>
-  <option value="bsb-chsb">BSB va CHSB</option>
   </select>
   </div>
   <div class="field"><label>Kurs nomi</label><input name="title" required placeholder="Masalan: Atestatsiya testlariga tayyorlov"></div>
@@ -8251,7 +8371,7 @@ const server = http.createServer(async (req, res) => {
     const groups = [
       { id: "nav", title: "Menyu va sayt nomi", fields: [["site_name", "Sayt nomi"], ["nav_home", "Bosh sahifa"], ["nav_attestation", "Attestatsiya"], ["nav_tkt", "TKT"], ["nav_duel", "Duel"], ["nav_plans", "Tariflar"], ["nav_leaderboard", "Reyting"]] },
       { id: "hero", title: "Bosh sahifa — asosiy qism", fields: [["hero_eyebrow", "Yuqori kichik yozuv"], ["hero_title", "Sarlavhaning birinchi qismi"], ["hero_accent", "Rangli sarlavha qismi"], ["hero_title_end", "Sarlavhaning oxirgi qismi"], ["hero_description", "Tavsif"], ["hero_primary", "Asosiy tugma"], ["hero_primary_logged", "Kirish qilganlar tugmasi"], ["hero_secondary", "Yo'nalishni tanlash tugmasi"], ["hero_trust_1", "Afzallik 1"], ["hero_trust_2", "Afzallik 2"], ["hero_trust_3", "Afzallik 3"], ["hero_note", "Yangilik xabari"], ["hero_image_caption", "Rasm osti yozuvi"], ["hero_float_mark", "TKT belgisi"], ["hero_float_title", "TKT kartasi sarlavhasi"], ["hero_float_description", "TKT kartasi tavsifi"]] },
-      { id: "overview", title: "Hisoblagich, kirish qismi va orbitalar", fields: [["stat_directions", "Yo'nalishlar hisoblagichi"], ["stat_lessons", "Video darslar hisoblagichi"], ["stat_tests", "Barcha testlar hisoblagichi"], ["stat_test_attestation", "Attestatsiya testlari nomi"], ["stat_test_tkt", "TKT testlari nomi"], ["stat_test_cpd", "CPD testlari nomi"], ["stat_students", "O'quvchilar hisoblagichi"], ["stat_note_title", "Hisoblagich yonidagi sarlavha"], ["stat_note_description", "Hisoblagich yonidagi izoh"], ["orbit_kicker", "Orbital karta yuqori yozuvi"], ["orbit_test", "Orbital test yorlig'i"], ["orbit_lesson", "Orbital dars yorlig'i"], ["orbit_result", "Orbital natija yorlig'i"], ["orbit_tag_1", "Orbital teg 1"], ["orbit_tag_2", "Orbital teg 2"], ["orbit_tag_3", "Orbital teg 3"], ["orbit_tag_4", "Orbital teg 4"], ["overview_eyebrow", "Kirish bo'limi kichik sarlavhasi"], ["overview_title", "Kirish bo'limi sarlavhasi"], ["overview_accent", "Rangli sarlavha qismi"], ["overview_description", "Kirish bo'limi tavsifi"], ["pillar_1_title", "Afzallik 1 sarlavhasi"], ["pillar_1_description", "Afzallik 1 tavsifi"], ["pillar_2_title", "Afzallik 2 sarlavhasi"], ["pillar_2_description", "Afzallik 2 tavsifi"], ["pillar_3_title", "Afzallik 3 sarlavhasi"], ["pillar_3_description", "Afzallik 3 tavsifi"]] },
+      { id: "overview", title: "Hisoblagich, kirish qismi va orbitalar", fields: [["stat_directions", "Yo'nalishlar hisoblagichi"], ["stat_lessons", "Video darslar hisoblagichi"], ["stat_tests", "Barcha testlar hisoblagichi"], ["stat_test_attestation", "Attestatsiya testlari nomi"], ["stat_test_tkt", "TKT testlari nomi"], ["stat_students", "O'quvchilar hisoblagichi"], ["stat_note_title", "Hisoblagich yonidagi sarlavha"], ["stat_note_description", "Hisoblagich yonidagi izoh"], ["orbit_kicker", "Orbital karta yuqori yozuvi"], ["orbit_test", "Orbital test yorlig'i"], ["orbit_lesson", "Orbital dars yorlig'i"], ["orbit_result", "Orbital natija yorlig'i"], ["orbit_tag_1", "Orbital teg 1"], ["orbit_tag_2", "Orbital teg 2"], ["orbit_tag_3", "Orbital teg 3"], ["orbit_tag_4", "Orbital teg 4"], ["overview_eyebrow", "Kirish bo'limi kichik sarlavhasi"], ["overview_title", "Kirish bo'limi sarlavhasi"], ["overview_accent", "Rangli sarlavha qismi"], ["overview_description", "Kirish bo'limi tavsifi"], ["pillar_1_title", "Afzallik 1 sarlavhasi"], ["pillar_1_description", "Afzallik 1 tavsifi"], ["pillar_2_title", "Afzallik 2 sarlavhasi"], ["pillar_2_description", "Afzallik 2 tavsifi"], ["pillar_3_title", "Afzallik 3 sarlavhasi"], ["pillar_3_description", "Afzallik 3 tavsifi"]] },
       { id: "directions", title: "Yo'nalishlar", fields: [["direction_heading", "Yo'nalishlar sarlavhasi"], ["direction_description", "Yo'nalishlar tavsifi"], ["direction_attestation_title", "Attestatsiya kartasi sarlavhasi"], ["direction_attestation_description", "Attestatsiya kartasi tavsifi"], ["direction_tkt_title", "TKT kartasi sarlavhasi"], ["direction_tkt_description", "TKT kartasi tavsifi"], ["direction_open", "Karta tugmasi"]] },
       { id: "features", title: "Biz haqimizda va imkoniyatlar", fields: [["about_eyebrow", "Biz haqimizda kichik sarlavha"], ["about_title", "Biz haqimizda sarlavhasi"], ["about_description", "Biz haqimizda tavsifi"], ["about_check_1", "Afzallik ro'yxati 1"], ["about_check_2", "Afzallik ro'yxati 2"], ["about_check_3", "Afzallik ro'yxati 3"], ["about_check_4", "Afzallik ro'yxati 4"], ["about_card_title", "Yon kartadagi sarlavha"], ["about_card_description", "Yon kartadagi izoh"], ["feature_eyebrow", "Imkoniyatlar kichik sarlavhasi"], ["feature_title", "Imkoniyatlar sarlavhasi"], ["feature_pdf_title", "PDF karta sarlavhasi"], ["feature_pdf_description", "PDF karta tavsifi"], ["feature_video_title", "Video karta sarlavhasi"], ["feature_video_description", "Video karta tavsifi"], ["feature_test_title", "Test karta sarlavhasi"], ["feature_test_description", "Test karta tavsifi"]] },
       { id: "program", title: "O'quv dasturi", fields: [["program_eyebrow", "Bo'lim kichik sarlavhasi"], ["program_title", "Bo'lim sarlavhasi"], ["program_accent", "Rangli sarlavha qismi"], ["program_description", "Bo'lim tavsifi"], ["program_direction_suffix", "Yo'nalishlar soni qo'shimchasi"], ["program_lesson_suffix", "Darslar soni qo'shimchasi"], ["program_attestation_tag", "1-bosqich yorlig'i"], ["program_tkt_tag", "2-bosqich yorlig'i"], ["program_practice_tag", "3-bosqich yorlig'i"], ["program_step_1_title", "Bosqich 1 sarlavhasi"], ["program_step_1_description", "Bosqich 1 tavsifi"], ["program_step_2_title", "Bosqich 2 sarlavhasi"], ["program_step_2_description", "Bosqich 2 tavsifi"], ["program_step_3_title", "Bosqich 3 sarlavhasi"], ["program_step_3_description", "Bosqich 3 tavsifi"]] },
@@ -8528,19 +8648,12 @@ const server = http.createServer(async (req, res) => {
   return;
   }
 
-  if (p === "/admin/category-label" && method === "POST") {
-  if (!admin) return redirect(res, "/admin/login");
-  const label = String(fields.label || "").trim().replace(/\s+/g, " ").slice(0, 40);
-  if (!label) return redirect(res, "/admin");
-  metaSet("other_category_label", label);
-  return redirect(res, "/admin?category_saved=1");
-  }
 
   if (p === "/admin/course" && method === "POST") {
   if (!contentManager) return redirect(res, "/admin/login");
   const title = String(fields.title || "").trim();
   const description = String(fields.description || "").trim();
-  const category = [...DIRECTION_IDS, "other", "bsb", "chsb"].includes(fields.category)
+  const category = DIRECTION_IDS.includes(fields.category)
   ? fields.category
 : "attestation";
   if (!title) return redirect(res, "/admin");
@@ -8588,7 +8701,7 @@ const server = http.createServer(async (req, res) => {
   if (!adminCourseMatch[2] && method === "POST") {
   const title = String(fields.title || "").trim();
   const description = String(fields.description || "").trim();
-  const category = [...DIRECTION_IDS, "other", "bsb", "chsb"].includes(fields.category)
+  const category = DIRECTION_IDS.includes(fields.category)
   ? fields.category
 : course.category || "attestation";
   if (title) {
@@ -8686,12 +8799,10 @@ const server = http.createServer(async (req, res) => {
   ${[
    ["attestation", "Attestatsiya"],
    ["tkt", "TKT"],
-   ["cpd", categoryLabel("cpd")],
-   ["bsb-chsb", "BSB va CHSB"]
   ]
 .map(
   ([value, label]) =>
-   `<option value="${value}"${((course.category === "other" ? "cpd" : ["bsb", "chsb"].includes(course.category) ? "bsb-chsb" : course.category) || "attestation") === value ? " selected": ""}>${h(label)}</option>`
+   `<option value="${value}"${(course.category || "attestation") === value ? " selected": ""}>${h(label)}</option>`
   )
 .join("")}
   </select>
