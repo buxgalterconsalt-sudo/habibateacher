@@ -2704,6 +2704,12 @@ function duelPlayerLabel(userId, fallback = "O'quvchi") {
   return `${h(firstName)}${username ? ` (@${h(username)})` : ""}`;
 }
 
+function telegramPublicName(name, username = "", fallback = "O'quvchi") {
+  const firstName = String(name || fallback).trim().split(/\s+/)[0] || fallback;
+  const cleanUsername = String(username || "").replace(/^@+/, "").trim();
+  return `${h(firstName)}${cleanUsername ? ` (@${h(cleanUsername)})` : ""}`;
+}
+
 async function sendUserMessage(userId, text, path) {
   const user = db.prepare("SELECT telegram_id FROM users WHERE id = ?").get(userId);
   if (!user || !user.telegram_id) return false;
@@ -3952,9 +3958,9 @@ function tournamentPairingLines(tournamentId, round) {
   if (!rows.length) return "Juftliklar hali tayyor emas.";
   return rows
 .map((m, i) => {
-  const a = m.p1name ? `${h(String(m.p1name).trim().split(/\s+/)[0])}${m.p1username ? ` (@${h(m.p1username)})` : ""}`: " ";
-  const b = m.p2name ? `${h(String(m.p2name).trim().split(/\s+/)[0])}${m.p2username ? ` (@${h(m.p2username)})` : ""}`: "raqib yo'q";
-  return `${i + 1}. ${a} vs ${b}${m.winner ? " S&": ""}`;
+  const a = m.p1name ? telegramPublicName(m.p1name, m.p1username) : " ";
+  const b = m.p2name ? telegramPublicName(m.p2name, m.p2username) : "raqib yo'q";
+  return `${i + 1}. ${a} vs ${b}`;
   })
 .join("\n");
 }
@@ -3963,10 +3969,10 @@ async function sendTournamentSchedule(tournament) {
   const entries = tournamentEntries(tournament.id);
   const times = bracketRoundTimes(tournament.size);
   const schedule = times.map((time, i) => `${time}   ${tournamentRoundName(tournament.size, i + 1)}`).join("\n");
-  const text = `x  <b>Bugungi duel kubogi</b>
-x & ${h(tournament.day)}
-x} Aralash test · ${TOURNAMENT_QUESTIONS} savol
-x  ${entries.length} ishtirokchi
+  const text = `<b>Bugungi duel kubogi</b>
+${h(tournament.day)}
+Aralash test · ${TOURNAMENT_QUESTIONS} savol
+${entries.length} ishtirokchi
 
  <b>Kun jadvali</b>
 09:00   start
@@ -3974,7 +3980,7 @@ ${schedule}
 17:15   g'olib
 18:00   yakun
 
-a  <b>${tournamentRoundName(tournament.size, 1)} final juftliklari</b>
+<b>${tournamentRoundName(tournament.size, 1)} juftliklari</b>
 ${tournamentPairingLines(tournament.id, 1)}
 
 Duelni ochish: /duel/tournament`;
@@ -3986,8 +3992,8 @@ Duelni ochish: /duel/tournament`;
 
 async function sendTournamentRound(tournament, round) {
   const label = tournamentRoundName(tournament.size, round);
-  const text = `a  <b>${label} boshlandi</b>
-x & ${h(tournament.day)}
+  const text = `<b>${label} boshlandi</b>
+${h(tournament.day)}
 
 ${tournamentPairingLines(tournament.id, round)}
 
@@ -4004,13 +4010,12 @@ async function sendTournamentWinner(tournament) {
 .prepare("SELECT * FROM tournament_matches WHERE tournament_id = ? AND round = ?")
 .get(tournament.id, rounds);
   if (!final || !final.winner) {
-  await notifyTelegram(`x  <b>Bugungi duel kubogi</b>\nFinal hali yakunlanmagan. 18:00 gacha davom etadi.`);
+  await notifyTelegram(`<b>Bugungi duel kubogi</b>\nFinal hali yakunlanmagan. 18:00 gacha davom etadi.`);
   return;
   }
   const winner = db.prepare("SELECT name, telegram_username FROM users WHERE id = ?").get(final.winner);
-  await notifyTelegram(`x  <b>Bugungi duel kubogi g'olibi   ${h(String(winner?.name || "?").trim().split(/\s+/)[0])}${winner?.telegram_username ? ` (@${h(winner.telegram_username)})` : ""}!</b>
-x ~ ${winner?.telegram_username ? `@${h(winner.telegram_username)}` : ""}
-x & ${h(tournament.day)}
+  await notifyTelegram(`<b>Bugungi duel kubogi g'olibi: ${telegramPublicName(winner?.name, winner?.telegram_username, "?")}!</b>
+${h(tournament.day)}
 
 Tabriklaymiz! Keyingi kubok   keyingi ish kuni, juftlar 09:00 da, duellar 10:00 dan.`);
 }
@@ -4054,7 +4059,7 @@ async function tournamentTick() {
   } else if (metaGet(flag("need")) !== "1") {
   metaSet(flag("need"), "1");
   await notifyTelegram(
-  `x  <b>Bugungi duel kubogi${label}</b>\nTurnir 09:00 da boshlanishi kerak edi, lekin hozircha ${entries.length} ishtirokchi bor.\nKamida 2 ishtirokchi kerak. /duel/tournament`
+  `<b>Bugungi duel kubogi${label}</b>\nTurnir 09:00 da boshlanishi kerak edi, lekin hozircha ${entries.length} ishtirokchi bor.\nKamida 2 ishtirokchi kerak. /duel/tournament`
   );
   }
   }
@@ -4092,15 +4097,13 @@ async function tournamentTick() {
   const winnerId = await closeTournament(tournament);
   metaSet(flag("closed"), "1");
   if (winnerId) {
-  const winner = db.prepare("SELECT name FROM users WHERE id = ?").get(winnerId);
+  const winner = db.prepare("SELECT name, telegram_username FROM users WHERE id = ?").get(winnerId);
   await notifyTelegram(
-  `x  <b>Kunlik duel yakunlandi${label}</b>\nG'olib: <b>${h(
-  winner?.name || "?"
-  )}</b>\n18:00   turnir yopildi.`
+  `<b>Kunlik duel yakunlandi${label}</b>\nG'olib: <b>${telegramPublicName(winner?.name, winner?.telegram_username, "?")}</b>\n18:00 da turnir yopildi.`
   );
   } else {
   await notifyTelegram(
-  `x <b>Kunlik duel yakunlandi${label}</b>\n18:00   turnir yopildi. Bugun g'olib aniqlanmadi.`
+  `<b>Kunlik duel yakunlandi${label}</b>\n18:00 da turnir yopildi. Bugun g'olib aniqlanmadi.`
   );
   }
   }
@@ -4146,14 +4149,14 @@ function activeUserIdsToday(day) {
 function tournamentWinnerToday(day) {
   const final = db
 .prepare(
-  `SELECT m.winner, u.name FROM tournament_matches m
+  `SELECT m.winner, u.name, u.telegram_username FROM tournament_matches m
   JOIN tournaments t ON t.id = m.tournament_id
   LEFT JOIN users u ON u.id = m.winner
   WHERE t.day = ? AND m.winner IS NOT NULL
   ORDER BY t.group_no DESC, m.round DESC LIMIT 1`
   )
 .get(day);
-  return final && final.name ? final.name: "";
+  return final && final.name ? telegramPublicName(final.name, final.telegram_username): "";
 }
 
 async function reminderStep(key, at, handler) {
@@ -4169,7 +4172,7 @@ async function reminderTick() {
   const clock = tashkentClock();
   const day = clock.day;
   const telegramUsers = db
-.prepare("SELECT id, name, telegram_id FROM users WHERE telegram_id IS NOT NULL AND telegram_id <> ''")
+.prepare("SELECT id, name, telegram_id, telegram_username FROM users WHERE telegram_id IS NOT NULL AND telegram_id <> ''")
 .all();
   if (!telegramUsers.length) return;
 
@@ -4186,7 +4189,7 @@ async function reminderTick() {
   if (!list.length) return;
   await send(
   list,
-  (u) => `xR& <b>Assalomu alaykum, ${h(u.name)}!</b>\n\nBugungi bosqich boshlandi va soat <b>18:00</b> gacha davom etadi.\nx  Bugun allaqachon <b>${active.size}</b> kishi qatnashdi.\n\nBosqichni hoziroq boshlang!`,
+  (u) => `<b>Assalomu alaykum, ${telegramPublicName(u.name, u.telegram_username)}!</b>\n\nBugungi bosqich boshlandi va soat <b>18:00</b> gacha davom etadi.\nBugun allaqachon <b>${active.size}</b> kishi qatnashdi.\n\nBosqichni hoziroq boshlang!`,
   "/duel/tournament",
   "Bosqichni boshlash"
   );
@@ -4198,7 +4201,7 @@ async function reminderTick() {
   if (!list.length) return;
   await send(
   list,
-  (u) => `x 9 <b>${h(u.name)}</b>, bugun hali qatnashmadingiz.\n\nBosqich <b>18:00</b> gacha ochiq.\nBugun <b>${active.size}</b> kishi allaqachon bajarib bo'ldi.\n\nVaqtni boy bermang!`,
+  (u) => `<b>${telegramPublicName(u.name, u.telegram_username)}</b>, bugun hali qatnashmadingiz.\n\nBosqich <b>18:00</b> gacha ochiq.\nBugun <b>${active.size}</b> kishi allaqachon qatnashdi.\n\nVaqtni boy bermang!`,
   "/duel/tournament",
   "Bosqichni ochish"
   );
@@ -4210,7 +4213,7 @@ async function reminderTick() {
   if (!list.length) return;
   await send(
   list,
-  (u) => ` <b>${h(u.name)}</b>, bugungi bosqich hali bajarilmagan!\n\nBosqich <b>18:00</b> da yopiladi   atigi <b>1 soat</b> qoldi.\nBugun <b>${active.size}</b> kishi qatnashdi.\n\nHoziroq qo'shiling!`,
+  (u) => `<b>${telegramPublicName(u.name, u.telegram_username)}</b>, bugungi bosqich hali bajarilmagan!\n\nBosqich <b>18:00</b> da yopiladi — atigi <b>1 soat</b> qoldi.\nBugun <b>${active.size}</b> kishi qatnashdi.\n\nHoziroq qo'shiling!`,
   "/duel/tournament",
   "Bosqichni ochish"
   );
@@ -4223,12 +4226,12 @@ async function reminderTick() {
   await send(
   telegramUsers,
   (u) =>
-  `x <b>Kun yakunlandi.</b>\n\nBugun <b>${active.size}</b> kishi qatnashdi.${
-  winner ? `\nx  Kun g'olibi: <b>${h(winner)}</b>`: ""
+  `<b>Kun yakunlandi.</b>\n\nBugun <b>${active.size}</b> kishi qatnashdi.${
+  winner ? `\nKun g'olibi: <b>${winner}</b>`: ""
   }\n\n${
   weekly
-  ? "x & Hafta yakunlandi. <b>Dushanba 09:00</b> da yangi hafta boshlanadi   qaytib keling! x "
-: "xR& Ertaga <b>09:00</b> da yangi bosqich boshlanadi   qaytib keling! x "
+  ? "Hafta yakunlandi. <b>Dushanba 09:00</b> da yangi hafta boshlanadi. Qaytib keling!"
+: "Ertaga <b>09:00</b> da yangi bosqich boshlanadi. Qaytib keling!"
   }`,
   "/leaderboard",
   "Natijalarni ko'rish"
@@ -6911,9 +6914,10 @@ const server = http.createServer(async (req, res) => {
   "UPDATE tournament_matches SET winner = ?, status = 'finished', finished_at = ? WHERE id = ?"
   ).run(winner, nowISO(), match.id);
   propagateTournament(tournament.id);
-  const winnerName = db.prepare("SELECT name FROM users WHERE id = ?").get(winner)?.name || "?";
+  const winnerUser = db.prepare("SELECT name, telegram_username FROM users WHERE id = ?").get(winner);
+  const winnerName = telegramPublicName(winnerUser?.name, winnerUser?.telegram_username, "?");
   notifyTelegram(
-  `x  <b>Kunlik duel</b>\n${h(tournament.day)}. ${tournamentRoundName(
+  `<b>Kunlik duel</b>\n${h(tournament.day)}. ${tournamentRoundName(
   tournament.size,
   match.round
   )}\nG'olib: <b>${h(winnerName)}</b> (${updated.s1}:${updated.s2})`
@@ -7090,7 +7094,7 @@ const server = http.createServer(async (req, res) => {
   const creatorName = duelPlayerLabel(duel.creator_id);
   const opponentName = duelPlayerLabel(duel.opponent_id);
   notifyTelegram(
-  `a  <b>Duel yakunlandi</b>\n${creatorName}: ${creatorPlay.correct}/${creatorPlay.total} (${Math.round(
+  `<b>Duel yakunlandi</b>\n${creatorName}: ${creatorPlay.correct}/${creatorPlay.total} (${Math.round(
   creatorPlay.elapsed_ms / 1000
   )}s)\n${opponentName}: ${opponentPlay.correct}/${opponentPlay.total} (${Math.round(
   opponentPlay.elapsed_ms / 1000
@@ -7269,9 +7273,9 @@ const server = http.createServer(async (req, res) => {
   const maxScore = Number(lesson.max_score) || 0;
   const shown = maxScore > 0 ? `${Math.round((score / 100) * maxScore)} / ${maxScore}`: `${score}%`;
   notifyTelegram(
-  `x} <b>Test yakunlandi</b>\nx  ${h(user.name)}. ${h(user.phone)}\nx  ${h(
+  `<b>Test yakunlandi</b>\n${telegramPublicName(user.name, user.telegram_username)}\n${h(
   lesson.title
-  )}\nS& Natija: <b>${score}%</b> (${shown})\nx"  ${new Date().toLocaleString("uz-UZ")}`
+  )}\nNatija: <b>${score}%</b> (${shown})\n${new Date().toLocaleString("uz-UZ")}`
   ).catch(() => {});
 
   redirect(res, `/test/${lesson.id}?result=${score}&attempt=${attempt.id}`);
