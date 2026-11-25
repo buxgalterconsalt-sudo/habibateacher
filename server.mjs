@@ -8388,11 +8388,8 @@ const server = http.createServer(async (req, res) => {
     if (!Number.isInteger(durationMin) || durationMin < 1 || durationMin > 180 || !Number.isInteger(maxScore) || maxScore < 0 || maxScore > 1000) {
       return redirect(res, "/author?err=course_settings");
     }
-    const saveCourseSettings = db.transaction(() => {
-      db.prepare("UPDATE lessons SET duration_min = ?, max_score = ? WHERE course_id = ? AND type = 'test'").run(durationMin, maxScore, courseId);
-      return db.prepare("SELECT changes() AS count").get().count;
-    });
-    const updatedTests = saveCourseSettings();
+    const result = db.prepare("UPDATE lessons SET duration_min = ?, max_score = ? WHERE course_id = ? AND type = 'test'").run(durationMin, maxScore, courseId);
+    const updatedTests = result.changes;
     return redirect(res, `/author?settings_updated=${updatedTests}&course=${courseId}`);
   }
 
