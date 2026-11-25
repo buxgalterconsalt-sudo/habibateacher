@@ -2120,7 +2120,7 @@ c.addEventListener('change', function () { b.disabled = !c.checked; });
 : ""
 }
 ${appInstallGate}
-<script>(function(){var links=Array.prototype.slice.call(document.querySelectorAll('[data-news-nav]'));if(!links.length)return;var first=links[0];var viewer=first.getAttribute('data-news-viewer')||'guest';var key='ht_news_seen_v2_'+viewer;var ids=[];var seen=[];try{ids=JSON.parse(first.getAttribute('data-news-ids')||'[]');seen=JSON.parse(localStorage.getItem(key)||'[]')}catch(e){}if(!Array.isArray(ids))ids=[];if(!Array.isArray(seen))seen=[];if(location.pathname==='/news'){seen=Array.from(new Set(seen.concat(ids)));try{localStorage.setItem(key,JSON.stringify(seen))}catch(e){}}var unread=ids.filter(function(id){return seen.indexOf(id)<0}).length;links.forEach(function(link){var badge=link.querySelector('[data-news-badge]');link.classList.toggle('has-unread',unread>0);link.setAttribute('aria-label',unread?'Yangiliklar, '+unread+' ta yangi xabar':'Yangiliklar');if(badge){badge.hidden=unread===0;badge.textContent=unread?String(unread):''}})})();</script>
+<script>(function(){var links=Array.prototype.slice.call(document.querySelectorAll('[data-news-nav]'));if(!links.length)return;var english=document.documentElement.lang==='en';var first=links[0];var viewer=first.getAttribute('data-news-viewer')||'guest';var key='ht_news_seen_v2_'+viewer;var ids=[];var seen=[];try{ids=JSON.parse(first.getAttribute('data-news-ids')||'[]');seen=JSON.parse(localStorage.getItem(key)||'[]')}catch(e){}if(!Array.isArray(ids))ids=[];if(!Array.isArray(seen))seen=[];if(location.pathname==='/news'){seen=Array.from(new Set(seen.concat(ids)));try{localStorage.setItem(key,JSON.stringify(seen))}catch(e){}}var unread=ids.filter(function(id){return seen.indexOf(id)<0}).length;links.forEach(function(link){var badge=link.querySelector('[data-news-badge]');link.classList.toggle('has-unread',unread>0);link.setAttribute('aria-label',unread?(english?unread+' new updates':'Yangiliklar, '+unread+' ta yangi xabar'):(english?'News':'Yangiliklar'));if(badge){badge.hidden=unread===0;badge.textContent=unread?String(unread):''}})})();</script>
 <script>
 (function () {
   document.querySelectorAll('input[data-phone]').forEach(function (input) {
@@ -3286,7 +3286,7 @@ function duelRoomPage(duel, user) {
   ${isCreator && !botInvite ? `<p class="muted small duel-bot-note">Bot nomi va tokeni sozlangach, taklif bot nomidan yuboriladi.</p>` : ""}
   ${
   isCreator
-  ? `<form method="post" action="/duel/${h(duel.code)}/delete" onsubmit="return confirm('Duel bekor qilinsinmi?')">
+  ? `<form method="post" action="/duel/${h(duel.code)}/delete" onsubmit="return confirm(document.documentElement.lang==='en'?'Cancel this duel?':'Duel bekor qilinsinmi?')">
   <button class="btn btn-sm btn-danger" type="submit">Duelni bekor qilish</button>
   </form>`
 : ""
@@ -5655,7 +5655,7 @@ const server = http.createServer(async (req, res) => {
     const postCards = posts.length ? posts.map((post) => {
       const displayTitle = res.lang === "en" && post.titleEn ? post.titleEn : post.title;
       const displayBody = res.lang === "en" && post.bodyEn ? post.bodyEn : post.body;
-      const authorActions = author ? `<div class="news-author-actions"><form method="post" action="/news/delete/${h(post.id)}" onsubmit="return confirm('Davom etilsinmi?')"><button class="btn btn-danger" type="submit">Yangilikni olib tashlash</button></form><details class="news-author-edit"><summary>Yangilikni tahrirlash</summary><form method="post" action="/news/save" class="form"><input type="hidden" name="id" value="${h(post.id)}"><div class="field"><label>Sana</label><input type="date" name="date" value="${h(post.date)}"></div><div class="field"><label>Sarlavha</label><input name="title" maxlength="180" required value="${h(post.title)}"></div><div class="field"><label>Matn</label><textarea name="body" maxlength="4000" rows="4" required>${h(post.body)}</textarea></div>${newsEnglishFields(post)}<button class="btn btn-primary" type="submit">Saqlash</button></form></details></div>` : "";
+      const authorActions = author ? `<div class="news-author-actions"><form method="post" action="/news/delete/${h(post.id)}" onsubmit="return confirm(document.documentElement.lang==='en'?'Remove this news post?':'Davom etilsinmi?')"><button class="btn btn-danger" type="submit">Yangilikni olib tashlash</button></form><details class="news-author-edit"><summary>Yangilikni tahrirlash</summary><form method="post" action="/news/save" class="form"><input type="hidden" name="id" value="${h(post.id)}"><div class="field"><label>Sana</label><input type="date" name="date" value="${h(post.date)}"></div><div class="field"><label>Sarlavha</label><input name="title" maxlength="180" required value="${h(post.title)}"></div><div class="field"><label>Matn</label><textarea name="body" maxlength="4000" rows="4" required>${h(post.body)}</textarea></div>${newsEnglishFields(post)}<button class="btn btn-primary" type="submit">Saqlash</button></form></details></div>` : "";
       return `<article class="card news-post"><time datetime="${h(post.date)}">${h(post.date || "Yangi")}</time><h2>${h(displayTitle)}</h2><p>${nl2br(h(displayBody))}</p>${authorActions}</article>`;
     }).join("") : `<div class="card empty"><h2>Hozircha yangiliklar yo'q</h2><p class="muted">Yangi xabarlar shu bo'limda e'lon qilinadi.</p></div>`;
     const authorTools = author ? `<details open class="card news-author-tools"><summary>Mualliflar uchun: yangilik qo'shish va boshqarish</summary><p class="muted">Yangiliklar sahifasining o'zida xabar kiriting va e'lon qiling.</p><video controls preload="metadata" aria-label="Yangilik qo'shish bo'yicha qisqa video"><source src="/video/news-author-guide.mp4" type="video/mp4">Brauzeringiz videoni ochmaydi.</video><form method="post" action="/news/save" class="form"><div class="field"><label>Sana</label><input type="date" name="date" value="${new Date().toISOString().slice(0, 10)}"></div><div class="field"><label>Sarlavha</label><input name="title" maxlength="180" required></div><div class="field"><label>Matn</label><textarea name="body" maxlength="4000" rows="4" required></textarea></div>${newsEnglishFields()}<button class="btn btn-primary" type="submit">Yangilikni e'lon qilish</button></form></details>` : "";
@@ -7864,7 +7864,7 @@ const server = http.createServer(async (req, res) => {
             .then(function (d) {
               if (!d || !d.ok) {
                 sent = false;
-                alert("Video to'liq ko'rilmagan. Iltimos, oxirigacha ko'ring.");
+                alert(document.documentElement.lang==='en'?'Please watch the entire video to complete it.':'Video to'liq ko'rilmagan. Iltimos, oxirigacha ko'ring.');
                 return;
               }
               location.reload();
