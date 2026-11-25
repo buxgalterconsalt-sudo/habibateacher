@@ -623,6 +623,10 @@ db.exec(`CREATE TABLE IF NOT EXISTS telegram_users (
   chat_id TEXT NOT NULL,
   updated_at TEXT NOT NULL
 )`);
+db.exec(`CREATE TABLE IF NOT EXISTS telegram_bot_subscribers (
+  chat_id TEXT PRIMARY KEY,
+  started_at TEXT NOT NULL
+)`);
 db.exec(`CREATE TABLE IF NOT EXISTS login_links (
   token TEXT PRIMARY KEY,
   phone TEXT NOT NULL,
@@ -1795,7 +1799,11 @@ function duelBotStartLink(code) {
 function duelTelegramShareUrl(code, inviterName = "") {
   const base = platformPublicUrl() || "https://habibateacher.uz";
   const duelUrl = `${base}/duel/${encodeURIComponent(code)}`;
-  const text = `${inviterName ? `${inviterName} sizni ` : "Sizni "}Habiba Teacher platformasida duelga chaqiryapti! Havolani ochib, taklifni qabul qiling.`;
+  const duel = getDuel(code);
+  const inviter = duel && db.prepare("SELECT telegram_username FROM users WHERE id = ?").get(duel.creator_id);
+  const username = String(inviter?.telegram_username || "").replace(/^@+/, "").trim();
+  const name = `${inviterName}${username ? ` (@${username})` : ""}`;
+  const text = `${name ? `${name} sizni ` : "Sizni "}Habiba Teacher platformasida duelga chaqiryapti! Havolani ochib, taklifni qabul qiling.`;
   return `https://t.me/share/url?url=${encodeURIComponent(duelUrl)}&text=${encodeURIComponent(text)}`;
 }
 
@@ -2660,6 +2668,17 @@ async function telegramApi(method, payload) {
   }
 }
 
+async function notifyNewsSubscribers(title) {
+  const cleanTitle = String(title || "").trim().slice(0, 180);
+  if (!cleanTitle) return;
+  const token = config.telegramBotToken || process.env.TELEGRAM_BOT_TOKEN || "";
+  if (!token) return;
+  const subscribers = db.prepare("SELECT chat_id FROM telegram_bot_subscribers").all();
+  for (const subscriber of subscribers) {
+    await telegramApi("sendMessage", { chat_id: subscriber.chat_id, text: cleanTitle });
+  }
+}
+
 async function sendLoginCode(chatId, code) {
   const response = await telegramApi("sendMessage", {
     chat_id: chatId,
@@ -2675,6 +2694,14 @@ function telegramDuelKeyboard(path) {
   if (!base) return null;
   const url = base + path;
   return { inline_keyboard: [[{ text: "Brauzerda ochish", url }]] };
+}
+
+function duelPlayerLabel(userId, fallback = "O'quvchi") {
+  const player = db.prepare("SELECT name, telegram_username FROM users WHERE id = ?").get(userId);
+  if (!player) return h(fallback);
+  const username = String(player.telegram_username || "").replace(/^@+/, "").trim();
+  const firstName = String(player.name || fallback).trim().split(/\s+/)[0] || fallback;
+  return `${h(firstName)}${username ? ` (@${h(username)})` : ""}`;
 }
 
 async function sendUserMessage(userId, text, path) {
@@ -2697,7 +2724,8 @@ async function notifyTournamentMatchPlayers(tournamentId, round, matchId = null,
   if (!tournament) return;
   const matches = db
 .prepare(
-  `SELECT m.*, u1.name AS p1name, u2.name AS p2name
+  `SELECT m.*, u1.name AS p1name, u1.telegram_username AS p1username,
+  u2.name AS p2name, u2.telegram_username AS p2username
   FROM tournament_matches m
   LEFT JOIN users u1 ON u1.id = m.p1
   LEFT JOIN users u2 ON u2.id = m.p2
@@ -2711,10 +2739,12 @@ async function notifyTournamentMatchPlayers(tournamentId, round, matchId = null,
   const flag = `tour_${phase}_${match.id}_${playerId}`;
   if (metaGet(flag, "") === "1") continue;
   metaSet(flag, "1");
-  const opponent = playerId === match.p1 ? match.p2name: match.p1name;
+  const opponentName = playerId === match.p1 ? match.p2name : match.p1name;
+  const opponentUsername = playerId === match.p1 ? match.p2username : match.p1username;
+  const opponent = `${h(String(opponentName || "?").trim().split(/\s+/)[0])}${opponentUsername ? ` (@${h(opponentUsername)})` : ""}`;
   await sendUserMessage(
   playerId,
-  `${phase === "reminder" ? "⏳ <b>Duelga 5 daqiqa qoldi!</b>" : phase === "started" ? "🔔 <b>Duel boshlandi!</b>" : `🏆 <b>${label} juftligi tayyor</b>`}\n${phase === "started" ? "30 daqiqa ichida kiring." : ""}\nRaqibingiz: <b>${h(opponent || "?")}</b>\n15 ta aralash savol. Har savolga 60 soniya.`,
+  `${phase === "reminder" ? "⏳ <b>Duelga 5 daqiqa qoldi!</b>" : phase === "started" ? "🔔 <b>Duel boshlandi!</b>" : `🏆 <b>${label} juftligi tayyor</b>`}\n${phase === "started" ? "30 daqiqa ichida kiring." : ""}\nRaqibingiz: <b>${opponent}</b>\n15 ta aralash savol. Har savolga 60 soniya.`,
   `/duel/tournament/match/${match.id}`
   );
   }
@@ -2764,7 +2794,7 @@ async function handleDuelInviteStart(chatId, rawCode) {
   const duelUrl = `${platformPublicUrl() || "https://habibateacher.uz"}/duel/${encodeURIComponent(code)}`;
   const response = await telegramApi("sendMessage", {
     chat_id: chatId,
-    text: `Duel tayyor, ${creator.name || "o'quvchi"}! Raqibingizni kontaktlardan tanlang.`,
+    text: `Duel tayyor, ${String(creator.name || "o'quvchi").trim().split(/\s+/)[0]}${creator.telegram_username ? ` (@${creator.telegram_username})` : ""}! Raqibingizni kontaktlardan tanlang.`,
     reply_markup: {
       inline_keyboard: [
         [{
@@ -2799,11 +2829,12 @@ async function handleDuelInlineQuery(inlineQuery) {
     ) {
       const duelUrl = `${platformPublicUrl() || "https://habibateacher.uz"}/duel/${encodeURIComponent(code)}`;
       const questionCount = Math.min(10, Number(duel.total_questions) || 10);
-      const inviteText = `⚔️ <b>${h(duel.creator_name || "O'quvchi")}</b> sizni Habiba Teacher'da duelga chaqiryapti!\n\n📚 Test: <b>${h(duel.lesson_title || "Aralash test")}</b>\n🔢 Savollar: ${questionCount}\n\nTaklifni qabul qilish uchun brauzerda oching.`;
+      const creatorLabel = duelPlayerLabel(duel.creator_id);
+      const inviteText = `⚔️ <b>${creatorLabel}</b> sizni Habiba Teacher'da duelga chaqiryapti!\n\n📚 Test: <b>${h(duel.lesson_title || "Aralash test")}</b>\n🔢 Savollar: ${questionCount}\n\nTaklifni qabul qilish uchun brauzerda oching.`;
       results.push({
         type: "article",
         id: `duel_${code}`,
-        title: `${duel.creator_name || "O'quvchi"} sizni duelga chaqiryapti`,
+        title: `${String(duel.creator_name || "O'quvchi").trim().split(/\s+/)[0]}${creator.telegram_username ? ` (@${creator.telegram_username})` : ""} sizni duelga chaqiryapti`,
         description: `${duel.lesson_title || "Aralash test"} · ${questionCount} ta savol`,
         input_message_content: {
           message_text: inviteText,
@@ -2852,6 +2883,11 @@ async function handleBotUpdate(update) {
   const parts = text.split(/\s+/);
   const cmd = parts[0].toLowerCase().replace(/@.*$/, "");
   const payload = parts[1] || "";
+
+  if (cmd === "/start") {
+    db.prepare("INSERT INTO telegram_bot_subscribers (chat_id, started_at) VALUES (?, ?) ON CONFLICT(chat_id) DO NOTHING")
+      .run(String(chatId), nowISO());
+  }
 
   if ((cmd === "/start" || cmd === "/login") && payload.startsWith("login_")) {
     await handleTelegramLoginLink(chatId, payload.slice(6), message.from);
@@ -3904,8 +3940,8 @@ function tournamentPairingLines(tournamentId, round) {
   const rows = db
 .prepare(
   `SELECT m.slot, m.p1, m.p2, m.winner, m.status,
-  u1.name AS p1name, u1.phone AS p1phone,
-  u2.name AS p2name, u2.phone AS p2phone
+  u1.name AS p1name, u1.telegram_username AS p1username,
+  u2.name AS p2name, u2.telegram_username AS p2username
   FROM tournament_matches m
   LEFT JOIN users u1 ON u1.id = m.p1
   LEFT JOIN users u2 ON u2.id = m.p2
@@ -3916,8 +3952,8 @@ function tournamentPairingLines(tournamentId, round) {
   if (!rows.length) return "Juftliklar hali tayyor emas.";
   return rows
 .map((m, i) => {
-  const a = m.p1name ? `${h(m.p1name)}${m.p1phone ? ` (${h(m.p1phone)})`: ""}`: " ";
-  const b = m.p2name ? `${h(m.p2name)}${m.p2phone ? ` (${h(m.p2phone)})`: ""}`: "raqib yo'q";
+  const a = m.p1name ? `${h(String(m.p1name).trim().split(/\s+/)[0])}${m.p1username ? ` (@${h(m.p1username)})` : ""}`: " ";
+  const b = m.p2name ? `${h(String(m.p2name).trim().split(/\s+/)[0])}${m.p2username ? ` (@${h(m.p2username)})` : ""}`: "raqib yo'q";
   return `${i + 1}. ${a} vs ${b}${m.winner ? " S&": ""}`;
   })
 .join("\n");
@@ -3971,9 +4007,9 @@ async function sendTournamentWinner(tournament) {
   await notifyTelegram(`x  <b>Bugungi duel kubogi</b>\nFinal hali yakunlanmagan. 18:00 gacha davom etadi.`);
   return;
   }
-  const winner = db.prepare("SELECT name, phone FROM users WHERE id = ?").get(final.winner);
-  await notifyTelegram(`x  <b>Bugungi duel kubogi g'olibi   ${h(winner?.name || "?")}!</b>
-x ~ ${h(winner?.phone || "")}
+  const winner = db.prepare("SELECT name, telegram_username FROM users WHERE id = ?").get(final.winner);
+  await notifyTelegram(`x  <b>Bugungi duel kubogi g'olibi   ${h(String(winner?.name || "?").trim().split(/\s+/)[0])}${winner?.telegram_username ? ` (@${h(winner.telegram_username)})` : ""}!</b>
+x ~ ${winner?.telegram_username ? `@${h(winner.telegram_username)}` : ""}
 x & ${h(tournament.day)}
 
 Tabriklaymiz! Keyingi kubok   keyingi ish kuni, juftlar 09:00 da, duellar 10:00 dan.`);
@@ -5596,6 +5632,7 @@ const server = http.createServer(async (req, res) => {
     if (index >= 0) posts[index] = post;
     else posts.unshift(post);
     metaSet("news_posts_json", JSON.stringify(posts.slice(0, 60)));
+    if (index < 0) notifyNewsSubscribers(post.title).catch((error) => console.error("[telegram] news broadcast failed", error.message));
     return redirect(res, "/news?saved=1");
   }
 
@@ -6926,7 +6963,7 @@ const server = http.createServer(async (req, res) => {
       .run(user.id, duel.id).changes;
     if (joined) {
       for (const playerId of [duel.creator_id, user.id]) {
-        sendUserMessage(playerId, `⚔️ <b>Duel boshlandi</b>\nRaqib: <b>${h(playerId === duel.creator_id ? user.name : duel.creator_name)}</b>\nTestga kirib boshlang.`, `/duel/${code}`, "Duelni ochish").catch(() => {});
+        sendUserMessage(playerId, `⚔️ <b>Duel boshlandi</b>\nRaqib: <b>${duelPlayerLabel(playerId === duel.creator_id ? user.id : duel.creator_id)}</b>\nTestga kirib boshlang.`, `/duel/${code}`, "Duelni ochish").catch(() => {});
       }
     }
     redirect(res, `/duel/${code}`);
@@ -6951,7 +6988,7 @@ const server = http.createServer(async (req, res) => {
   for (const playerId of [duel.creator_id, user.id]) {
   sendUserMessage(
     playerId,
-    `⚔️ <b>Duel boshlandi</b>\nRaqib: <b>${h(playerId === duel.creator_id ? user.name : duel.creator_name)}</b>\nKod: <b>${code}</b>\nTestga kirib boshlang.`,
+    `⚔️ <b>Duel boshlandi</b>\nRaqib: <b>${duelPlayerLabel(playerId === duel.creator_id ? user.id : duel.creator_id)}</b>\nKod: <b>${code}</b>\nTestga kirib boshlang.`,
     `/duel/${code}`,
     "Duelni ochish"
   ).catch(() => {});
@@ -7050,12 +7087,12 @@ const server = http.createServer(async (req, res) => {
   db.prepare("UPDATE duels SET status = 'finished', finished_at = ? WHERE id = ?").run(nowISO(), duel.id);
   const creatorPlay = plays[duel.creator_id];
   const opponentPlay = plays[duel.opponent_id];
-  const creatorName = db.prepare("SELECT name FROM users WHERE id = ?").get(duel.creator_id).name;
-  const opponentName = db.prepare("SELECT name FROM users WHERE id = ?").get(duel.opponent_id).name;
+  const creatorName = duelPlayerLabel(duel.creator_id);
+  const opponentName = duelPlayerLabel(duel.opponent_id);
   notifyTelegram(
-  `a  <b>Duel yakunlandi</b>\n${h(creatorName)}: ${creatorPlay.correct}/${creatorPlay.total} (${Math.round(
+  `a  <b>Duel yakunlandi</b>\n${creatorName}: ${creatorPlay.correct}/${creatorPlay.total} (${Math.round(
   creatorPlay.elapsed_ms / 1000
-  )}s)\n${h(opponentName)}: ${opponentPlay.correct}/${opponentPlay.total} (${Math.round(
+  )}s)\n${opponentName}: ${opponentPlay.correct}/${opponentPlay.total} (${Math.round(
   opponentPlay.elapsed_ms / 1000
   )}s)`
   ).catch(() => {});
