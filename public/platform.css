@@ -6744,9 +6744,11 @@ html[data-theme="light"] .home-final-card { background: linear-gradient(120deg, 
 .news-post h2 { margin: 10px 0 8px; }
 .news-post p { margin: 0; color: var(--muted); line-height: 1.65; }
 .news-list { display: grid; gap: 16px; max-width: 900px; margin-inline: auto; }
-.admin-news-list { margin-top: 20px; }
-.admin-news-editor { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 16px; }
-.admin-news-editor > form:last-child { padding-top: 48px; }
+.news-author-tools { margin-bottom: 20px; }
+.news-author-tools summary, .news-author-edit summary { cursor: pointer; font-weight: 700; }
+.news-author-tools video { display: block; width: min(100%, 960px); max-height: 540px; margin: 16px 0 22px; border-radius: 14px; background: #061827; }
+.news-author-edit { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line); }
+.news-author-edit form { margin-top: 14px; }
 .home-news-stat { text-decoration: none; }
 .home-news-stat:hover { border-color: var(--primary); color: var(--text); }
 .install-gate[hidden] { display: none !important; }
@@ -6756,11 +6758,8 @@ html[data-theme="light"] .home-final-card { background: linear-gradient(120deg, 
 .install-gate-card > p { color: var(--muted); line-height: 1.65; }
 .install-gate-card .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
 .install-gate-card .install-gate-help { margin: 20px 0 0; }
-.admin-news-video video { display: block; width: min(100%, 960px); max-height: 540px; border-radius: 14px; background: #061827; }
 body.install-gate-open { overflow: hidden; }
 @media (max-width: 720px) {
-  .admin-news-editor { grid-template-columns: 1fr; }
-  .admin-news-editor > form:last-child { padding-top: 0; }
   .nav a, .nav .who { font-size: 1rem; }
 }
 

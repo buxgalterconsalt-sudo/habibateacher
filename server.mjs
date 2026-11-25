@@ -1917,7 +1917,6 @@ function navFor(user, admin, publicPage = false) {
   if (admin && !publicPage) {
   return `<nav class="nav">
   <a href="/admin" class="active">Admin</a>
-  <a href="/admin/news">Yangiliklar</a>
   <a href="/admin/students">O'quvchilar</a>
   <a href="/admin/site-settings">Sayt sozlamalari</a>
   <a href="/leaderboard">Reyting</a>
@@ -2029,7 +2028,7 @@ ${seoTags}
   <nav class="mobile-links">
   ${
   admin && !publicPage
-  ? `<a href="/admin">Admin</a><a href="/admin/news">Yangiliklar</a><a href="/admin/students">O'quvchilar</a><a href="/admin/site-settings">Sayt sozlamalari</a><a href="/leaderboard">Reyting</a><a href="/">Saytni ko'rish</a>
+  ? `<a href="/admin">Admin</a><a href="/admin/students">O'quvchilar</a><a href="/admin/site-settings">Sayt sozlamalari</a><a href="/leaderboard">Reyting</a><a href="/">Saytni ko'rish</a>
   <form method="post" action="/admin/logout"><button class="mobile-link-btn" type="submit">Chiqish</button></form>`
    : `${newsNavigationLink(user)}${siteButtonVisible("nav_home") && String(copy.nav_home || "").trim() ? `<a href="/">${h(copy.nav_home)}</a>` : ""}
   ${siteButtonVisible("nav_attestation") && String(copy.nav_attestation || "").trim() ? `<a href="/attestation">${h(copy.nav_attestation)}</a>` : ""}
@@ -5363,8 +5362,8 @@ const server = http.createServer(async (req, res) => {
   return;
   }
 
-  if (p === "/video/admin-news-guide.mp4" && method === "GET") {
-    const videoPath = path.join(PUBLIC_DIR, "video", "admin-news-guide.mp4");
+  if (p === "/video/news-author-guide.mp4" && method === "GET") {
+    const videoPath = path.join(PUBLIC_DIR, "video", "news-author-guide.mp4");
     if (!fs.existsSync(videoPath)) return notFound(res, null, false);
     res.writeHead(200, { "Content-Type": "video/mp4", "Cache-Control": "public, max-age=86400" });
     fs.createReadStream(videoPath).pipe(res);
@@ -5574,8 +5573,8 @@ const server = http.createServer(async (req, res) => {
   const fields = form.fields;
   const files = form.files;
 
-  if (p === "/admin/news/save" && method === "POST") {
-    if (!admin) return redirect(res, "/admin/login");
+  if (p === "/news/save" && method === "POST") {
+    if (!author) return redirect(res, user ? "/news" : "/login");
     const posts = newsPosts();
     const id = String(fields.id || "").replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 48);
     const post = {
@@ -5584,19 +5583,19 @@ const server = http.createServer(async (req, res) => {
       body: String(fields.body || "").trim().slice(0, 4000),
       date: /^\d{4}-\d{2}-\d{2}$/.test(String(fields.date || "")) ? String(fields.date) : new Date().toISOString().slice(0, 10), updatedAt: nowISO()
     };
-    if (!post.title || !post.body) return redirect(res, "/admin/news?err=required");
+    if (!post.title || !post.body) return redirect(res, "/news?err=required");
     const index = posts.findIndex((item) => item.id === id);
     if (index >= 0) posts[index] = post;
     else posts.unshift(post);
     metaSet("news_posts_json", JSON.stringify(posts.slice(0, 60)));
-    return redirect(res, "/admin/news?saved=1");
+    return redirect(res, "/news?saved=1");
   }
 
-  const deleteNewsMatch = p.match(/^\/admin\/news\/delete\/([a-zA-Z0-9_-]{1,48})$/);
+  const deleteNewsMatch = p.match(/^\/news\/delete\/([a-zA-Z0-9_-]{1,48})$/);
   if (deleteNewsMatch && method === "POST") {
-    if (!admin) return redirect(res, "/admin/login");
+    if (!author) return redirect(res, user ? "/news" : "/login");
     metaSet("news_posts_json", JSON.stringify(newsPosts().filter((post) => post.id !== deleteNewsMatch[1])));
-    return redirect(res, "/admin/news?deleted=1");
+    return redirect(res, "/news?deleted=1");
   }
 
   if (p === "/admin/video-upload/start" && method === "POST") {
@@ -5645,8 +5644,9 @@ const server = http.createServer(async (req, res) => {
 
   if (p === "/news" && method === "GET") {
     const posts = newsPosts();
-    const postCards = posts.length ? posts.map((post) => `<article class="card news-post"><time datetime="${h(post.date)}">${h(post.date || "Yangi")}</time><h2>${h(post.title)}</h2><p>${nl2br(h(post.body))}</p></article>`).join("") : `<div class="card empty"><h2>Hozircha yangiliklar yo'q</h2><p class="muted">Yangi xabarlar shu bo'limda e'lon qilinadi.</p></div>`;
-    const body = `<section class="news-page"><div class="page-head"><div><span class="eyebrow">PLATFORMADAN XABARLAR</span><h1>Yangiliklar</h1><p class="lead">Platformadagi yangilanish va e'lonlarni kuzatib boring.</p></div></div><div class="news-list">${postCards}</div></section>`;
+    const postCards = posts.length ? posts.map((post) => `<article class="card news-post"><time datetime="${h(post.date)}">${h(post.date || "Yangi")}</time><h2>${h(post.title)}</h2><p>${nl2br(h(post.body))}</p>${author ? `<details class="news-author-edit"><summary>Yangilikni tahrirlash</summary><form method="post" action="/news/save" class="form"><input type="hidden" name="id" value="${h(post.id)}"><div class="field"><label>Sana</label><input type="date" name="date" value="${h(post.date)}"></div><div class="field"><label>Sarlavha</label><input name="title" maxlength="180" required value="${h(post.title)}"></div><div class="field"><label>Matn</label><textarea name="body" maxlength="4000" rows="4" required>${h(post.body)}</textarea></div><div class="actions"><button class="btn btn-primary" type="submit">Saqlash</button><button class="btn btn-danger" type="submit" formaction="/news/delete/${h(post.id)}" formnovalidate onclick="return confirm('Davom etilsinmi?')">O'chirish</button></div></form></details>` : ""}</article>`).join("") : `<div class="card empty"><h2>Hozircha yangiliklar yo'q</h2><p class="muted">Yangi xabarlar shu bo'limda e'lon qilinadi.</p></div>`;
+    const authorTools = author ? `<details open class="card news-author-tools"><summary>Mualliflar uchun: yangilik qo'shish va boshqarish</summary><p class="muted">Yangiliklar sahifasining o'zida xabar kiriting va e'lon qiling.</p><video controls preload="metadata" aria-label="Yangilik qo'shish bo'yicha qisqa video"><source src="/video/news-author-guide.mp4" type="video/mp4">Brauzeringiz videoni ochmaydi.</video><form method="post" action="/news/save" class="form"><div class="field"><label>Sana</label><input type="date" name="date" value="${new Date().toISOString().slice(0, 10)}"></div><div class="field"><label>Sarlavha</label><input name="title" maxlength="180" required></div><div class="field"><label>Matn</label><textarea name="body" maxlength="4000" rows="4" required></textarea></div><button class="btn btn-primary" type="submit">Yangilikni e'lon qilish</button></form></details>` : "";
+    const body = `<section class="news-page"><div class="page-head"><div><span class="eyebrow">PLATFORMADAN XABARLAR</span><h1>Yangiliklar</h1><p class="lead">Platformadagi yangilanish va e'lonlarni kuzatib boring.</p></div></div>${url.searchParams.get("saved") === "1" ? alertBox("Yangilik saqlandi.", "success") : ""}${url.searchParams.get("deleted") === "1" ? alertBox("Yangilik o'chirildi.", "success") : ""}${url.searchParams.get("err") === "required" ? alertBox("Sarlavha va matnni to'ldiring.", "error") : ""}${authorTools}<div class="news-list">${postCards}</div></section>`;
     send(res, 200, layout({ title: "Yangiliklar", body, user, admin, seo: { path: "/news", title: "Yangiliklar | Habiba Teacher", description: "Habiba Teacher platformasidagi yangilanishlar, testlar va e'lonlar." } }));
     return;
   }
@@ -8276,15 +8276,6 @@ const server = http.createServer(async (req, res) => {
       <div class="field"><label>Kurs nomi</label><input name="title" required maxlength="160"></div><div class="field"><label>Tavsif</label><textarea name="description" rows="2"></textarea></div>
       <button class="btn btn-primary" type="submit">Kurs yaratish</button></form></div>`;
     send(res, 200, layout({ title: "Muallif paneli", body, user, admin }));
-    return;
-  }
-
-  if (p === "/admin/news" && method === "GET") {
-    if (!admin) return redirect(res, "/admin/login");
-    const posts = newsPosts();
-    const postForms = posts.map((post) => `<article class="card admin-news-editor"><form method="post" action="/admin/news/save" class="form"><input type="hidden" name="id" value="${h(post.id)}"><h2>${h(post.title)}</h2><div class="field"><label>Sana</label><input type="date" name="date" value="${h(post.date)}"></div><div class="field"><label>Sarlavha</label><input name="title" maxlength="180" required value="${h(post.title)}"></div><div class="field"><label>Matn</label><textarea name="body" maxlength="4000" rows="4" required>${h(post.body)}</textarea></div><div class="actions"><button class="btn btn-primary" type="submit">Yangilikni saqlash</button></div></form><form method="post" action="/admin/news/delete/${h(post.id)}" onsubmit="return confirm('Bu yangilik o\'chirilsinmi?')"><button class="btn btn-danger btn-sm" type="submit">O'chirish</button></form></article>`).join("");
-    const body = `<a class="back" href="/admin">Admin panel</a><section class="card admin-news-video"><h2>Qisqa video-yo'riqnoma</h2><video controls preload="metadata" aria-label="Admin panelida yangilik qo'shish bo'yicha yo'riqnoma"><source src="/video/admin-news-guide.mp4" type="video/mp4">Brauzeringiz videoni ochmaydi.</video></section><div class="page-head"><div><h1>Yangiliklar bo'limi</h1><p class="muted">Bu xabarlar barcha tashrif buyuruvchilarga ko'rinadi. Bosh sahifadagi hisoblagich avtomatik yangilanadi.</p></div><a class="btn btn-ghost" href="/news">Ommaviy sahifa</a></div>${url.searchParams.get("saved") === "1" ? alertBox("Yangilik saqlandi.", "success") : ""}${url.searchParams.get("deleted") === "1" ? alertBox("Yangilik o'chirildi.", "success") : ""}${url.searchParams.get("err") === "required" ? alertBox("Sarlavha va matnni to'ldiring.", "error") : ""}<section class="card"><h2>Yangi xabar</h2><form method="post" action="/admin/news/save" class="form"><div class="field"><label>Sana</label><input type="date" name="date" value="${new Date().toISOString().slice(0, 10)}"></div><div class="field"><label>Sarlavha</label><input name="title" maxlength="180" required></div><div class="field"><label>Matn</label><textarea name="body" maxlength="4000" rows="4" required></textarea></div><button class="btn btn-primary" type="submit">Yangilikni e'lon qilish</button></form></section><div class="news-list admin-news-list">${postForms || `<p class="muted">Hozircha yangiliklar yo'q.</p>`}</div>`;
-    send(res, 200, layout({ title: "Yangiliklar boshqaruvi", body, admin }));
     return;
   }
 
