@@ -133,7 +133,6 @@ Object.assign(SITE_TEXT_DEFAULTS, {
 
 const HOME_SECTION_LABELS = {
   hero: "Bosh sahifa yuqori qismi",
-  news: "Yangiliklar bo'limi",
   "teachers-photo": "O'qituvchilar jamoasi rasmi",
   overview: "Orbita va afzalliklar",
   directions: "Yo'nalish kartalari",
@@ -178,12 +177,6 @@ function homeSectionOrder(customSections = homeCustomSections()) {
     else order.push("teachers-photo");
   }
   for (const key of allKeys) if (!order.includes(key)) order.push(key);
-  const newsIndex = order.indexOf("news");
-  if (newsIndex >= 0) {
-    order.splice(newsIndex, 1);
-    const heroIndex = order.indexOf("hero");
-    order.splice(heroIndex >= 0 ? heroIndex + 1 : 0, 0, "news");
-  }
   return order;
 }
 
@@ -191,7 +184,8 @@ const DEFAULT_NEWS_POSTS = [{
   id: "attestation-practice-120",
   title: "120 ta yangi mashq testi joylandi",
   body: "Reading, Grammar, Vocabulary, Pragmatika, Pedagogik mahorat va Kasbiy standart yo'nalishlarida yangi testlar bilan muntazam mashq qiling.",
-  date: "2026-11-25"
+  date: "2026-11-25",
+  updatedAt: "2026-11-25"
 }];
 
 function newsPosts() {
@@ -202,8 +196,15 @@ function newsPosts() {
     id: String(post.id || `news-${index + 1}`).replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 48),
     title: String(post.title || "").trim().slice(0, 180),
     body: String(post.body || "").trim().slice(0, 4000),
-    date: /^\d{4}-\d{2}-\d{2}$/.test(String(post.date || "")) ? String(post.date) : ""
+    date: /^\d{4}-\d{2}-\d{2}$/.test(String(post.date || "")) ? String(post.date) : "",
+    updatedAt: String(post.updatedAt || post.date || "")
   })).filter((post) => post.id && post.title && post.body).sort((a, b) => b.date.localeCompare(a.date));
+}
+
+function newsNavigationLink(user) {
+  const ids = newsPosts().map((post) => `${post.id}:${post.updatedAt}`);
+  const viewer = user && Number(user.id) ? `user-${Number(user.id)}` : "guest";
+  return `<a href="/news" class="news-nav-link" data-news-nav data-news-viewer="${h(viewer)}" data-news-ids="${h(JSON.stringify(ids))}" aria-label="Yangiliklar"><span>Yangiliklar</span><span class="news-nav-badge" data-news-badge hidden></span></a>`;
 }
 
 function siteTexts(includeRemoved = false) {
@@ -1926,7 +1927,7 @@ function navFor(user, admin, publicPage = false) {
   }
 
   const links = `
-  <a href="/news">Yangiliklar</a>
+  ${newsNavigationLink(user)}
   ${siteButtonVisible("nav_home") && String(copy.nav_home || "").trim() ? `<a href="/">${h(copy.nav_home)}</a>` : ""}
   ${siteButtonVisible("nav_attestation") && String(copy.nav_attestation || "").trim() ? `<a href="/attestation">${h(copy.nav_attestation)}</a>` : ""}
   ${siteButtonVisible("nav_tkt") && String(copy.nav_tkt || "").trim() ? `<a href="/tkt">${h(copy.nav_tkt)}</a>` : ""}
@@ -1936,7 +1937,7 @@ function navFor(user, admin, publicPage = false) {
 
   if (user) {
   return `<nav class="nav nav-student">
-  <a href="/news">Yangiliklar</a>
+  ${newsNavigationLink(user)}
   ${siteButtonVisible("nav_home") && String(copy.nav_home || "").trim() ? `<a href="/">${h(copy.nav_home)}</a>` : ""}
   ${siteButtonVisible("nav_attestation") && String(copy.nav_attestation || "").trim() ? `<a href="/attestation">${h(copy.nav_attestation)}</a>` : ""}
   ${siteButtonVisible("nav_tkt") && String(copy.nav_tkt || "").trim() ? `<a href="/tkt">${h(copy.nav_tkt)}</a>` : ""}
@@ -2030,7 +2031,7 @@ ${seoTags}
   admin && !publicPage
   ? `<a href="/admin">Admin</a><a href="/admin/news">Yangiliklar</a><a href="/admin/students">O'quvchilar</a><a href="/admin/site-settings">Sayt sozlamalari</a><a href="/leaderboard">Reyting</a><a href="/">Saytni ko'rish</a>
   <form method="post" action="/admin/logout"><button class="mobile-link-btn" type="submit">Chiqish</button></form>`
-   : `<a href="/news">Yangiliklar</a>${siteButtonVisible("nav_home") && String(copy.nav_home || "").trim() ? `<a href="/">${h(copy.nav_home)}</a>` : ""}
+   : `${newsNavigationLink(user)}${siteButtonVisible("nav_home") && String(copy.nav_home || "").trim() ? `<a href="/">${h(copy.nav_home)}</a>` : ""}
   ${siteButtonVisible("nav_attestation") && String(copy.nav_attestation || "").trim() ? `<a href="/attestation">${h(copy.nav_attestation)}</a>` : ""}
   ${siteButtonVisible("nav_tkt") && String(copy.nav_tkt || "").trim() ? `<a href="/tkt">${h(copy.nav_tkt)}</a>` : ""}
   ${siteButtonVisible("nav_duel") && String(copy.nav_duel || "").trim() ? `<a href="/duel">${h(copy.nav_duel)}</a>` : ""}
@@ -2072,7 +2073,7 @@ ${body}
   <p class="footer-donation-note">Ustozlarimizga ko‘mak bo‘lsin deya, ushbu materiallar Habiba Mo'minjonovna tomonidan taqdim etildi.</p>
   </div>
   <nav class="footer-links">
-  <a href="/news">Yangiliklar</a>
+  ${newsNavigationLink(user)}
   ${siteButtonVisible("nav_home") && String(copy.nav_home || "").trim() ? `<a href="/">${h(copy.nav_home)}</a>` : ""}
   ${siteButtonVisible("footer_directions") ? `<a href="/#directions">Yo'nalishlar</a>` : ""}
   ${siteButtonVisible("nav_attestation") && String(copy.nav_attestation || "").trim() ? `<a href="/attestation">${h(copy.nav_attestation)}</a>` : ""}
@@ -2114,6 +2115,7 @@ c.addEventListener('change', function () { b.disabled = !c.checked; });
 : ""
 }
 ${appInstallGate}
+<script>(function(){var links=Array.prototype.slice.call(document.querySelectorAll('[data-news-nav]'));if(!links.length)return;var first=links[0];var viewer=first.getAttribute('data-news-viewer')||'guest';var key='ht_news_seen_v2_'+viewer;var ids=[];var seen=[];try{ids=JSON.parse(first.getAttribute('data-news-ids')||'[]');seen=JSON.parse(localStorage.getItem(key)||'[]')}catch(e){}if(!Array.isArray(ids))ids=[];if(!Array.isArray(seen))seen=[];if(location.pathname==='/news'){seen=Array.from(new Set(seen.concat(ids)));try{localStorage.setItem(key,JSON.stringify(seen))}catch(e){}}var unread=ids.filter(function(id){return seen.indexOf(id)<0}).length;links.forEach(function(link){var badge=link.querySelector('[data-news-badge]');link.classList.toggle('has-unread',unread>0);link.setAttribute('aria-label',unread?'Yangiliklar, '+unread+' ta yangi xabar':'Yangiliklar');if(badge){badge.hidden=unread===0;badge.textContent=unread?String(unread):''}})})();</script>
 <script>
 (function () {
   document.querySelectorAll('input[data-phone]').forEach(function (input) {
@@ -5317,6 +5319,7 @@ const server = http.createServer(async (req, res) => {
   const isStatic =
   p.startsWith("/assets/") ||
   p.startsWith("/img/") ||
+  p.startsWith("/video/") ||
   p === "/favicon.ico" ||
   p === "/health" ||
   p === "/access" ||
@@ -5358,6 +5361,14 @@ const server = http.createServer(async (req, res) => {
   res.writeHead(200, { "Content-Type": "application/javascript; charset=utf-8", "Cache-Control": "no-cache", "Service-Worker-Allowed": "/" });
   res.end(fs.readFileSync(path.join(PUBLIC_DIR, "service-worker.js")));
   return;
+  }
+
+  if (p === "/video/admin-news-guide.mp4" && method === "GET") {
+    const videoPath = path.join(PUBLIC_DIR, "video", "admin-news-guide.mp4");
+    if (!fs.existsSync(videoPath)) return notFound(res, null, false);
+    res.writeHead(200, { "Content-Type": "video/mp4", "Cache-Control": "public, max-age=86400" });
+    fs.createReadStream(videoPath).pipe(res);
+    return;
   }
 
   /* ---------------------------------------------------------- static images */
@@ -5571,7 +5582,7 @@ const server = http.createServer(async (req, res) => {
       id: id || `news-${randomBytes(8).toString("hex")}`,
       title: String(fields.title || "").trim().slice(0, 180),
       body: String(fields.body || "").trim().slice(0, 4000),
-      date: /^\d{4}-\d{2}-\d{2}$/.test(String(fields.date || "")) ? String(fields.date) : new Date().toISOString().slice(0, 10)
+      date: /^\d{4}-\d{2}-\d{2}$/.test(String(fields.date || "")) ? String(fields.date) : new Date().toISOString().slice(0, 10), updatedAt: nowISO()
     };
     if (!post.title || !post.body) return redirect(res, "/admin/news?err=required");
     const index = posts.findIndex((item) => item.id === id);
@@ -5690,7 +5701,6 @@ const server = http.createServer(async (req, res) => {
   const customHomeSections = homeCustomSections();
   const savedHomeSectionOrder = homeSectionOrder(customHomeSections);
   const currentNews = newsPosts();
-  const latestNewsCards = currentNews.slice(0, 3).map((post) => `<article class="home-news-card"><time datetime="${h(post.date)}">${h(post.date || "Yangi")}</time><h3>${h(post.title)}</h3><p>${h(post.body)}</p></article>`).join("");
 
   const planCards = getPlans().map((plan, index) => `<article class="home-plan-card${index === 1 ? " featured" : ""}">
     <span class="home-kicker">${index === 0 ? "BOSHLASH" : index === 1 ? "MASHHUR TANLOV" : "UZLUKSIZ RIVOJLANISH"}</span>
@@ -5735,13 +5745,6 @@ const server = http.createServer(async (req, res) => {
   </section>
   <section class="home-teachers-photo" data-home-section="teachers-photo" aria-label="O'qituvchilar jamoasi">
     <img src="/img/teachers-group.jpg" alt="O'zbekistonlik o'qituvchilar British Council treningida">
-  </section>
-
-  <section class="section home-news" data-home-section="news">
-    <div class="wrap">
-      <div class="section-head"><div><span class="eyebrow">PLATFORMADAGI SO'NGGI XABARLAR</span><h2>Yangiliklar</h2></div><a class="btn btn-ghost" href="/news">Barcha yangiliklar</a></div>
-      <div class="home-news-grid">${latestNewsCards || `<p class="muted">Hozircha yangiliklar yo'q.</p>`}</div>
-    </div>
   </section>
 
   <section class="section home-overview" id="program" data-home-section="overview">
@@ -8280,7 +8283,7 @@ const server = http.createServer(async (req, res) => {
     if (!admin) return redirect(res, "/admin/login");
     const posts = newsPosts();
     const postForms = posts.map((post) => `<article class="card admin-news-editor"><form method="post" action="/admin/news/save" class="form"><input type="hidden" name="id" value="${h(post.id)}"><h2>${h(post.title)}</h2><div class="field"><label>Sana</label><input type="date" name="date" value="${h(post.date)}"></div><div class="field"><label>Sarlavha</label><input name="title" maxlength="180" required value="${h(post.title)}"></div><div class="field"><label>Matn</label><textarea name="body" maxlength="4000" rows="4" required>${h(post.body)}</textarea></div><div class="actions"><button class="btn btn-primary" type="submit">Yangilikni saqlash</button></div></form><form method="post" action="/admin/news/delete/${h(post.id)}" onsubmit="return confirm('Bu yangilik o\'chirilsinmi?')"><button class="btn btn-danger btn-sm" type="submit">O'chirish</button></form></article>`).join("");
-    const body = `<a class="back" href="/admin">Admin panel</a><div class="page-head"><div><h1>Yangiliklar bo'limi</h1><p class="muted">Bu xabarlar barcha tashrif buyuruvchilarga ko'rinadi. Bosh sahifadagi hisoblagich avtomatik yangilanadi.</p></div><a class="btn btn-ghost" href="/news">Ommaviy sahifa</a></div>${url.searchParams.get("saved") === "1" ? alertBox("Yangilik saqlandi.", "success") : ""}${url.searchParams.get("deleted") === "1" ? alertBox("Yangilik o'chirildi.", "success") : ""}${url.searchParams.get("err") === "required" ? alertBox("Sarlavha va matnni to'ldiring.", "error") : ""}<section class="card"><h2>Yangi xabar</h2><form method="post" action="/admin/news/save" class="form"><div class="field"><label>Sana</label><input type="date" name="date" value="${new Date().toISOString().slice(0, 10)}"></div><div class="field"><label>Sarlavha</label><input name="title" maxlength="180" required></div><div class="field"><label>Matn</label><textarea name="body" maxlength="4000" rows="4" required></textarea></div><button class="btn btn-primary" type="submit">Yangilikni e'lon qilish</button></form></section><div class="news-list admin-news-list">${postForms || `<p class="muted">Hozircha yangiliklar yo'q.</p>`}</div>`;
+    const body = `<a class="back" href="/admin">Admin panel</a><section class="card admin-news-video"><h2>Qisqa video-yo'riqnoma</h2><video controls preload="metadata" aria-label="Admin panelida yangilik qo'shish bo'yicha yo'riqnoma"><source src="/video/admin-news-guide.mp4" type="video/mp4">Brauzeringiz videoni ochmaydi.</video></section><div class="page-head"><div><h1>Yangiliklar bo'limi</h1><p class="muted">Bu xabarlar barcha tashrif buyuruvchilarga ko'rinadi. Bosh sahifadagi hisoblagich avtomatik yangilanadi.</p></div><a class="btn btn-ghost" href="/news">Ommaviy sahifa</a></div>${url.searchParams.get("saved") === "1" ? alertBox("Yangilik saqlandi.", "success") : ""}${url.searchParams.get("deleted") === "1" ? alertBox("Yangilik o'chirildi.", "success") : ""}${url.searchParams.get("err") === "required" ? alertBox("Sarlavha va matnni to'ldiring.", "error") : ""}<section class="card"><h2>Yangi xabar</h2><form method="post" action="/admin/news/save" class="form"><div class="field"><label>Sana</label><input type="date" name="date" value="${new Date().toISOString().slice(0, 10)}"></div><div class="field"><label>Sarlavha</label><input name="title" maxlength="180" required></div><div class="field"><label>Matn</label><textarea name="body" maxlength="4000" rows="4" required></textarea></div><button class="btn btn-primary" type="submit">Yangilikni e'lon qilish</button></form></section><div class="news-list admin-news-list">${postForms || `<p class="muted">Hozircha yangiliklar yo'q.</p>`}</div>`;
     send(res, 200, layout({ title: "Yangiliklar boshqaruvi", body, admin }));
     return;
   }
