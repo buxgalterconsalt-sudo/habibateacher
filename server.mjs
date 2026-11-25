@@ -8327,15 +8327,24 @@ const server = http.createServer(async (req, res) => {
     const durationNotice = url.searchParams.has("times_updated")
       ? alertBox(`${Math.max(0, Number(url.searchParams.get("times_updated")) || 0)} ta test vaqti${updatedCourse ? ` “${updatedCourse.title}” kursida` : ""} yangilandi.`, "success")
       : "";
+    const scoreNotice = url.searchParams.has("scores_updated")
+      ? alertBox(`${Math.max(0, Number(url.searchParams.get("scores_updated")) || 0)} ta test bali${updatedCourse ? ` “${updatedCourse.title}” kursida` : ""} yangilandi.`, "success")
+      : "";
     const durationError = url.searchParams.get("err") === "duration" ? alertBox("Test vaqti 1–180 daqiqa oralig'ida bo'lishi kerak.", "error") : "";
+    const scoreError = url.searchParams.get("err") === "score" ? alertBox("Test bali 0–1000 oralig'ida bo'lishi kerak.", "error") : "";
     const courseRows = courses.length ? courses.map((course) => `<div class="card course-card">
       <div class="course-top"><div class="course-ico">${icon("layers")}</div><span class="badge">${course.lesson_count} dars</span></div>
       <h3>${h(course.title)}</h3><p class="muted">${h(categoryLabel(course.category))} · ${Number(course.is_published) ? "E'lon qilingan" : "Qoralama"}</p><a class="card-link" href="/admin/course/${course.id}">Tahrirlash</a>
-      <form method="post" action="/author/course/${course.id}/test-duration" class="course-duration-form" onsubmit="return confirm('Shu kursdagi barcha testlar vaqtini tanlangan qiymatga o‘zgartirasizmi?')"><label>Test vaqti (daqiqa)</label><input type="number" name="duration_min" min="1" max="180" value="30" required ${Number(course.test_count) ? "" : "disabled"}><button class="btn btn-sm btn-primary" type="submit" ${Number(course.test_count) ? "" : "disabled"}>Vaqtni testlarga qo‘llash</button></form>
+      <div class="course-bulk-actions">
+        <form method="post" action="/author/course/${course.id}/test-duration" class="course-duration-form" onsubmit="return confirm('Shu kursdagi barcha testlar vaqtini tanlangan qiymatga o‘zgartirasizmi?')"><label>Daqiqa</label><input aria-label="Test vaqti daqiqada" type="number" name="duration_min" min="1" max="180" value="30" required ${Number(course.test_count) ? "" : "disabled"}><button class="btn btn-sm btn-primary" type="submit" ${Number(course.test_count) ? "" : "disabled"}>Vaqt</button></form>
+        <form method="post" action="/author/course/${course.id}/test-score" class="course-duration-form" onsubmit="return confirm('Shu kursdagi barcha testlar balini tanlangan qiymatga o‘zgartirasizmi?')"><label>Ball</label><input aria-label="Test bali" type="number" name="max_score" min="0" max="1000" value="15" required ${Number(course.test_count) ? "" : "disabled"}><button class="btn btn-sm btn-primary" type="submit" ${Number(course.test_count) ? "" : "disabled"}>Ball</button></form>
+      </div>
       </div>`).join("") : `<div class="card empty">Hozircha kurs yo'q.</div>`;
     const body = `<div class="page-head"><div><h1>Muallif paneli</h1><p class="muted">Kurslar, darslar va test materiallarini boshqaring.</p></div></div>
       ${durationNotice}
+      ${scoreNotice}
       ${durationError}
+      ${scoreError}
       <div class="grid three">${courseRows}</div>
       <div class="card" style="margin-top:22px"><h2>Yangi kurs</h2><form method="post" action="/admin/course" class="form">
       <div class="field"><label>Yo'nalish</label><select name="category"><option value="attestation">Attestatsiya</option><option value="tkt">TKT</option></select></div>
@@ -8357,6 +8366,20 @@ const server = http.createServer(async (req, res) => {
     }
     const result = db.prepare("UPDATE lessons SET duration_min = ? WHERE course_id = ? AND type = 'test'").run(durationMin, courseId);
     return redirect(res, `/author?times_updated=${result.changes}&course=${courseId}`);
+  }
+
+  const authorCourseScoreMatch = p.match(/^\/author\/course\/(\d+)\/test-score$/);
+  if (authorCourseScoreMatch && method === "POST") {
+    if (!user) return redirect(res, "/login?next=/author");
+    if (!author && !admin) return redirect(res, "/attestation");
+    const courseId = Number(authorCourseScoreMatch[1]);
+    if (!db.prepare("SELECT id FROM courses WHERE id = ?").get(courseId)) return redirect(res, "/author");
+    const maxScore = Number(fields.max_score);
+    if (!Number.isInteger(maxScore) || maxScore < 0 || maxScore > 1000) {
+      return redirect(res, "/author?err=score");
+    }
+    const result = db.prepare("UPDATE lessons SET max_score = ? WHERE course_id = ? AND type = 'test'").run(maxScore, courseId);
+    return redirect(res, `/author?scores_updated=${result.changes}&course=${courseId}`);
   }
 
   if (p === "/admin" && method === "GET") {

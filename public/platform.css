@@ -979,17 +979,31 @@ html:not([data-theme="light"]) .theme-moon {
   margin-bottom: 14px;
 }
 
-.course-duration-form {
-  position: relative;
+.course-bulk-actions {
   display: grid;
-  gap: 8px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
   margin-top: 14px;
   padding-top: 12px;
   border-top: 1px solid var(--line);
 }
+
+.course-duration-form {
+  position: relative;
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  min-width: 0;
+}
 .course-duration-form label { font-size: .8rem; font-weight: 750; }
 .course-duration-form input { width: 100%; }
-.course-duration-form .btn { justify-self: start; }
+.course-duration-form .btn { justify-self: stretch; padding-inline: 8px; }
+
+@media (max-width: 480px) {
+  .course-bulk-actions { gap: 8px; }
+  .course-duration-form { gap: 6px; }
+  .course-duration-form .btn { font-size: .78rem; }
+}
 
 .card-link {
   color: var(--primary-soft);
