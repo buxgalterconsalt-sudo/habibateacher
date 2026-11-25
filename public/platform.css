@@ -6736,6 +6736,12 @@ html[data-theme="light"] .home-final-card { background: linear-gradient(120deg, 
 /* Home page: supplied teacher group photograph */
 .landing-home .home-teachers-photo { position: relative; left: 50%; width: 100vw; max-width: 100vw; margin: 0 0 0 -50vw; overflow: hidden; background: #0b1527; }
 .landing-home .home-teachers-photo img { display: block; width: 100%; height: clamp(250px, 48vw, 680px); object-fit: cover; object-position: center 54%; }
+.landing-home .home-teacher-marquee { overflow: hidden; border-top: 1px solid rgba(118, 91, 212, .28); border-bottom: 1px solid rgba(118, 91, 212, .22); background: linear-gradient(90deg, rgba(15, 12, 37, .98), rgba(13, 33, 50, .98)); color: #d5ccf2; }
+.landing-home .home-teacher-marquee-track { display: flex; width: max-content; animation: homeTeacherMarquee 38s linear infinite; }
+.landing-home .home-teacher-marquee-track span { display: block; flex: 0 0 auto; padding: 16px clamp(30px, 6vw, 86px); color: inherit; font-size: clamp(.9rem, 1.35vw, 1.08rem); font-weight: 650; letter-spacing: .015em; white-space: nowrap; }
+.landing-home .home-teacher-marquee-track span::after { content: "✦"; margin-left: clamp(30px, 6vw, 86px); color: #55d2d4; }
+@keyframes homeTeacherMarquee { to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) { .landing-home .home-teacher-marquee-track { width: 100%; justify-content: center; animation: none; } .landing-home .home-teacher-marquee-track span { padding-inline: 16px; text-align: center; white-space: normal; } .landing-home .home-teacher-marquee-track span[aria-hidden="true"] { display: none; } }
 @media (max-width: 640px) { .landing-home .home-teachers-photo img { height: clamp(220px, 65vw, 380px); object-position: center; } }
 
 /* Public news, the dashboard news counter, and the app install prompt */

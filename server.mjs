@@ -1995,7 +1995,7 @@ ${seoTags}
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%2312b5a6'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='18' font-weight='bold' text-anchor='middle' fill='%2303211d'%3EH%3C/text%3E%3C/svg%3E">
 <script async src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>try{document.documentElement.dataset.theme=localStorage.getItem('ht_theme')||'dark';}catch(e){document.documentElement.dataset.theme='dark';}</script>
-<link rel="stylesheet" href="/assets/platform.css?v=20261125portrait1">
+<link rel="stylesheet" href="/assets/platform.css?v=20261125ticker1">
 </head>
 <body${admin && !publicPage ? ` class="admin-page"` : isStudentPage ? ` class="student-page${isDashboard ? " is-dashboard" : ""}"` : ""}>
 <header class="topbar">
@@ -4841,7 +4841,7 @@ function testDocument({ title, body }) {  return `<!DOCTYPE html>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%231e40af'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='18' font-weight='bold' text-anchor='middle' fill='white'%3EH%3C/text%3E%3C/svg%3E">
 <script async src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>try{document.documentElement.dataset.theme=localStorage.getItem('ht_theme')||'dark';}catch(e){document.documentElement.dataset.theme='dark';}</script>
-<link rel="stylesheet" href="/assets/platform.css?v=20261125portrait1">
+<link rel="stylesheet" href="/assets/platform.css?v=20261125ticker1">
 </head>
 <body class="test-body student-page">
 ${body}
@@ -5748,6 +5748,9 @@ const server = http.createServer(async (req, res) => {
   </section>
   <section class="home-teachers-photo" data-home-section="teachers-photo" aria-label="O'qituvchilar jamoasi">
     <img src="/img/teachers-group.jpg" alt="O'zbekistonlik o'qituvchilar British Council treningida">
+    <div class="home-teacher-marquee" role="img" aria-label="Ustozlar tajribasi baham ko‘rilganda, bilim ham, natija ham yuksaladi.">
+      <div class="home-teacher-marquee-track" aria-hidden="true"><span>Ustozlar tajribasi baham ko‘rilganda, bilim ham, natija ham yuksaladi.</span><span>Ustozlar tajribasi baham ko‘rilganda, bilim ham, natija ham yuksaladi.</span></div>
+    </div>
   </section>
 
   <section class="section home-overview" id="program" data-home-section="overview">
