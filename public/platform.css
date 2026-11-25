@@ -6771,3 +6771,7 @@ body.install-gate-open { overflow: hidden; }
 @keyframes newsLinkPulse { 50% { text-shadow: 0 0 12px rgba(239, 68, 68, .75); } }
 @keyframes newsBadgePulse { 50% { background: #b91c1c; transform: scale(1.08); } }
 @media (prefers-reduced-motion: reduce) { .news-nav-link.has-unread, .news-nav-link.has-unread .news-nav-badge { animation: none; } }
+
+.news-author-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 16px; }
+.news-author-actions > form { margin: 0; }
+.news-author-actions .news-author-edit { flex: 1 1 100%; }
