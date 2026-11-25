@@ -209,10 +209,6 @@ function newsNavigationLink(user) {
   return `<a href="/news" class="news-nav-link" data-news-nav data-news-viewer="${h(viewer)}" data-news-ids="${h(JSON.stringify(ids))}" aria-label="Yangiliklar"><span>Yangiliklar</span><span class="news-nav-badge" data-news-badge hidden></span></a>`;
 }
 
-function newsEnglishFields(post = {}) {
-  return `<div class="field"><label>Sarlavha (inglizcha)</label><input name="title_en" maxlength="180" required value="${h(post.titleEn || "")}"></div><div class="field"><label>Matn (inglizcha)</label><textarea name="body_en" maxlength="4000" rows="4" required>${h(post.bodyEn || "")}</textarea></div>`;
-}
-
 function siteTexts(includeRemoved = false) {
   let saved = {};
   try { saved = JSON.parse(metaGet("site_texts_json", "{}")) || {}; } catch (e) {}
@@ -5639,15 +5635,16 @@ const server = http.createServer(async (req, res) => {
     if (!author) return redirect(res, user ? "/news" : "/login");
     const posts = newsPosts();
     const id = String(fields.id || "").replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 48);
+    const previousPost = id ? posts.find((item) => item.id === id) : null;
     const post = {
       id: id || `news-${randomBytes(8).toString("hex")}`,
       title: String(fields.title || "").trim().slice(0, 180),
       body: String(fields.body || "").trim().slice(0, 4000),
-      titleEn: String(fields.title_en || "").trim().slice(0, 180),
-      bodyEn: String(fields.body_en || "").trim().slice(0, 4000),
+      titleEn: String(fields.title_en ?? previousPost?.titleEn ?? "").trim().slice(0, 180),
+      bodyEn: String(fields.body_en ?? previousPost?.bodyEn ?? "").trim().slice(0, 4000),
       date: /^\d{4}-\d{2}-\d{2}$/.test(String(fields.date || "")) ? String(fields.date) : new Date().toISOString().slice(0, 10), updatedAt: nowISO()
     };
-    if (!post.title || !post.body || !post.titleEn || !post.bodyEn) return redirect(res, "/news?err=required");
+    if (!post.title || !post.body) return redirect(res, "/news?err=required");
     const index = posts.findIndex((item) => item.id === id);
     if (index >= 0) posts[index] = post;
     else posts.unshift(post);
@@ -5712,11 +5709,11 @@ const server = http.createServer(async (req, res) => {
     const postCards = posts.length ? posts.map((post) => {
       const displayTitle = res.lang === "en" && post.titleEn ? post.titleEn : post.title;
       const displayBody = res.lang === "en" && post.bodyEn ? post.bodyEn : post.body;
-      const authorActions = author ? `<div class="news-author-actions"><form method="post" action="/news/delete/${h(post.id)}" onsubmit="return confirm(document.documentElement.lang==='en'?'Remove this news post?':'Davom etilsinmi?')"><button class="btn btn-danger" type="submit">Yangilikni olib tashlash</button></form><details class="news-author-edit"><summary>Yangilikni tahrirlash</summary><form method="post" action="/news/save" class="form"><input type="hidden" name="id" value="${h(post.id)}"><div class="field"><label>Sana</label><input type="date" name="date" value="${h(post.date)}"></div><div class="field"><label>Sarlavha</label><input name="title" maxlength="180" required value="${h(post.title)}"></div><div class="field"><label>Matn</label><textarea name="body" maxlength="4000" rows="4" required>${h(post.body)}</textarea></div>${newsEnglishFields(post)}<button class="btn btn-primary" type="submit">Saqlash</button></form></details></div>` : "";
+      const authorActions = author ? `<div class="news-author-actions"><form method="post" action="/news/delete/${h(post.id)}" onsubmit="return confirm(document.documentElement.lang==='en'?'Remove this news post?':'Davom etilsinmi?')"><button class="btn btn-danger" type="submit">Yangilikni olib tashlash</button></form><details class="news-author-edit"><summary>Yangilikni tahrirlash</summary><form method="post" action="/news/save" class="form"><input type="hidden" name="id" value="${h(post.id)}"><div class="field"><label>Sana</label><input type="date" name="date" value="${h(post.date)}"></div><div class="field"><label>Sarlavha</label><input name="title" maxlength="180" required value="${h(post.title)}"></div><div class="field"><label>Matn</label><textarea name="body" maxlength="4000" rows="4" required>${h(post.body)}</textarea></div><button class="btn btn-primary" type="submit">Saqlash</button></form></details></div>` : "";
       return `<article class="card news-post"><time datetime="${h(post.date)}">${h(post.date || "Yangi")}</time><h2>${h(displayTitle)}</h2><p>${nl2br(h(displayBody))}</p>${authorActions}</article>`;
     }).join("") : `<div class="card empty"><h2>Hozircha yangiliklar yo'q</h2><p class="muted">Yangi xabarlar shu bo'limda e'lon qilinadi.</p></div>`;
-    const authorTools = author ? `<details open class="card news-author-tools"><summary>Mualliflar uchun: yangilik qo'shish va boshqarish</summary><p class="muted">Yangiliklar sahifasining o'zida xabar kiriting va e'lon qiling.</p><video controls preload="metadata" aria-label="Yangilik qo'shish bo'yicha qisqa video"><source src="/video/news-author-guide.mp4" type="video/mp4">Brauzeringiz videoni ochmaydi.</video><form method="post" action="/news/save" class="form"><div class="field"><label>Sana</label><input type="date" name="date" value="${new Date().toISOString().slice(0, 10)}"></div><div class="field"><label>Sarlavha</label><input name="title" maxlength="180" required></div><div class="field"><label>Matn</label><textarea name="body" maxlength="4000" rows="4" required></textarea></div>${newsEnglishFields()}<button class="btn btn-primary" type="submit">Yangilikni e'lon qilish</button></form></details>` : "";
-    const body = `<section class="news-page"><div class="page-head"><div><span class="eyebrow">PLATFORMADAN XABARLAR</span><h1>Yangiliklar</h1><p class="lead">Platformadagi yangilanish va e'lonlarni kuzatib boring.</p></div></div>${url.searchParams.get("saved") === "1" ? alertBox("Yangilik saqlandi.", "success") : ""}${url.searchParams.get("deleted") === "1" ? alertBox("Yangilik o'chirildi.", "success") : ""}${url.searchParams.get("err") === "required" ? alertBox("O‘zbekcha va inglizcha sarlavha hamda matnni to‘ldiring.", "error") : ""}${authorTools}<div class="news-list">${postCards}</div></section>`;
+    const authorTools = author ? `<details open class="card news-author-tools"><summary>Mualliflar uchun: yangilik qo'shish va boshqarish</summary><p class="muted">Yangiliklar sahifasining o'zida xabar kiriting va e'lon qiling.</p><video controls preload="metadata" aria-label="Yangilik qo'shish bo'yicha qisqa video"><source src="/video/news-author-guide.mp4" type="video/mp4">Brauzeringiz videoni ochmaydi.</video><form method="post" action="/news/save" class="form"><div class="field"><label>Sana</label><input type="date" name="date" value="${new Date().toISOString().slice(0, 10)}"></div><div class="field"><label>Sarlavha</label><input name="title" maxlength="180" required></div><div class="field"><label>Matn</label><textarea name="body" maxlength="4000" rows="4" required></textarea></div><button class="btn btn-primary" type="submit">Yangilikni e'lon qilish</button></form></details>` : "";
+    const body = `<section class="news-page"><div class="page-head"><div><span class="eyebrow">PLATFORMADAN XABARLAR</span><h1>Yangiliklar</h1><p class="lead">Platformadagi yangilanish va e'lonlarni kuzatib boring.</p></div></div>${url.searchParams.get("saved") === "1" ? alertBox("Yangilik saqlandi.", "success") : ""}${url.searchParams.get("deleted") === "1" ? alertBox("Yangilik o'chirildi.", "success") : ""}${url.searchParams.get("err") === "required" ? alertBox("Sarlavha va matnni to‘ldiring.", "error") : ""}${authorTools}<div class="news-list">${postCards}</div></section>`;
     send(res, 200, layout({ title: "Yangiliklar", body, user, admin, seo: { path: "/news", title: "Yangiliklar | Habiba Teacher", description: "Habiba Teacher platformasidagi yangilanishlar, testlar va e'lonlar." } }));
     return;
   }
