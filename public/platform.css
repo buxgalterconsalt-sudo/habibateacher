@@ -6638,7 +6638,7 @@ html[data-theme="light"] .home-final-card { background: linear-gradient(120deg, 
   .landing-home .landing-hero-copy h1 { max-width: 12ch; font-size: clamp(2.75rem, 13vw, 4.15rem); }
   .landing-home .landing-hero-copy h1.home-hero-message { max-width: 42ch; font-size: 1.08rem; line-height: 1.6; letter-spacing: -.015em; }
   .landing-home .landing-hero-art { min-height: 320px; }
-  .landing-home .hero-photo-frame { width: min(86%, 370px); height: 350px; }
+  .landing-home .hero-photo-frame { width: min(100%, 465px); max-width: 100%; height: auto; aspect-ratio: .92; }
   .landing-home .hero-float-card.one { left: -1%; }
   .home-statbar { margin-bottom: 28px; }
   .home-statbar > div { min-height: 66px; padding: 11px 12px; }
