@@ -6645,9 +6645,18 @@ const server = http.createServer(async (req, res) => {
     : isTktGroup
       ? `<summary class="test-group-head tkt-group-title"><h2>${h(course.title)}</h2><span class="tkt-group-marker" aria-hidden="true">+</span></summary>`
     : `<div class="test-group-head"><div><h2>${h(course.title)}</h2></div></div>`;
+  const tktOfficialSampleUrl = isTktGroup ? ({
+    "TKT MODULE 1": "https://www.cambridgeenglish.org/Images/539274-tkt-module-1-sample-paper-and-answer-key.zip",
+    "TKT MODULE 2": "https://www.cambridgeenglish.org/Images/539275-tkt-module-2-sample-paper-and-answer-key.zip",
+    "TKT MODULE 3": "https://www.cambridgeenglish.org/Images/539276-tkt-module-3-sample-paper-and-answer-key.zip"
+  }[String(course.title || "").trim().toUpperCase()] || "") : "";
+  const tktOfficialSample = tktOfficialSampleUrl
+    ? `<div class="tkt-official-sample"><a class="btn btn-ghost btn-sm" href="${tktOfficialSampleUrl}" target="_blank" rel="noopener noreferrer">Cambridge rasmiy namunaviy testi + javoblar ↗</a></div>`
+    : "";
   const firstTestIdInGroup = Number(list[0]?.id) || 0;
   return `<${isAttestationGroup || isTktGroup ? "details" : "section"} class="test-group${isAttestationGroup ? ` attestation-test-group${groupHasTests ? " has-tests" : ""}` : isTktGroup ? " tkt-test-group" : ""}">
   ${groupHeader}
+  ${tktOfficialSample}
   ${
   hasPaid && list.length > 1
   ? `<div class="plan-banner">
