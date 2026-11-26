@@ -6203,7 +6203,6 @@ body.is-dashboard .dl-pager .dl-page.active { border-color: #7943e3; background:
 .tkt-test-group > .tkt-group-title::marker { content: ""; }
 .tkt-group-marker { display: grid; width: 30px; height: 30px; flex: 0 0 30px; place-items: center; border: 1px solid var(--line); border-radius: 50%; color: var(--primary-soft); font-size: 1.35rem; line-height: 1; transition: transform .2s ease; }
 .tkt-test-group[open] > .tkt-group-title .tkt-group-marker { transform: rotate(45deg); }
-.tkt-official-sample { display: flex; flex-wrap: wrap; gap: 8px; margin: -4px 0 16px; }
 
 @media (max-width: 760px) {
   body.is-dashboard .page { padding-inline: 18px; }
