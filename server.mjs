@@ -4444,14 +4444,15 @@ function dashboardPage(user) {
   const quote = DAILY_WISDOM[quoteIndex];
   const dashboardQuoteText = quote.text;
 
+  const isReadingStarter = !!next && /^reading\s*[·-]\s*test\s*0?1$/i.test(String(next.title || "").trim());
   const nextCard = next
     ? `<a class="dash-hero-card" href="${
         nextNeedsPlan ? "/plans" : next.type === "test" ? `/test/${next.id}` : `/lesson/${next.id}`
       }">
         <span class="dash-hero-ico"><svg viewBox="0 0 24 24"><path d="m9 7 8 5-8 5z"/></svg></span>
         <span class="dash-hero-copy">
-          <small>${h(next.course_title)}</small>
-          <b>${/^reading\s*[·-]\s*test\s*0?1$/i.test(String(next.title || "").trim()) ? "Testlarni ishlash uchun bosing" : h(next.title)}</b>
+          ${isReadingStarter ? "" : `<small>${h(next.course_title)}</small>`}
+          <b>${isReadingStarter ? "Testlarni ishlash uchun bosing" : h(next.title)}</b>
           <span class="muted">${nextNeedsPlan ? copy.dashboard_plan_required : copy.dashboard_next_test} | ${
         nextNeedsPlan ? copy.dashboard_open_access : `${Number(next.duration_min) || 30} ${h(copy.dashboard_duration_unit)}`
       } | ${completed}/${total} ${h(copy.dashboard_completed)}</span>
