@@ -6616,10 +6616,6 @@ const server = http.createServer(async (req, res) => {
   const userHasPlan = !!user && hasPlanAccess(user.id);
   const sequence = user && !admin ? dashboardTestSequence(user.id) : null;
   const nextTest = sequence?.tests.find((test) => !sequence.completed.has(Number(test.id))) || null;
-  const tktDemoCourseId = cat === "tkt"
-    ? Number(courses.find((course) => /^TKT\s+MODULE\s+1$/i.test(String(course.title || "").trim()))?.id) || 0
-    : 0;
-
   const byCourse = new Map();
   for (const test of tests) {
   if (!byCourse.has(test.course_id)) byCourse.set(test.course_id, []);
@@ -6665,7 +6661,7 @@ const server = http.createServer(async (req, res) => {
   }
   <div class="grid test-grid">${list.map((t) => {
     const isComplete = sequence?.completed.has(Number(t.id)) || false;
-    const isFirstTestInGroup = (isAttestationGroup || (cat === "tkt" && Number(course.id) === tktDemoCourseId)) && Number(t.id) === firstTestIdInGroup;
+    const isFirstTestInGroup = (isAttestationGroup || isTktGroup) && Number(t.id) === firstTestIdInGroup;
     const locked = !!sequence && !isComplete && Number(t.id) !== Number(nextTest?.id) && !isFirstTestInGroup;
     return testCard(t, Number(t.price) > 0 && userHasPlan, locked, isFirstTestInGroup ? t.id : nextTest?.id);
   }).join("")}${addCard}</div>
