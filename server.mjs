@@ -4451,7 +4451,7 @@ function dashboardPage(user) {
         <span class="dash-hero-ico"><svg viewBox="0 0 24 24"><path d="m9 7 8 5-8 5z"/></svg></span>
         <span class="dash-hero-copy">
           <small>${h(next.course_title)}</small>
-          <b>${h(next.title)}</b>
+          <b>${/^reading\s*[·-]\s*test\s*0?1$/i.test(String(next.title || "").trim()) ? "Testlarni ishlash uchun bosing" : h(next.title)}</b>
           <span class="muted">${nextNeedsPlan ? copy.dashboard_plan_required : copy.dashboard_next_test} | ${
         nextNeedsPlan ? copy.dashboard_open_access : `${Number(next.duration_min) || 30} ${h(copy.dashboard_duration_unit)}`
       } | ${completed}/${total} ${h(copy.dashboard_completed)}</span>
@@ -6632,6 +6632,7 @@ const server = http.createServer(async (req, res) => {
     ATTESTATION_GROUP_PRIORITY.has(normalizeAttestationGroupName(course.title)) ||
     normalizeAttestationGroupName(course.title) === "toifa testlari"
   );
+  const isTktGroup = cat === "tkt";
   if (!list.length && !admin && !isAttestationGroup) return "";
   const hasPaid = list.some((t) => Number(t.price) > 0);
   const addCard = admin
@@ -6644,9 +6645,11 @@ const server = http.createServer(async (req, res) => {
   const groupHasTests = list.length > 0;
   const groupHeader = isAttestationGroup
     ? `<summary class="test-group-head attestation-group-title${groupHasTests ? " has-tests" : ""}"><h2>${h(course.title)}</h2>${groupHasTests ? `<span class="attestation-group-marker" aria-hidden="true"></span>` : ""}</summary>`
+    : isTktGroup
+      ? `<summary class="test-group-head tkt-group-title"><h2>${h(course.title)}</h2><span class="tkt-group-marker" aria-hidden="true">+</span></summary>`
     : `<div class="test-group-head"><div><h2>${h(course.title)}</h2></div></div>`;
   const firstTestIdInGroup = Number(list[0]?.id) || 0;
-  return `<${isAttestationGroup ? "details" : "section"} class="test-group${isAttestationGroup ? ` attestation-test-group${groupHasTests ? " has-tests" : ""}` : ""}">
+  return `<${isAttestationGroup || isTktGroup ? "details" : "section"} class="test-group${isAttestationGroup ? ` attestation-test-group${groupHasTests ? " has-tests" : ""}` : isTktGroup ? " tkt-test-group" : ""}">
   ${groupHeader}
   ${
   hasPaid && list.length > 1
@@ -6665,7 +6668,7 @@ const server = http.createServer(async (req, res) => {
     const locked = !!sequence && !isComplete && Number(t.id) !== Number(nextTest?.id) && !isFirstTestInGroup;
     return testCard(t, Number(t.price) > 0 && userHasPlan, locked, isFirstTestInGroup ? t.id : nextTest?.id);
   }).join("")}${addCard}</div>
-  ${isAttestationGroup ? "</details>" : "</section>"}`;
+  ${isAttestationGroup || isTktGroup ? "</details>" : "</section>"}`;
   })
 .filter(Boolean)
 .join("");
@@ -6680,7 +6683,7 @@ const server = http.createServer(async (req, res) => {
   <div class="wrap">
   <div class="tests-head">
   <span class="eyebrow">O'qituvchlar uchun mock testlar</span>
-  <h2>${h(meta.title)}</h2>
+  ${cat === "tkt" ? "" : `<h2>${h(meta.title)}</h2>`}
   </div>
   ${sections || `<div class="card empty">Bu yo'nalishda testlar tez orada qo'shiladi.</div>`}
   </div>
