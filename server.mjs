@@ -334,9 +334,12 @@ function hasDeviceLimitReached(userId, req) {
 
 const TEST_PASS_PERCENT = 80;
 const ATTESTATION_TEST_PASS_PERCENT = 60;
+const TKT_TEST_PASS_PERCENT = 45;
 
 function testPassPercent(category) {
-  return category === "attestation" ? ATTESTATION_TEST_PASS_PERCENT : TEST_PASS_PERCENT;
+  if (category === "attestation") return ATTESTATION_TEST_PASS_PERCENT;
+  if (category === "tkt") return TKT_TEST_PASS_PERCENT;
+  return TEST_PASS_PERCENT;
 }
 
 function firstVideoTasksGate(userId, courseId) {
@@ -2419,7 +2422,7 @@ function courseProgress(userId, courseId) {
   `SELECT
   (SELECT COUNT(*) FROM lessons WHERE course_id = ?) AS total,
   (SELECT COUNT(*) FROM progress p JOIN lessons l ON l.id = p.lesson_id JOIN courses c ON c.id = l.course_id
-  WHERE l.course_id = ? AND p.user_id = ? AND (l.type <> 'test' OR p.score >= CASE WHEN c.category = 'attestation' THEN ${ATTESTATION_TEST_PASS_PERCENT} ELSE ${TEST_PASS_PERCENT} END)) AS done`
+  WHERE l.course_id = ? AND p.user_id = ? AND (l.type <> 'test' OR p.score >= CASE WHEN c.category = 'attestation' THEN ${ATTESTATION_TEST_PASS_PERCENT} WHEN c.category = 'tkt' THEN ${TKT_TEST_PASS_PERCENT} ELSE ${TEST_PASS_PERCENT} END)) AS done`
   )
 .get(courseId, courseId, userId);
   return { total: row.total || 0, done: row.done || 0 };
@@ -3061,7 +3064,14 @@ function testResultStats(lessonId, category = "") {
     ? [
         { label: "Oliy toifa · 80–100%", min: 80, max: 100 },
         { label: "Birinchi toifa · 70–79%", min: 70, max: 79 },
-        { label: "Ikkinchi toifa · 0–69%", min: 0, max: 69 }
+        { label: "Ikkinchi toifa · 60–69%", min: 60, max: 69 },
+        { label: "Mutaxassis · 0–59%", min: 0, max: 59 }
+      ]
+    : category === "tkt"
+      ? [
+        { label: "A'lo · 70–100%", min: 70, max: 100 },
+        { label: "O'tdi · 45–69%", min: 45, max: 69 },
+        { label: "O'tolmadi · 0–44%", min: 0, max: 44 }
       ]
     : [
         { label: "70% va yuqori", min: 70, max: 100 },
@@ -4349,9 +4359,9 @@ function dashboardTestSequence(userId) {
     `SELECT p.lesson_id FROM progress p JOIN lessons l ON l.id = p.lesson_id
      JOIN courses c ON c.id = l.course_id
      WHERE p.user_id = ? AND l.type = 'test'
-       AND p.score >= CASE WHEN c.category = 'attestation' THEN ? ELSE ? END
+       AND p.score >= CASE WHEN c.category = 'attestation' THEN ? WHEN c.category = 'tkt' THEN ? ELSE ? END
        AND c.is_published = 1`
-  ).all(userId, ATTESTATION_TEST_PASS_PERCENT, TEST_PASS_PERCENT).map((row) => Number(row.lesson_id)));
+  ).all(userId, ATTESTATION_TEST_PASS_PERCENT, TKT_TEST_PASS_PERCENT, TEST_PASS_PERCENT).map((row) => Number(row.lesson_id)));
   return { tests, completed };
 }
 
@@ -5280,7 +5290,9 @@ function testResultPage(lesson, questions, score, answers = {}, passMark = null)
     ? "Oliy toifaga o'tdingiz"
     : score >= 70
       ? "Birinchi toifaga o'tdingiz"
-      : score >= 60 ? "Ikkinchi toifaga o'tdingiz" : "Yana urinib ko'ring";
+      : score >= 60 ? "Ikkinchi toifaga o'tdingiz" : "Mutaxassis";
+  const tktGrade = score >= 70 ? "A'lo!" : score >= 45 ? "O'tdingiz" : "O'tolmadingiz";
+  const resultTitle = isAttestation ? attestationGrade : course?.category === "tkt" ? tktGrade : passed ? "Yaxshi natija!" : "Yana urinib ko'ring";
   const mistakes = questions.filter((q) => String(answers[`q${q.id}`] || "") !== String(q.correct));
   const review = Object.keys(answers).length
     ? `<section class="answer-review"><h2>Xatolarni ko'rib chiqing</h2>${mistakes.length ? mistakes.map((q) => `<article class="answer-mistake"><b>${h(q.text)}</b><p class="wrong-answer">Sizning javobingiz: ${h(q[`o${Number(answers[`q${q.id}`])}`] || "Javob berilmadi")}</p><p class="right-answer">To'g'ri javob: ${h(q[`o${q.correct}`])}</p>${q.passage ? `<details><summary>Matnni ko'rish</summary><p>${nl2br(q.passage)}</p></details>` : ""}</article>`).join("") : `<p class="muted">Xato javob yo'q — a'lo!</p>`}</section>`
@@ -5295,9 +5307,9 @@ function testResultPage(lesson, questions, score, answers = {}, passMark = null)
   <div class="result-card">
   <span class="pill">Test yakunlandi</span>
   <div class="score-circle">${score}%</div>
-  <h1>${isAttestation && passed ? attestationGrade : passed ? "Yaxshi natija!": "Yana urinib ko'ring"}</h1>
+  <h1>${resultTitle}</h1>
   <p class="muted">${correct} / ${total} to'g'ri javob</p>
-  ${isAttestation ? `<p class="muted">${score >= 80 ? "80–100% — oliy toifa" : score >= 70 ? "70–79% — birinchi toifa" : score >= 60 ? "60–69% — ikkinchi toifa" : `60% dan kam. Ikkinchi toifa va keyingi test uchun 60% kerak.`}</p>` : `<p class="muted">O'tish uchun ${requiredPercent}% kerak.</p>`}
+  ${isAttestation ? `<p class="muted">${score >= 80 ? "80–100% — oliy toifa" : score >= 70 ? "70–79% — birinchi toifa" : score >= 60 ? "60–69% — ikkinchi toifa" : "60% dan kam — mutaxassis"}</p>` : course?.category === "tkt" ? `<p class="muted">70% va yuqori — a'lo · 45–69% — o'tdingiz · 45% dan kam — o'tolmadingiz</p>` : `<p class="muted">O'tish uchun ${requiredPercent}% kerak.</p>`}
   <div class="actions">
   ${passed ? `<a class="btn btn-primary" href="${moduleHref(lesson)}">Testlarga qaytish</a>` : `<a class="btn btn-primary" href="/test/${lesson.id}?start=1">Qayta topshirish</a>`}
   ${passed ? `<a class="btn btn-ghost" href="/test/${lesson.id}?start=1">Yana topshirish</a>` : ""}
