@@ -972,6 +972,7 @@ const normalizeAttestationGroupName = (value) => String(value || "").toLocaleLow
   .replace(/[’'`]/g, "")
   .replace(/\s+/g, " ")
   .trim();
+const isAttestationMockGroup = (value) => ["toifa testlari", "toliq mock"].includes(normalizeAttestationGroupName(value));
 
 const ATTESTATION_GROUPS = [
   { title: "Reading testlari", aliases: ["reading", "reading testlari", "attestatsiya readinglari"], description: "Reading bo'limi — har bir testda 15 ta savol." },
@@ -4352,7 +4353,7 @@ function dashboardTestSequence(userId) {
            WHEN 'reading testlari' THEN 0 WHEN 'grammar testlari' THEN 1
            WHEN 'vocabulary testlari' THEN 2 WHEN 'pragmatika testlari' THEN 3
            WHEN 'pedagogik mahorat testlari' THEN 4 WHEN 'kasbiy standart testlari' THEN 5
-           WHEN 'toifa testlari' THEN 6 ELSE 7 END ELSE 0 END,
+           WHEN 'toifa testlari' THEN 6 WHEN 'toliq mock' THEN 6 ELSE 7 END ELSE 0 END,
          c.id, l.position, l.id`
   ).all();
   const completed = new Set(db.prepare(
@@ -4367,7 +4368,7 @@ function dashboardTestSequence(userId) {
 
 function isFirstAttestationCategoryTest(test, tests) {
   const groupName = normalizeAttestationGroupName(test?.course_title);
-  if (!ATTESTATION_GROUP_PRIORITY.has(groupName) && groupName !== "toifa testlari") return false;
+  if (!ATTESTATION_GROUP_PRIORITY.has(groupName) && !isAttestationMockGroup(groupName)) return false;
   const firstInGroup = tests.find((item) => Number(item.course_id) === Number(test.course_id));
   return Number(firstInGroup?.id) === Number(test.id);
 }
@@ -4380,7 +4381,7 @@ function isFirstCourseTest(test, tests) {
 
 function isDashboardMockTest(test) {
   return test?.course_category === "tkt" || (
-    test?.course_category === "attestation" && normalizeAttestationGroupName(test?.course_title) === "toifa testlari"
+    test?.course_category === "attestation" && isAttestationMockGroup(test?.course_title)
   );
 }
 
@@ -6648,7 +6649,7 @@ const server = http.createServer(async (req, res) => {
   const list = byCourse.get(course.id) || [];
   const isAttestationGroup = cat === "attestation" && (
     ATTESTATION_GROUP_PRIORITY.has(normalizeAttestationGroupName(course.title)) ||
-    normalizeAttestationGroupName(course.title) === "toifa testlari"
+    isAttestationMockGroup(course.title)
   );
   const isTktGroup = cat === "tkt";
   if (!list.length && !admin && !isAttestationGroup) return "";
