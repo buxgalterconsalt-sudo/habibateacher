@@ -4378,10 +4378,22 @@ function isFirstCourseTest(test, tests) {
   return Number(firstInCourse?.id) === Number(test.id);
 }
 
+function isDashboardMockTest(test) {
+  return test?.course_category === "tkt" || (
+    test?.course_category === "attestation" && normalizeAttestationGroupName(test?.course_title) === "toifa testlari"
+  );
+}
+
+function isFirstDashboardMockTest(test, tests) {
+  return isFirstAttestationCategoryTest(test, tests) || (
+    test?.course_category === "tkt" && isFirstCourseTest(test, tests)
+  );
+}
+
 function dashboardPage(user) {
   const copy = siteTexts();
   const sequence = dashboardTestSequence(user.id);
-  const lessons = sequence.tests;
+  const lessons = sequence.tests.filter(isDashboardMockTest);
   const done = sequence.completed;
   const total = lessons.length;
   const completed = lessons.filter((l) => done.has(l.id)).length;
@@ -4472,17 +4484,14 @@ function dashboardPage(user) {
       </a>`
     : `<div class="dash-hero-card done"><span class="dash-hero-ico">&#10003;</span><span class="dash-hero-copy"><b>${h(copy.dashboard_done_title)}</b><span class="muted">${h(copy.dashboard_done_description)}</span></span></div>`;
 
-  const dashboardTests = lessons.filter((lesson) =>
-    lesson.course_category === "tkt" ||
-    (lesson.course_category === "attestation" && normalizeAttestationGroupName(lesson.course_title) === "toifa testlari")
-  );
+  const dashboardTests = lessons;
   const lessonCards = dashboardTests.length
     ? `<section class="dl-group">
       <div class="dl-group-head"><h3>${h(copy.dashboard_tests_title)}</h3><span>${dashboardTests.length} ${h(copy.dashboard_test_count_suffix)}</span></div>
       <div class="dl-grid list">${dashboardTests.map((l, i) => {
         const isDone = done.has(l.id);
         const sequenceIndex = lessons.findIndex((item) => Number(item.id) === Number(l.id));
-        const sequenceLocked = firstIncompleteIndex >= 0 && sequenceIndex > firstIncompleteIndex && !isFirstAttestationCategoryTest(l, lessons);
+        const sequenceLocked = firstIncompleteIndex >= 0 && sequenceIndex > firstIncompleteIndex && !isFirstDashboardMockTest(l, lessons);
         const lockedPaidTest = !sequenceLocked && Number(l.price) > 0 && !testOwned(user.id, l.id);
         const href = sequenceLocked ? "" : lockedPaidTest ? "/plans" : `/test/${l.id}`;
         const cardTag = sequenceLocked ? "div" : "a";
