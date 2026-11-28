@@ -1122,8 +1122,10 @@ function seedPreparedTests() {
   );
   const updateReadingQuestion = db.prepare("UPDATE questions SET text = ?, o1 = ?, o2 = ?, o3 = ?, o4 = ?, correct = ?, passage = ? WHERE id = ?");
   let addedSets = 0;
+  const keepTktSeedTests = metaGet("tkt_tests_cleared_2026_11_v1", "") !== "1";
   for (const sets of sources) {
     for (const set of sets) {
+      if (!keepTktSeedTests && set.category === "tkt") continue;
       const isAttestationFifty = set.category === "attestation" && set.questions.length === 50 &&
         ((Number(set.number) >= 1 && Number(set.number) <= 10) || set.layout === "attestation-50-sections");
       if (isAttestationFifty && set.layout !== "attestation-50-sections") set.questions.splice(0, preparedReading.length, ...preparedReading);
@@ -1259,6 +1261,71 @@ function seedPreparedTests() {
 }
 
 seedPreparedTests();
+
+function clearTktTestsForModuleRefresh() {
+  const migrationKey = "tkt_tests_cleared_2026_11_v1";
+  if (metaGet(migrationKey, "") === "1") return;
+  const courseIds = db.prepare("SELECT id FROM courses WHERE category = 'tkt'").all().map((row) => Number(row.id));
+  const lessonIds = courseIds.length
+    ? db.prepare(`SELECT id FROM lessons WHERE type = 'test' AND course_id IN (${courseIds.map(() => "?").join(",")})`).all(...courseIds).map((row) => Number(row.id))
+    : [];
+  const fileIds = [];
+  if (lessonIds.length) {
+    const marks = lessonIds.map(() => "?").join(",");
+    const questionIds = db.prepare(`SELECT id FROM questions WHERE lesson_id IN (${marks})`).all(...lessonIds).map((row) => Number(row.id));
+    const duelIds = db.prepare(`SELECT id FROM duels WHERE lesson_id IN (${marks})`).all(...lessonIds).map((row) => Number(row.id));
+    const tournamentIds = db.prepare(`SELECT id FROM tournaments WHERE test_id IN (${marks})`).all(...lessonIds).map((row) => Number(row.id));
+    fileIds.push(...db.prepare(`SELECT file_id FROM lessons WHERE id IN (${marks}) AND COALESCE(file_id, '') <> ''`).all(...lessonIds).map((row) => row.file_id));
+    fileIds.push(...db.prepare(`SELECT file_id FROM materials WHERE lesson_id IN (${marks}) AND COALESCE(file_id, '') <> ''`).all(...lessonIds).map((row) => row.file_id));
+    db.exec("BEGIN IMMEDIATE");
+    try {
+      if (duelIds.length) {
+        const duelMarks = duelIds.map(() => "?").join(",");
+        db.prepare(`DELETE FROM duel_questions WHERE duel_id IN (${duelMarks})`).run(...duelIds);
+        db.prepare(`DELETE FROM duel_starts WHERE duel_id IN (${duelMarks})`).run(...duelIds);
+        db.prepare(`DELETE FROM duel_plays WHERE duel_id IN (${duelMarks})`).run(...duelIds);
+        db.prepare(`DELETE FROM duels WHERE id IN (${duelMarks})`).run(...duelIds);
+      }
+      if (tournamentIds.length) {
+        const tournamentMarks = tournamentIds.map(() => "?").join(",");
+        const matchIds = db.prepare(`SELECT id FROM tournament_matches WHERE tournament_id IN (${tournamentMarks})`).all(...tournamentIds).map((row) => Number(row.id));
+        if (matchIds.length) {
+          const matchMarks = matchIds.map(() => "?").join(",");
+          db.prepare(`DELETE FROM tournament_starts WHERE match_id IN (${matchMarks})`).run(...matchIds);
+        }
+        db.prepare(`DELETE FROM tournament_matches WHERE tournament_id IN (${tournamentMarks})`).run(...tournamentIds);
+        db.prepare(`DELETE FROM tournament_entries WHERE tournament_id IN (${tournamentMarks})`).run(...tournamentIds);
+        db.prepare(`DELETE FROM tournament_questions WHERE tournament_id IN (${tournamentMarks})`).run(...tournamentIds);
+        db.prepare(`DELETE FROM tournaments WHERE id IN (${tournamentMarks})`).run(...tournamentIds);
+      }
+      if (questionIds.length) {
+        const questionMarks = questionIds.map(() => "?").join(",");
+        db.prepare(`DELETE FROM duel_questions WHERE question_id IN (${questionMarks})`).run(...questionIds);
+        db.prepare(`DELETE FROM tournament_questions WHERE question_id IN (${questionMarks})`).run(...questionIds);
+      }
+      for (const table of ["test_attempts", "progress", "purchases", "likes", "video_watch", "lesson_viewers", "test_sections", "materials", "questions"]) {
+        db.prepare(`DELETE FROM ${table} WHERE lesson_id IN (${marks})`).run(...lessonIds);
+      }
+      db.prepare(`DELETE FROM lessons WHERE id IN (${marks})`).run(...lessonIds);
+      metaSet(migrationKey, "1");
+      db.exec("COMMIT");
+    } catch (error) {
+      db.exec("ROLLBACK");
+      throw error;
+    }
+    for (const fileId of fileIds) {
+      const safeName = path.basename(String(fileId || ""));
+      if (safeName && safeName === fileId) {
+        try { fs.unlinkSync(path.join(STORAGE_DIR, safeName)); } catch (error) {}
+      }
+    }
+  } else {
+    metaSet(migrationKey, "1");
+  }
+  console.log(`[migration] Cleared ${lessonIds.length} existing TKT tests; Module 1–3 are ready for new source papers.`);
+}
+
+clearTktTestsForModuleRefresh();
 
 function replaceToifaTestBank() {
   const migrationKey = "toifa_test_bank_replaced_2026_11";
