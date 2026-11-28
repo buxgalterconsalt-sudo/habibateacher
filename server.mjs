@@ -790,6 +790,37 @@ CREATE TABLE IF NOT EXISTS test_attempts (
   completed_at TEXT NOT NULL DEFAULT ''
 );
 CREATE INDEX IF NOT EXISTS idx_test_attempts_user_lesson ON test_attempts(user_id, lesson_id, id);
+CREATE TABLE IF NOT EXISTS user_activity (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  action TEXT NOT NULL,
+  details TEXT NOT NULL DEFAULT '',
+  created_at TEXT NOT NULL,
+  source_key TEXT NOT NULL DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS idx_user_activity_created ON user_activity(created_at DESC, id DESC);
+CREATE INDEX IF NOT EXISTS idx_user_activity_user ON user_activity(user_id, created_at DESC, id DESC);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_user_activity_source ON user_activity(source_key) WHERE source_key <> '';
+`);
+db.exec(`
+  INSERT OR IGNORE INTO user_activity (user_id, action, details, created_at, source_key)
+    SELECT id, 'Ro''yxatdan o''tdi', '', created_at, 'register:' || id FROM users WHERE created_at <> '';
+  INSERT OR IGNORE INTO user_activity (user_id, action, details, created_at, source_key)
+    SELECT user_id, 'Kursni ochdi', c.title, created_at, 'enrollment:' || user_id || ':' || course_id
+    FROM enrollments e JOIN courses c ON c.id = e.course_id;
+  INSERT OR IGNORE INTO user_activity (user_id, action, details, created_at, source_key)
+    SELECT a.user_id, 'Testni boshladi', COALESCE(l.title, 'Test'), a.created_at, 'test-start:' || a.id
+    FROM test_attempts a LEFT JOIN lessons l ON l.id = a.lesson_id;
+  INSERT OR IGNORE INTO user_activity (user_id, action, details, created_at, source_key)
+    SELECT a.user_id, 'Testni yakunladi', COALESCE(l.title, 'Test') || ' — ' || a.score || '%', a.completed_at, 'test-finish:' || a.id
+    FROM test_attempts a LEFT JOIN lessons l ON l.id = a.lesson_id
+    WHERE a.score IS NOT NULL AND a.completed_at <> '';
+  INSERT OR IGNORE INTO user_activity (user_id, action, details, created_at, source_key)
+    SELECT p.user_id, 'Darsni yakunladi', l.title, p.completed_at, 'lesson-finish:' || p.user_id || ':' || p.lesson_id || ':' || p.completed_at
+    FROM progress p JOIN lessons l ON l.id = p.lesson_id
+    WHERE l.type = 'video' AND p.score IS NULL;
+  INSERT OR IGNORE INTO user_activity (user_id, action, details, created_at, source_key)
+    SELECT r.user_id, 'Tarif so''rovi yubordi', r.plan_id, r.created_at, 'payment-request:' || r.id FROM payment_requests r;
 `);
 
 // Eski bazalarga ustun qo'shish
@@ -1850,6 +1881,17 @@ function isAdmin(req) {
   return !!row;
 }
 
+function logUserActivity(userId, action, details = "") {
+  const id = Number(userId) || 0;
+  if (!id) return;
+  try {
+    db.prepare("INSERT INTO user_activity (user_id, action, details, created_at) VALUES (?, ?, ?, ?)")
+      .run(id, String(action || "Harakat").slice(0, 80), String(details || "").slice(0, 500), nowISO());
+  } catch (error) {
+    console.error("[activity] log failed", error.message);
+  }
+}
+
 function createUserSession(res, userId, req) {
   const token = randomBytes(32).toString("hex");
   const maxAge = 3 * 24 * 60 * 60;
@@ -1859,6 +1901,7 @@ function createUserSession(res, userId, req) {
   Date.now() + maxAge * 1000
   );
   db.prepare("UPDATE users SET last_login_at = ? WHERE id = ?").run(nowISO(), userId);
+  logUserActivity(userId, "Tizimga kirdi");
   res.setHeader("Set-Cookie", cookie("ht_session", token, maxAge, req));
 }
 
@@ -1939,6 +1982,7 @@ function navFor(user, admin, publicPage = false) {
   return `<nav class="nav">
   <a href="/admin" class="active">Admin</a>
   <a href="/admin/students">O'quvchilar</a>
+  <a href="/admin/activity">Faollik</a>
   <a href="/admin/site-settings">Sayt sozlamalari</a>
   <a href="/leaderboard">Reyting</a>
   <a href="/">Saytni ko'rish</a>
@@ -2049,7 +2093,7 @@ ${seoTags}
   <nav class="mobile-links">
   ${
   admin && !publicPage
-  ? `<a href="/admin">Admin</a><a href="/admin/students">O'quvchilar</a><a href="/admin/site-settings">Sayt sozlamalari</a><a href="/leaderboard">Reyting</a><a href="/">Saytni ko'rish</a>
+  ? `<a href="/admin">Admin</a><a href="/admin/students">O'quvchilar</a><a href="/admin/activity">Faollik</a><a href="/admin/site-settings">Sayt sozlamalari</a><a href="/leaderboard">Reyting</a><a href="/">Saytni ko'rish</a>
   <form method="post" action="/admin/logout"><button class="mobile-link-btn" type="submit">Chiqish</button></form>`
    : `${siteButtonVisible("nav_home") && String(copy.nav_home || "").trim() ? `<a href="/">${h(copy.nav_home)}</a>` : ""}${newsNavigationLink(user)}
   ${siteButtonVisible("nav_attestation") && String(copy.nav_attestation || "").trim() ? `<a href="/attestation">${h(copy.nav_attestation)}</a>` : ""}
@@ -5579,6 +5623,7 @@ const server = http.createServer(async (req, res) => {
   db.prepare("UPDATE lessons SET likes = likes + 1 WHERE id = ?").run(lessonId);
   newLiked = true;
   }
+  logUserActivity(user.id, newLiked ? "Testga yoqtirish bildirdi" : "Test yoqtirishini bekor qildi", lesson.title || `Test #${lessonId}`);
   const fresh = db.prepare("SELECT likes FROM lessons WHERE id = ?").get(lessonId);
   if (wantsJson) {
   res.writeHead(200, { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" });
@@ -6093,6 +6138,7 @@ const server = http.createServer(async (req, res) => {
   db.prepare("UPDATE registration_links SET used = 1 WHERE token = ?").run(registrationToken);
   createUserSession(res, Number(info.lastInsertRowid), req);
   createDeviceSession(res, Number(info.lastInsertRowid), req);
+  logUserActivity(info.lastInsertRowid, "Ro'yxatdan o'tdi");
   notifyTelegram(
     `<b>Yangi ro'yxatdan o'tish</b>\nIsm: ${h(fullName)}\nTelefon: ${h(phone)}\nTelegram: ${h(
       telegramUsername ? "@" + telegramUsername : telegramId || "ulanmagan"
@@ -6547,6 +6593,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (p === "/logout" && method === "POST") {
+  if (user) logUserActivity(user.id, "Tizimdan chiqdi");
   const token = parseCookies(req).ht_session;
   const deviceToken = parseCookies(req).ht_device;
   if (token) db.prepare("DELETE FROM sessions WHERE token = ?").run(token);
@@ -6569,6 +6616,7 @@ const server = http.createServer(async (req, res) => {
     "INSERT INTO payment_requests (user_id, plan_id, amount, status, created_at) VALUES (?, ?, ?, 'pending', ?)"
   ).run(user.id, plan.id, plan.price, nowISO());
   const requestId = Number(info.lastInsertRowid);
+  logUserActivity(user.id, "Tarif so'rovi yubordi", plan.title);
   await notifyTelegram(
     `<b>Yangi tarif/to'lov so'rovi #${requestId}</b>\nO'quvchi: <b>${h(user.name)}</b>\nTelefon: <code>${h(user.phone)}</code>\nTarif: <b>${h(plan.title)}</b>\nSumma: <b>${formatSum(plan.price)} so'm</b>\n\nTo'lovni tekshirish uchun o'quvchi yuborgan chek skrinshoti va tranzaksiya raqamini so'rang. Tasdiqlash: /admin/payments`,
     null,
@@ -7198,6 +7246,7 @@ const server = http.createServer(async (req, res) => {
   if (!user) return redirect(res, "/login");
   const course = db.prepare("SELECT * FROM courses WHERE id = ?").get(Number(courseMatch[1]));
   if (!course) return notFound(res, user, admin);
+  if (!admin) logUserActivity(user.id, "Kursni ochdi", course.title);
 
   db.prepare("INSERT OR IGNORE INTO enrollments (user_id, course_id, created_at) VALUES (?, ?, ?)").run(
   user.id,
@@ -7332,6 +7381,7 @@ const server = http.createServer(async (req, res) => {
   `INSERT INTO progress (user_id, lesson_id, score, completed_at) VALUES (?, ?, ?, ?)
   ON CONFLICT(user_id, lesson_id) DO UPDATE SET score = excluded.score, completed_at = excluded.completed_at`
   ).run(user.id, lesson.id, score, completedAt);
+  logUserActivity(user.id, "Testni yakunladi", `${lesson.title} — ${score}%`);
 
   const maxScore = Number(lesson.max_score) || 0;
   const shown = maxScore > 0 ? `${Math.round((score / 100) * maxScore)} / ${maxScore}`: `${score}%`;
@@ -7375,6 +7425,7 @@ const server = http.createServer(async (req, res) => {
     : questions;
   const attemptInfo = db.prepare("INSERT INTO test_attempts (user_id, lesson_id, question_ids, created_at) VALUES (?, ?, ?, ?)")
     .run(user.id, lesson.id, JSON.stringify(chosenQuestions.map((q) => q.id)), nowISO());
+  logUserActivity(user.id, "Testni boshladi", lesson.title);
   questions = chosenQuestions;
   const result = url.searchParams.get("result");
   if (result !== null) {
@@ -7518,6 +7569,9 @@ const server = http.createServer(async (req, res) => {
       if (!previousComplete) return redirect(res, `/test/${previous.id}?start=1`);
     }
   }
+  if (method === "GET" && !lessonMatch[2] && !admin && lesson.type !== "test") {
+    logUserActivity(user.id, "Darsni ochdi", lesson.title);
+  }
   if (lesson.type === "test" && !lessonMatch[2]) {
   redirect(res, `/test/${lesson.id}`);
   return;
@@ -7546,6 +7600,7 @@ const server = http.createServer(async (req, res) => {
   `INSERT INTO progress (user_id, lesson_id, score, completed_at) VALUES (?, ?, NULL, ?)
   ON CONFLICT(user_id, lesson_id) DO UPDATE SET completed_at = excluded.completed_at`
   ).run(user.id, lesson.id, nowISO());
+  logUserActivity(user.id, "Darsni yakunladi", lesson.title);
   if (String(req.headers.accept || "").includes("application/json")) {
   const nextRow = db
   .prepare(
@@ -7580,6 +7635,7 @@ const server = http.createServer(async (req, res) => {
   `INSERT INTO progress (user_id, lesson_id, score, completed_at) VALUES (?, ?, ?, ?)
   ON CONFLICT(user_id, lesson_id) DO UPDATE SET score = excluded.score, completed_at = excluded.completed_at`
   ).run(user.id, lesson.id, score, nowISO());
+  logUserActivity(user.id, "Dars testini yakunladi", `${lesson.title} — ${score}%`);
   redirect(res, `/lesson/${lesson.id}?result=${score}&attempt=${Number(attemptInfo.lastInsertRowid)}`);
   return;
   }
@@ -8460,6 +8516,44 @@ const server = http.createServer(async (req, res) => {
     return redirect(res, `/author?settings_updated=${updatedTests}&course=${courseId}`);
   }
 
+  if (p === "/admin/activity" && method === "GET") {
+    if (!admin) return redirect(res, "/admin/login");
+    const selectedUserId = Number(url.searchParams.get("user")) || 0;
+    const search = String(url.searchParams.get("q") || "").trim().slice(0, 100);
+    const users = db.prepare("SELECT id, name FROM users ORDER BY name COLLATE NOCASE LIMIT 2000").all();
+    const activities = db.prepare(`
+      SELECT a.id, a.user_id, a.action, a.details, a.created_at,
+        COALESCE(NULLIF(u.name, ''), 'Foydalanuvchi #' || a.user_id) AS user_name,
+        COALESCE(u.phone, '') AS phone
+      FROM user_activity a LEFT JOIN users u ON u.id = a.user_id
+      WHERE (? = 0 OR a.user_id = ?)
+        AND (? = '' OR lower(COALESCE(u.name, '')) LIKE '%' || lower(?) || '%'
+          OR lower(COALESCE(u.phone, '')) LIKE '%' || lower(?) || '%'
+          OR lower(a.action) LIKE '%' || lower(?) || '%'
+          OR lower(a.details) LIKE '%' || lower(?) || '%')
+      ORDER BY a.created_at DESC, a.id DESC LIMIT 500
+    `).all(selectedUserId, selectedUserId, search, search, search, search, search);
+    const rows = activities.length
+      ? activities.map((item) => `<tr>
+          <td>${h(String(item.created_at || "").replace("T", " ").slice(0, 19))}</td>
+          <td><a href="/admin/activity?user=${Number(item.user_id)}"><b>${h(item.user_name)}</b></a>${item.phone ? `<br><small class="muted">${h(item.phone)}</small>` : ""}</td>
+          <td><span class="badge">${h(item.action)}</span></td>
+          <td>${h(item.details || "—")}</td>
+        </tr>`).join("")
+      : `<tr><td colspan="4" class="muted">Hozircha faollik yozuvlari yo'q. Yangi harakatlar shu yerda ko'rinadi.</td></tr>`;
+    const body = `<a class="back" href="/admin">Admin panel</a>
+      <div class="page-head"><div><h1>Foydalanuvchi faolligi</h1><p class="muted">Ro'yxatdan o'tish, kirish, kurs va darslarni ochish hamda test natijalari. Oxirgi 500 ta harakat ko'rsatiladi.</p></div><a class="btn btn-ghost" href="/admin/students">O'quvchilar</a></div>
+      <form method="get" action="/admin/activity" class="card actions" style="align-items:end;gap:12px;flex-wrap:wrap">
+        <label>Foydalanuvchi <select name="user"><option value="0">Barchasi</option>${users.map((item) => `<option value="${item.id}"${selectedUserId === Number(item.id) ? " selected" : ""}>${h(item.name)}</option>`).join("")}</select></label>
+        <label>Qidirish <input name="q" value="${h(search)}" placeholder="Ism, telefon yoki harakat"></label>
+        <button class="btn btn-primary btn-sm" type="submit">Ko'rsatish</button>
+        ${selectedUserId || search ? `<a class="btn btn-ghost btn-sm" href="/admin/activity">Filtrni tozalash</a>` : ""}
+      </form>
+      <div class="card"><div class="table-wrap"><table><thead><tr><th>Vaqt</th><th>Foydalanuvchi</th><th>Harakat</th><th>Tafsilot</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+    send(res, 200, layout({ title: "Foydalanuvchi faolligi", body, admin }));
+    return;
+  }
+
   if (p === "/admin" && method === "GET") {
   if (!admin) return redirect(res, "/admin/login");
 
@@ -8500,7 +8594,7 @@ const server = http.createServer(async (req, res) => {
 : `<tr><td colspan="5" class="muted">Hozircha kurslar yo'q.</td></tr>`;
 
   const body = `
-  <div class="page-head"><div><h1>Admin panel</h1><p class="muted">Kurslar, darslar va o'quvchilar boshqaruvi.</p></div><div class="actions"><a class="btn btn-ghost btn-sm" href="/admin/students">O'quvchilar</a><a class="btn btn-ghost btn-sm" href="/admin/site-settings">Sayt sozlamalari</a><a class="btn btn-ghost btn-sm" href="/admin/plans">Tariflar</a><a class="btn btn-ghost btn-sm" href="/admin/payments">To'lovlar</a><a class="btn btn-ghost btn-sm" href="/admin/password">Parolni o'zgartirish</a><a class="btn btn-ghost btn-sm" href="/admin/contract">Ta'lim shartnomasi</a></div></div>
+  <div class="page-head"><div><h1>Admin panel</h1><p class="muted">Kurslar, darslar va o'quvchilar boshqaruvi.</p></div><div class="actions"><a class="btn btn-ghost btn-sm" href="/admin/students">O'quvchilar</a><a class="btn btn-ghost btn-sm" href="/admin/activity">Foydalanuvchi faolligi</a><a class="btn btn-ghost btn-sm" href="/admin/site-settings">Sayt sozlamalari</a><a class="btn btn-ghost btn-sm" href="/admin/plans">Tariflar</a><a class="btn btn-ghost btn-sm" href="/admin/payments">To'lovlar</a><a class="btn btn-ghost btn-sm" href="/admin/password">Parolni o'zgartirish</a><a class="btn btn-ghost btn-sm" href="/admin/contract">Ta'lim shartnomasi</a></div></div>
   <div class="stats">
   <div class="stat"><b>${stats.users}</b><span>O'quvchilar</span></div>
   <div class="stat"><b>${stats.courses}</b><span>Kurslar</span></div>
@@ -8711,7 +8805,7 @@ const server = http.createServer(async (req, res) => {
         db.prepare("DELETE FROM tournament_entries WHERE user_id = ?").run(studentId);
         db.prepare("DELETE FROM tournament_starts WHERE user_id = ?").run(studentId);
         db.prepare("UPDATE tournament_matches SET p1 = CASE WHEN p1 = ? THEN NULL ELSE p1 END, p2 = CASE WHEN p2 = ? THEN NULL ELSE p2 END, winner = CASE WHEN winner = ? THEN NULL ELSE winner END, status = CASE WHEN p1 = ? OR p2 = ? THEN 'pending' ELSE status END, s1 = CASE WHEN p1 = ? OR p2 = ? THEN NULL ELSE s1 END, s2 = CASE WHEN p1 = ? OR p2 = ? THEN NULL ELSE s2 END, t1 = CASE WHEN p1 = ? OR p2 = ? THEN NULL ELSE t1 END, t2 = CASE WHEN p1 = ? OR p2 = ? THEN NULL ELSE t2 END, finished_at = CASE WHEN p1 = ? OR p2 = ? THEN NULL ELSE finished_at END WHERE p1 = ? OR p2 = ? OR winner = ?").run(...Array(18).fill(studentId));
-        for (const table of ["sessions", "device_sessions", "progress", "enrollments", "purchases", "likes", "video_watch", "test_attempts", "plan_subscriptions", "payment_requests", "tournament_entries"]) db.prepare(`DELETE FROM ${table} WHERE user_id = ?`).run(studentId);
+        for (const table of ["sessions", "device_sessions", "progress", "enrollments", "purchases", "likes", "video_watch", "test_attempts", "plan_subscriptions", "payment_requests", "tournament_entries", "user_activity"]) db.prepare(`DELETE FROM ${table} WHERE user_id = ?`).run(studentId);
         db.prepare("DELETE FROM login_codes WHERE phone = ?").run(target.phone);
         db.prepare("DELETE FROM login_links WHERE phone = ?").run(target.phone);
         if (target.telegram_username) db.prepare("DELETE FROM telegram_users WHERE username = ?").run(target.telegram_username);
@@ -8775,7 +8869,8 @@ const server = http.createServer(async (req, res) => {
   <td>${s.done}</td>
   <td>${s.plan_expires ? String(s.plan_expires).startsWith("9999-") ? "To'liq ruxsat" : `Faol: ${h(String(s.plan_expires).slice(0, 10))}` : "Ruxsat yo'q"}</td>
   <td>${Number(s.is_blocked) ? `<span class="badge danger">Cheklangan</span>` : `<span class="badge done">Faol</span>`}</td>
-  <td><form method="post" action="/admin/student/${s.id}/${Number(s.is_blocked) ? "unblock" : "block"}" class="inline"><button class="btn btn-sm ${Number(s.is_blocked) ? "btn-primary" : "btn-danger"}">${Number(s.is_blocked) ? "Ruxsat berish" : "Cheklash"}</button></form>
+  <td><a class="btn btn-sm" href="/admin/activity?user=${s.id}">Faollik</a>
+  <form method="post" action="/admin/student/${s.id}/${Number(s.is_blocked) ? "unblock" : "block"}" class="inline"><button class="btn btn-sm ${Number(s.is_blocked) ? "btn-primary" : "btn-danger"}">${Number(s.is_blocked) ? "Ruxsat berish" : "Cheklash"}</button></form>
   <form method="post" action="/admin/student/${s.id}/author" class="inline"><button class="btn btn-sm">${Number(s.is_author) ? "Mualliflikni bekor qilish" : "Muallif tayinlash"}</button></form>
   <form method="post" action="/admin/student/${s.id}/delete" class="inline" onsubmit="return confirm('Foydalanuvchi va unga tegishli ma’lumotlar o‘chiriladi. Davom etilsinmi?')"><button class="btn btn-sm btn-danger">O‘chirish</button></form>
   <form method="post" action="/admin/student/${s.id}/grant" class="inline"><label class="small">Muddat <select name="months" style="min-width:100px">${Array.from({length:120},(_,i)=>`<option value="${i+1}"${i===2?" selected":""}>${i+1} oy</option>`).join("")}</select></label><button class="btn btn-sm" name="duration" value="set">Ruxsat berish</button><label class="small">Tugash sanasi <input type="date" name="expiry_date" value="${s.plan_expires && !String(s.plan_expires).startsWith("9999-") ? h(String(s.plan_expires).slice(0, 10)) : ""}"></label><button class="btn btn-sm" name="duration" value="date">Sanani belgilash</button><button class="btn btn-sm" name="duration" value="full">To'liq ochish</button></form>
