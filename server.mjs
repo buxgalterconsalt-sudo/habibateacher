@@ -5228,7 +5228,9 @@ function testPage(lesson, questions, testSections = [], attemptId = 0) {
 .join("");
 
   const sections = [];
-  if (storedSections.length) {
+  if (isTkt) {
+  sections.push({ title: "", from: 1, to: total });
+  } else if (storedSections.length) {
   let cursor = 1;
   for (const s of storedSections) {
   const from = Math.max(cursor, s.from);
@@ -5261,7 +5263,7 @@ function testPage(lesson, questions, testSections = [], attemptId = 0) {
   );
   }
   return `<div class="step-block">
-  <div class="step-title">${h(section.title)}</div>
+  ${section.title ? `<div class="step-title">${h(section.title)}</div>` : ""}
   <div class="palette">${buttons.join("")}</div>
   </div>`;
   })
