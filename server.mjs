@@ -307,6 +307,11 @@ function hasLessonPermission(userId, lessonId) {
     .get(userId, lessonId);
 }
 
+function isFreeTktModuleOnePaper(lesson) {
+  if (!lesson || lesson.type !== "pdf") return false;
+  return !!db.prepare("SELECT 1 FROM courses WHERE id = ? AND title = 'TKT MODULE 1' AND category = 'tkt'").get(lesson.course_id);
+}
+
 function isIntroVideoLesson(lessonId) {
   const lesson = db.prepare("SELECT id, course_id, position FROM lessons WHERE id = ? AND type = 'video'").get(lessonId);
   if (!lesson) return false;
@@ -1326,6 +1331,44 @@ function clearTktTestsForModuleRefresh() {
 }
 
 clearTktTestsForModuleRefresh();
+
+function importTktModuleOneSourcePapers() {
+  const migrationKey = "tkt_module1_source_papers_2026_11_v1";
+  if (metaGet(migrationKey, "") === "1") return;
+  const papers = JSON.parse(fs.readFileSync(path.join(__dirname, "seed-data", "tkt-module1-papers", "manifest.json"), "utf8"));
+  let course = db.prepare("SELECT * FROM courses WHERE title = 'TKT MODULE 1' AND category = 'tkt' ORDER BY id LIMIT 1").get();
+  if (!course) {
+    const info = db.prepare("INSERT INTO courses (title, description, category, is_test_group, is_published, created_at) VALUES (?, ?, 'tkt', 1, 1, ?)")
+      .run("TKT MODULE 1", "TKT Module 1 test savollari va variantlari asl hujjat shaklida.", nowISO());
+    course = db.prepare("SELECT * FROM courses WHERE id = ?").get(Number(info.lastInsertRowid));
+  }
+  db.prepare("UPDATE courses SET is_published = 1 WHERE id = ?").run(course.id);
+  let position = Number(db.prepare("SELECT COALESCE(MAX(position), 0) + 1 AS n FROM lessons WHERE course_id = ?").get(course.id).n) || 1;
+  const insertPaper = db.prepare(`INSERT INTO lessons
+    (course_id, title, type, content, duration_min, position, price, is_pro, max_score, question_count, file_id, file_name, file_size, created_at)
+    VALUES (?, ?, 'pdf', ?, 80, ?, 0, 0, 0, 0, ?, ?, ?, ?)`);
+  db.exec("BEGIN IMMEDIATE");
+  try {
+    for (const paper of papers) {
+      const sourcePath = path.join(__dirname, "seed-data", "tkt-module1-papers", paper.id);
+      const targetPath = path.join(STORAGE_DIR, paper.id);
+      if (!fs.existsSync(sourcePath)) throw new Error(`Missing TKT source paper: ${paper.id}`);
+      if (!fs.existsSync(targetPath)) fs.copyFileSync(sourcePath, targetPath);
+      const exists = db.prepare("SELECT id FROM lessons WHERE course_id = ? AND file_id = ? LIMIT 1").get(course.id, paper.id);
+      if (!exists) {
+        insertPaper.run(course.id, paper.title, "Savol va javob variantlari asl yuborilgan hujjat ko'rinishida.", position++, paper.id, paper.fileName, paper.size, nowISO());
+      }
+    }
+    metaSet(migrationKey, "1");
+    db.exec("COMMIT");
+  } catch (error) {
+    db.exec("ROLLBACK");
+    throw error;
+  }
+  console.log(`[seed] ${papers.length} original TKT Module 1 source papers added.`);
+}
+
+importTktModuleOneSourcePapers();
 
 function replaceToifaTestBank() {
   const migrationKey = "toifa_test_bank_replaced_2026_11";
@@ -2583,18 +2626,22 @@ function moduleHref(lesson) {
 }
 
 function testCard(test, owned = false, locked = false, unlockTestId = 0) {
+  const isSourcePdf = test.type === "pdf";
   const isPro = Number(test.price) > 0;
   const count = Number(test.question_count) || Number(test.qcount) || 0;
   const score = Number(test.max_score) || 0;
-  const priceLabel = owned ? "Ochilgan": isPro ? `${formatSum(test.price)} so'm`: "Bepul";
+  const priceLabel = isSourcePdf ? "Asl testni ochish": owned ? "Ochilgan": isPro ? `${formatSum(test.price)} so'm`: "Bepul";
   const targetId = locked && unlockTestId ? Number(unlockTestId) : Number(test.id);
-  return `<a class="test-card ${isPro ? "pro": "free"}${locked ? " test-locked" : ""}" href="/test/${targetId}"${locked ? ` aria-label="${h(test.title)} yopiq. Avval oldingi testni bajaring."` : ""}>
-  <span class="test-flag">${locked ? "🔒" : isPro ? "PRO": "FREE"}</span>
+  const href = isSourcePdf ? `/lesson/${targetId}` : `/test/${targetId}`;
+  return `<a class="test-card ${isPro ? "pro": "free"}${locked ? " test-locked" : ""}" href="${href}"${locked ? ` aria-label="${h(test.title)} yopiq. Avval oldingi testni bajaring."` : ""}>
+  <span class="test-flag">${locked ? "🔒" : isSourcePdf ? "PDF" : isPro ? "PRO": "FREE"}</span>
   <h3>${h(test.title)}</h3>
   <div class="test-params">
+  ${isSourcePdf ? `<div><span>Test ko'rinishi:</span><b>Asl hujjat</b></div><div><span>Fayl hajmi:</span><b>${formatSize(test.file_size)}</b></div>` : `
   <div><span>Ajratilgan vaqt:</span><b>${formatDuration(test.duration_min)}</b></div>
   <div><span>Savollar soni:</span><b>${count} ta</b></div>
   <div><span>Eng yuqori ball:</span><b>${score} ballik</b></div>
+  `}
   </div>
   <div class="test-engagement">
   <span class="like-btn" data-like="${test.id}" role="button" tabindex="0" title="Yoqdi">${icon("heart")} <b>${Number(test.likes) || 0}</b></span>
@@ -5886,9 +5933,9 @@ const server = http.createServer(async (req, res) => {
   (SELECT COUNT(*) FROM users) AS users,
   (SELECT COUNT(DISTINCT category) FROM courses WHERE is_published = 1 AND is_test_group = 0) AS courses,
   (SELECT COUNT(*) FROM lessons l JOIN courses c ON c.id = l.course_id WHERE l.type = 'video' AND c.is_published = 1 AND c.is_test_group = 0) AS lessons,
-  (SELECT COUNT(*) FROM lessons l JOIN courses c ON c.id = l.course_id WHERE l.type = 'test' AND c.is_published = 1) AS tests,
+  (SELECT COUNT(*) FROM lessons l JOIN courses c ON c.id = l.course_id WHERE (l.type = 'test' OR (l.type = 'pdf' AND c.category = 'tkt' AND c.title = 'TKT MODULE 1')) AND c.is_published = 1) AS tests,
   (SELECT COUNT(*) FROM lessons l JOIN courses c ON c.id = l.course_id WHERE l.type = 'test' AND c.is_published = 1 AND c.category = 'attestation') AS tests_attestation,
-  (SELECT COUNT(*) FROM lessons l JOIN courses c ON c.id = l.course_id WHERE l.type = 'test' AND c.is_published = 1 AND c.category = 'tkt') AS tests_tkt,
+  (SELECT COUNT(*) FROM lessons l JOIN courses c ON c.id = l.course_id WHERE (l.type = 'test' OR (l.type = 'pdf' AND c.title = 'TKT MODULE 1')) AND c.is_published = 1 AND c.category = 'tkt') AS tests_tkt,
   (SELECT COUNT(*) FROM progress) AS done`
   )
 .get();
@@ -6760,9 +6807,10 @@ const server = http.createServer(async (req, res) => {
   `SELECT l.*, c.title AS course_title,
   (SELECT COUNT(*) FROM questions q WHERE q.lesson_id = l.id) AS qcount
   FROM lessons l JOIN courses c ON c.id = l.course_id
-  WHERE l.type = 'test' AND c.category IN (${categoryMarks}) AND c.is_published = 1
-    AND (c.category <> 'tkt' OR EXISTS (SELECT 1 FROM questions q WHERE q.lesson_id = l.id))
-    AND (? = 1 OR EXISTS (SELECT 1 FROM questions q WHERE q.lesson_id = l.id))
+  WHERE (l.type = 'test' OR (c.category = 'tkt' AND c.title = 'TKT MODULE 1' AND l.type = 'pdf' AND COALESCE(l.file_id, '') <> ''))
+    AND c.category IN (${categoryMarks}) AND c.is_published = 1
+    AND (c.category <> 'tkt' OR EXISTS (SELECT 1 FROM questions q WHERE q.lesson_id = l.id) OR l.type = 'pdf')
+    AND (? = 1 OR EXISTS (SELECT 1 FROM questions q WHERE q.lesson_id = l.id) OR l.type = 'pdf')
   ORDER BY l.course_id, l.position, l.id`
   )
   .all(...queryCategories, admin ? 1 : 0);
@@ -6816,7 +6864,7 @@ const server = http.createServer(async (req, res) => {
   <div class="grid test-grid">${list.map((t) => {
     const isComplete = sequence?.completed.has(Number(t.id)) || false;
     const isFirstTestInGroup = (isAttestationGroup || isTktGroup) && Number(t.id) === firstTestIdInGroup;
-    const locked = !!sequence && !isComplete && Number(t.id) !== Number(nextTest?.id) && !isFirstTestInGroup;
+    const locked = t.type !== "pdf" && !!sequence && !isComplete && Number(t.id) !== Number(nextTest?.id) && !isFirstTestInGroup;
     return testCard(t, Number(t.price) > 0 && userHasPlan, locked, isFirstTestInGroup ? t.id : nextTest?.id);
   }).join("")}${addCard}</div>
   ${isAttestationGroup || isTktGroup ? "</details>" : "</section>"}`;
@@ -7325,7 +7373,7 @@ const server = http.createServer(async (req, res) => {
 .prepare("SELECT * FROM lessons WHERE course_id = ? ORDER BY position, id")
 .all(course.id);
   const visibleLessons = lessons.filter((lesson, index) => {
-    if (admin || (lesson.type === "video" && (isIntroVideoLesson(lesson.id) || hasLessonPermission(user.id, lesson.id))) ||
+    if (admin || isFreeTktModuleOnePaper(lesson) || (lesson.type === "video" && (isIntroVideoLesson(lesson.id) || hasLessonPermission(user.id, lesson.id))) ||
         (lesson.type === "test" && Number(lesson.price) === 0) || hasLessonPermission(user.id, lesson.id)) {
       const previous = lessons[index - 1];
       if (!admin && lesson.type === "test" && previous?.type === "video" && !isIntroVideoLesson(previous.id) && !hasLessonPermission(user.id, previous.id)) return false;
@@ -7622,7 +7670,7 @@ const server = http.createServer(async (req, res) => {
     const unmet = isFirstCategoryTest ? null : sequence.tests.slice(0, index).find((item) => !sequence.completed.has(Number(item.id)));
     if (unmet) return redirect(res, `/test/${unmet.id}`);
   }
-  if (!admin && lesson.type !== "test" && lesson.type !== "video" && !hasLessonPermission(user.id, lesson.id)) return redirect(res, "/plans");
+  if (!admin && lesson.type !== "test" && lesson.type !== "video" && !isFreeTktModuleOnePaper(lesson) && !hasLessonPermission(user.id, lesson.id)) return redirect(res, "/plans");
   if (!admin && lesson.type === "video" && !isIntroVideoLesson(lesson.id) && !hasLessonPermission(user.id, lesson.id)) return redirect(res, "/plans");
   const videoPreviewOnly = lesson.type === "video" && !admin && !hasLessonPermission(user.id, lesson.id) && !isIntroVideoLesson(lesson.id);
   if (!admin && lesson.type === "test" && Number(lesson.price) > 0 && !testOwned(user.id, lesson.id)) return redirect(res, `/test/${lesson.id}`);
@@ -8254,7 +8302,7 @@ const server = http.createServer(async (req, res) => {
   if (!user && !admin) return redirect(res, "/login");
   const lesson = db.prepare("SELECT * FROM lessons WHERE id = ?").get(Number(fileMatch[1]));
   if (!lesson || lesson.type !== "pdf" || !lesson.file_id) return notFound(res, user, admin);
-  if (!admin && !hasLessonPermission(user.id, lesson.id)) { redirect(res, "/plans"); return; }
+  if (!admin && !isFreeTktModuleOnePaper(lesson) && !hasLessonPermission(user.id, lesson.id)) { redirect(res, "/plans"); return; }
   if (!admin && Number(lesson.price) > 0 && !testOwned(user.id, lesson.id)) {
   redirect(res, `/test/${lesson.id}`);
   return;
