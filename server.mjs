@@ -1350,7 +1350,7 @@ function importTktModuleOneSourcePapers() {
 importTktModuleOneSourcePapers();
 
 function importInteractiveTktModuleOneTests() {
-  const migrationKey = "tkt_module1_interactive_2007_v1";
+  const migrationKey = "tkt_module1_interactive_quizzes_v2";
   if (metaGet(migrationKey, "") === "1") return;
   const quizzes = JSON.parse(fs.readFileSync(path.join(__dirname, "seed-data", "tkt-module1-quizzes.json"), "utf8"));
   let course = db.prepare("SELECT * FROM courses WHERE title = 'TKT MODULE 1' AND category = 'tkt' ORDER BY id LIMIT 1").get();
