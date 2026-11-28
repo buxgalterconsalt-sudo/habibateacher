@@ -1472,6 +1472,41 @@ function importInteractiveTktModuleTwoTests() {
 
 importInteractiveTktModuleTwoTests();
 
+function importTktModuleTwoTelegramQuiz() {
+  const migrationKey = "tkt_module2_telegram_quiz_v1";
+  if (metaGet(migrationKey, "") === "1") return;
+  const quiz = JSON.parse(fs.readFileSync(path.join(__dirname, "seed-data", "tkt-module2-quizzes.json"), "utf8"))
+    .find((item) => item.title === "TKT Module 2 · Telegram Quiz 1 (40 verified questions)");
+  if (!quiz) throw new Error("Missing verified Telegram TKT Module 2 quiz");
+  const course = db.prepare("SELECT id FROM courses WHERE title = 'TKT MODULE 2' AND category = 'tkt' ORDER BY id LIMIT 1").get();
+  if (!course) throw new Error("TKT MODULE 2 course was not found");
+  const existing = db.prepare("SELECT id FROM lessons WHERE course_id = ? AND title = ? AND type = 'test'").get(course.id, quiz.title);
+  if (!existing) {
+    const position = Number(db.prepare("SELECT COALESCE(MAX(position), 0) + 1 AS n FROM lessons WHERE course_id = ? AND type = 'test'").get(course.id).n) || 1;
+    const lesson = db.prepare(`INSERT INTO lessons
+      (course_id, title, type, content, duration_min, position, price, is_pro, max_score, question_count, created_at)
+      VALUES (?, ?, 'test', ?, ?, ?, 0, 0, ?, ?, ?)`)
+      .run(course.id, quiz.title, `Manba: ${quiz.source}`, Number(quiz.duration_min) || 40, position, quiz.questions.length, quiz.questions.length, nowISO());
+    const insertQuestion = db.prepare(`INSERT INTO questions
+      (lesson_id, text, o1, o2, o3, o4, correct, passage, o5, o6, o7, o8, option_count)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
+    for (const question of quiz.questions) {
+      const options = Array.isArray(question.options) ? question.options.slice(0, 8) : [];
+      const optionCount = options.filter((value) => String(value || "").trim()).length;
+      if (!String(question.text || "").trim() || optionCount < 2 || Number(question.correct) < 1 || Number(question.correct) > optionCount) {
+        throw new Error(`Invalid TKT Module 2 Telegram question in ${quiz.title}`);
+      }
+      while (options.length < 8) options.push("");
+      insertQuestion.run(Number(lesson.lastInsertRowid), question.text, options[0], options[1], options[2], options[3], Number(question.correct), question.passage || "", options[4], options[5], options[6], options[7], optionCount);
+    }
+  }
+  db.prepare("UPDATE courses SET description = ? WHERE id = ?")
+    .run("TKT Module 2 interaktiv testlari. Har bir sinov savollar manbasidagi mavjud miqdor va javob kaliti asosida tuzilgan.", course.id);
+  metaSet(migrationKey, "1");
+}
+
+importTktModuleTwoTelegramQuiz();
+
 function replaceToifaTestBank() {
   const migrationKey = "toifa_test_bank_replaced_2026_11";
   if (metaGet(migrationKey, "") === "1") return;
