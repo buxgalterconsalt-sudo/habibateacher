@@ -1472,6 +1472,52 @@ function importInteractiveTktModuleTwoTests() {
 
 importInteractiveTktModuleTwoTests();
 
+function importAdditionalTktPracticeTests() {
+  const migrationKey = "tkt_additional_practice_tests_2026_11_v1";
+  if (metaGet(migrationKey, "") === "1") return;
+  const quizzes = JSON.parse(fs.readFileSync(path.join(__dirname, "seed-data", "tkt-practice-tests.json"), "utf8"));
+  const insertLesson = db.prepare(`INSERT INTO lessons
+    (course_id, title, type, content, duration_min, position, price, is_pro, max_score, question_count, created_at)
+    VALUES (?, ?, 'test', ?, ?, ?, 0, 0, ?, ?, ?)`);
+  const insertQuestion = db.prepare(`INSERT INTO questions
+    (lesson_id, text, o1, o2, o3, o4, correct, passage, o5, o6, o7, o8, option_count)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
+  db.exec("BEGIN IMMEDIATE");
+  try {
+    for (const quiz of quizzes) {
+      const courseTitle = `TKT MODULE ${Number(quiz.module)}`;
+      let course = db.prepare("SELECT * FROM courses WHERE title = ? AND category = 'tkt' ORDER BY id LIMIT 1").get(courseTitle);
+      if (!course) {
+        const created = db.prepare("INSERT INTO courses (title, description, category, is_test_group, is_published, created_at) VALUES (?, ?, 'tkt', 1, 1, ?)")
+          .run(courseTitle, `TKT Module ${quiz.module} interaktiv sinov testlari.`, nowISO());
+        course = db.prepare("SELECT * FROM courses WHERE id = ?").get(Number(created.lastInsertRowid));
+      }
+      const exists = db.prepare("SELECT id FROM lessons WHERE course_id = ? AND title = ? AND type = 'test'").get(course.id, quiz.title);
+      if (exists) continue;
+      const position = Number(db.prepare("SELECT COALESCE(MAX(position), 0) + 1 AS n FROM lessons WHERE course_id = ? AND type = 'test'").get(course.id).n) || 1;
+      const lesson = insertLesson.run(course.id, quiz.title, `Manba: ${quiz.source}`, Number(quiz.duration_min) || 20, position, quiz.questions.length, quiz.questions.length, nowISO());
+      const lessonId = Number(lesson.lastInsertRowid);
+      for (const question of quiz.questions) {
+        const options = Array.isArray(question.options) ? question.options.slice(0, 8) : [];
+        const optionCount = options.filter((value) => String(value || "").trim()).length;
+        if (!String(question.text || "").trim() || optionCount < 2 || Number(question.correct) < 0 || Number(question.correct) >= optionCount) {
+          throw new Error(`Invalid TKT practice question in ${quiz.title}`);
+        }
+        while (options.length < 8) options.push("");
+        insertQuestion.run(lessonId, question.text, options[0], options[1], options[2], options[3], Number(question.correct) + 1, question.passage || "", options[4], options[5], options[6], options[7], optionCount);
+      }
+    }
+    metaSet(migrationKey, "1");
+    db.exec("COMMIT");
+  } catch (error) {
+    db.exec("ROLLBACK");
+    throw error;
+  }
+  console.log(`[seed] Imported ${quizzes.length} additional interactive TKT practice tests.`);
+}
+
+importAdditionalTktPracticeTests();
+
 function importTktModuleTwoTelegramQuiz() {
   const migrationKey = "tkt_module2_telegram_quiz_v1";
   if (metaGet(migrationKey, "") === "1") return;
