@@ -1411,6 +1411,67 @@ function importInteractiveTktModuleOneTests() {
 
 importInteractiveTktModuleOneTests();
 
+
+function importInteractiveTktModuleTwoTests() {
+  const migrationKey = "tkt_module2_interactive_quizzes_v1";
+  if (metaGet(migrationKey, "") === "1") return;
+  const quizzes = JSON.parse(fs.readFileSync(path.join(__dirname, "seed-data", "tkt-module2-quizzes.json"), "utf8"));
+  let course = db.prepare("SELECT * FROM courses WHERE title = 'TKT MODULE 2' AND category = 'tkt' ORDER BY id LIMIT 1").get();
+  if (!course) {
+    const result = db.prepare("INSERT INTO courses (title, description, category, is_test_group, is_published, created_at) VALUES (?, ?, 'tkt', 1, 1, ?)")
+      .run("TKT MODULE 2", "TKT 2-modul: dars rejalashtirish va resurslardan foydalanish.", nowISO());
+    course = db.prepare("SELECT * FROM courses WHERE id = ?").get(Number(result.lastInsertRowid));
+  }
+  const pdfLessons = db.prepare("SELECT id, file_id FROM lessons WHERE course_id = ? AND type = 'pdf'").all(course.id);
+  let position = Number(db.prepare("SELECT COALESCE(MAX(position), 0) + 1 AS n FROM lessons WHERE course_id = ? AND type = 'test'").get(course.id).n) || 1;
+  const insertLesson = db.prepare(`INSERT INTO lessons
+    (course_id, title, type, content, duration_min, position, price, is_pro, max_score, question_count, created_at)
+    VALUES (?, ?, 'test', ?, ?, ?, 0, 0, ?, ?, ?)`);
+  const insertQuestion = db.prepare(`INSERT INTO questions
+    (lesson_id, text, o1, o2, o3, o4, correct, passage, o5, o6, o7, o8, option_count)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
+  db.exec("BEGIN IMMEDIATE");
+  try {
+    for (const lesson of pdfLessons) {
+      const id = Number(lesson.id);
+      for (const table of ["test_attempts", "progress", "purchases", "likes", "video_watch", "lesson_viewers", "test_sections", "materials", "questions"]) {
+        db.prepare(`DELETE FROM ${table} WHERE lesson_id = ?`).run(id);
+      }
+      db.prepare("DELETE FROM lessons WHERE id = ?").run(id);
+    }
+    for (const quiz of quizzes) {
+      if (db.prepare("SELECT id FROM lessons WHERE course_id = ? AND title = ? AND type = 'test'").get(course.id, quiz.title)) continue;
+      const info = insertLesson.run(course.id, quiz.title, `Manba: ${quiz.source}`, quiz.duration_min || 80, position++, quiz.questions.length, quiz.questions.length, nowISO());
+      const lessonId = Number(info.lastInsertRowid);
+      for (const question of quiz.questions) {
+        const options = Array.isArray(question.options) ? question.options.slice(0, 8) : [];
+        while (options.length < 8) options.push("");
+        const optionCount = options.filter((value) => String(value || "").trim()).length;
+        if (!String(question.text || "").trim() || optionCount < 2 || Number(question.correct) < 1 || Number(question.correct) > optionCount) {
+          throw new Error(`Invalid TKT Module 2 question in ${quiz.title}`);
+        }
+        insertQuestion.run(lessonId, question.text, options[0], options[1], options[2], options[3], Number(question.correct), question.passage || "", options[4], options[5], options[6], options[7], optionCount);
+      }
+    }
+    db.prepare("UPDATE courses SET is_published = 1, description = ? WHERE id = ?")
+      .run("TKT 2-modul: dars rejalashtirish va resurslardan foydalanish. Har bir interaktiv testda 80 ta savol.", course.id);
+    metaSet(migrationKey, "1");
+    db.exec("COMMIT");
+  } catch (error) {
+    db.exec("ROLLBACK");
+    throw error;
+  }
+  for (const lesson of pdfLessons) {
+    const fileId = String(lesson.file_id || "");
+    if (fileId && path.basename(fileId) === fileId) {
+      try { fs.unlinkSync(path.join(STORAGE_DIR, fileId)); } catch (error) {}
+    }
+  }
+  console.log(`[seed] Imported ${quizzes.length} interactive TKT Module 2 test(s); removed ${pdfLessons.length} PDF lessons.`);
+}
+
+importInteractiveTktModuleTwoTests();
+
 function replaceToifaTestBank() {
   const migrationKey = "toifa_test_bank_replaced_2026_11";
   if (metaGet(migrationKey, "") === "1") return;
