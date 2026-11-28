@@ -863,6 +863,14 @@ const questionCols = db.prepare("PRAGMA table_info(questions)").all();
 if (!questionCols.some((c) => c.name === "passage")) {
   db.exec("ALTER TABLE questions ADD COLUMN passage TEXT NOT NULL DEFAULT ''");
 }
+for (const option of [5, 6, 7, 8]) {
+  if (!questionCols.some((c) => c.name === `o${option}`)) {
+    db.exec(`ALTER TABLE questions ADD COLUMN o${option} TEXT NOT NULL DEFAULT ''`);
+  }
+}
+if (!questionCols.some((c) => c.name === "option_count")) {
+  db.exec("ALTER TABLE questions ADD COLUMN option_count INTEGER NOT NULL DEFAULT 4");
+}
 
 /* Boshlang'ich katalog   attestatsiya va TKT testlari ro'yxati */
 function ensureDemoContent() {
@@ -1335,40 +1343,73 @@ clearTktTestsForModuleRefresh();
 function importTktModuleOneSourcePapers() {
   const migrationKey = "tkt_module1_source_papers_2026_11_v1";
   if (metaGet(migrationKey, "") === "1") return;
-  const papers = JSON.parse(fs.readFileSync(path.join(__dirname, "seed-data", "tkt-module1-papers", "manifest.json"), "utf8"));
+  // Source PDFs are converted into interactive questions below; never import them as lessons.
+  metaSet(migrationKey, "1");
+}
+
+importTktModuleOneSourcePapers();
+
+function importInteractiveTktModuleOneTests() {
+  const migrationKey = "tkt_module1_interactive_2007_v1";
+  if (metaGet(migrationKey, "") === "1") return;
+  const quizzes = JSON.parse(fs.readFileSync(path.join(__dirname, "seed-data", "tkt-module1-quizzes.json"), "utf8"));
   let course = db.prepare("SELECT * FROM courses WHERE title = 'TKT MODULE 1' AND category = 'tkt' ORDER BY id LIMIT 1").get();
   if (!course) {
-    const info = db.prepare("INSERT INTO courses (title, description, category, is_test_group, is_published, created_at) VALUES (?, ?, 'tkt', 1, 1, ?)")
-      .run("TKT MODULE 1", "TKT Module 1 test savollari va variantlari asl hujjat shaklida.", nowISO());
-    course = db.prepare("SELECT * FROM courses WHERE id = ?").get(Number(info.lastInsertRowid));
+    const result = db.prepare("INSERT INTO courses (title, description, category, is_test_group, is_published, created_at) VALUES (?, ?, 'tkt', 1, 1, ?)")
+      .run("TKT MODULE 1", "TKT Module 1 interaktiv sinov testlari.", nowISO());
+    course = db.prepare("SELECT * FROM courses WHERE id = ?").get(Number(result.lastInsertRowid));
   }
-  db.prepare("UPDATE courses SET is_published = 1 WHERE id = ?").run(course.id);
-  let position = Number(db.prepare("SELECT COALESCE(MAX(position), 0) + 1 AS n FROM lessons WHERE course_id = ?").get(course.id).n) || 1;
-  const insertPaper = db.prepare(`INSERT INTO lessons
-    (course_id, title, type, content, duration_min, position, price, is_pro, max_score, question_count, file_id, file_name, file_size, created_at)
-    VALUES (?, ?, 'pdf', ?, 80, ?, 0, 0, 0, 0, ?, ?, ?, ?)`);
+  const pdfLessons = db.prepare("SELECT id, file_id FROM lessons WHERE course_id = ? AND type = 'pdf'").all(course.id);
+  const positionRow = db.prepare("SELECT COALESCE(MAX(position), 0) + 1 AS n FROM lessons WHERE course_id = ? AND type = 'test'").get(course.id);
+  let position = Number(positionRow.n) || 1;
+  const insertLesson = db.prepare(`INSERT INTO lessons
+    (course_id, title, type, content, duration_min, position, price, is_pro, max_score, question_count, created_at)
+    VALUES (?, ?, 'test', ?, ?, ?, 0, 0, ?, ?, ?)`);
+  const insertQuestion = db.prepare(`INSERT INTO questions
+    (lesson_id, text, o1, o2, o3, o4, correct, passage, o5, o6, o7, o8, option_count)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
   db.exec("BEGIN IMMEDIATE");
   try {
-    for (const paper of papers) {
-      const sourcePath = path.join(__dirname, "seed-data", "tkt-module1-papers", paper.id);
-      const targetPath = path.join(STORAGE_DIR, paper.id);
-      if (!fs.existsSync(sourcePath)) throw new Error(`Missing TKT source paper: ${paper.id}`);
-      if (!fs.existsSync(targetPath)) fs.copyFileSync(sourcePath, targetPath);
-      const exists = db.prepare("SELECT id FROM lessons WHERE course_id = ? AND file_id = ? LIMIT 1").get(course.id, paper.id);
-      if (!exists) {
-        insertPaper.run(course.id, paper.title, "Savol va javob variantlari asl yuborilgan hujjat ko'rinishida.", position++, paper.id, paper.fileName, paper.size, nowISO());
+    for (const lesson of pdfLessons) {
+      const id = Number(lesson.id);
+      for (const table of ["test_attempts", "progress", "purchases", "likes", "video_watch", "lesson_viewers", "test_sections", "materials", "questions"]) {
+        db.prepare(`DELETE FROM ${table} WHERE lesson_id = ?`).run(id);
+      }
+      db.prepare("DELETE FROM lessons WHERE id = ?").run(id);
+    }
+    for (const quiz of quizzes) {
+      const exists = db.prepare("SELECT id FROM lessons WHERE course_id = ? AND title = ? AND type = 'test'").get(course.id, quiz.title);
+      if (exists) continue;
+      const info = insertLesson.run(course.id, quiz.title, `Manba: ${quiz.source}`, Number(quiz.duration_min) || 80, position++, quiz.questions.length, quiz.questions.length, nowISO());
+      const lessonId = Number(info.lastInsertRowid);
+      for (const q of quiz.questions) {
+        const options = Array.isArray(q.options) ? q.options.slice(0, 8) : [];
+        while (options.length < 8) options.push("");
+        const optionCount = options.filter((value) => String(value || "").trim()).length;
+        if (!String(q.text || "").trim() || optionCount < 2 || Number(q.correct) < 1 || Number(q.correct) > optionCount) {
+          throw new Error(`Invalid TKT question in ${quiz.title}`);
+        }
+        insertQuestion.run(lessonId, q.text, options[0], options[1], options[2], options[3], Number(q.correct), q.passage || "", options[4], options[5], options[6], options[7], optionCount);
       }
     }
+    db.prepare("UPDATE courses SET is_published = 1, description = ? WHERE id = ?")
+      .run("TKT Module 1 interaktiv sinov testlari. Savollar asl imtihon materiallari asosida.", course.id);
     metaSet(migrationKey, "1");
     db.exec("COMMIT");
   } catch (error) {
     db.exec("ROLLBACK");
     throw error;
   }
-  console.log(`[seed] ${papers.length} original TKT Module 1 source papers added.`);
+  for (const lesson of pdfLessons) {
+    const fileId = String(lesson.file_id || "");
+    if (fileId && path.basename(fileId) === fileId) {
+      try { fs.unlinkSync(path.join(STORAGE_DIR, fileId)); } catch (error) {}
+    }
+  }
+  console.log(`[seed] Imported interactive TKT Module 1 quizzes; removed ${pdfLessons.length} PDF lessons.`);
 }
 
-importTktModuleOneSourcePapers();
+importInteractiveTktModuleOneTests();
 
 function replaceToifaTestBank() {
   const migrationKey = "toifa_test_bank_replaced_2026_11";
@@ -5140,23 +5181,32 @@ function testPage(lesson, questions, testSections = [], attemptId = 0) {
   });
   const hasPassage = passages.some(Boolean);
 
+  const course = db.prepare("SELECT category FROM courses WHERE id = ?").get(lesson.course_id);
+  const isTkt = course?.category === "tkt";
+  const letters = "ABCDEFGH";
   const answerSlots = Array.from({ length: total }, (_, index) => index % 4);
-  for (let index = answerSlots.length - 1; index > 0; index -= 1) {
-    const swap = Math.floor(Math.random() * (index + 1));
-    [answerSlots[index], answerSlots[swap]] = [answerSlots[swap], answerSlots[index]];
+  if (!isTkt) {
+    for (let index = answerSlots.length - 1; index > 0; index -= 1) {
+      const swap = Math.floor(Math.random() * (index + 1));
+      [answerSlots[index], answerSlots[swap]] = [answerSlots[swap], answerSlots[index]];
+    }
   }
   const slides = questions
 .map(
   (q, i) => {
-  const correctSlot = answerSlots[i];
-  const distractors = [1, 2, 3, 4].filter((n) => n !== Number(q.correct));
-  for (let index = distractors.length - 1; index > 0; index -= 1) {
-    const swap = Math.floor(Math.random() * (index + 1));
-    [distractors[index], distractors[swap]] = [distractors[swap], distractors[index]];
+  const optionCount = Math.max(2, Math.min(8, Number(q.option_count) || 4));
+  let optionOrder = Array.from({ length: optionCount }, (_, index) => index + 1).filter((n) => String(q[`o${n}`] || "").trim());
+  if (!optionOrder.length) optionOrder = [1, 2, 3, 4];
+  if (!isTkt && optionCount === 4 && optionOrder.length === 4) {
+    const correctSlot = answerSlots[i];
+    const distractors = optionOrder.filter((n) => n !== Number(q.correct));
+    for (let index = distractors.length - 1; index > 0; index -= 1) {
+      const swap = Math.floor(Math.random() * (index + 1));
+      [distractors[index], distractors[swap]] = [distractors[swap], distractors[index]];
+    }
+    let distractorIndex = 0;
+    optionOrder = Array.from({ length: 4 }, (_, slot) => slot === correctSlot ? Number(q.correct) : distractors[distractorIndex++]);
   }
-  const optionOrder = [];
-  let distractorIndex = 0;
-  for (let slot = 0; slot < 4; slot += 1) optionOrder.push(slot === correctSlot ? Number(q.correct) : distractors[distractorIndex++]);
   return `<section class="q-slide${i === 0 ? " is-active": ""}" data-i="${i}">
   <div class="q-passage-data" hidden>${testReadingHtml(passages[i])}</div>
   <div class="q-head">${i + 1}-savol</div>
@@ -5166,7 +5216,7 @@ function testPage(lesson, questions, testSections = [], attemptId = 0) {
 .map(
   (n, slot) => `<label class="q-opt">
   <input type="radio" name="q${q.id}" value="${n}">
-  <span class="q-letter">${"ABCD"[slot]}</span>
+  <span class="q-letter">${letters[slot]}</span>
   <span class="q-text">${i >= 11 && i < 15 ? testReadingHtml(q["o" + n]) : h(q["o" + n])}</span>
   </label>`
   )
