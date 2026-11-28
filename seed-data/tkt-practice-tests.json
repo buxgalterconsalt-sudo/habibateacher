@@ -417,238 +417,1966 @@
   },
   {
     "module": 3,
-    "title": "TKT Module 3 · Additional Practice Test (20 questions)",
-    "source": "Teacher-created practice based on the supplied Cambridge TKT sample papers",
-    "duration_min": 20,
+    "title": "TKT Module 3 · M3 V62 Full Test (80 questions)",
+    "source": "User-provided M3 V62 PDF; all 80 questions adapted to interactive format and answers checked against the paper content",
+    "duration_min": 80,
     "questions": [
       {
-        "text": "A teacher says “A pharmacy is a shop where you buy medicine.” What is the teacher doing?",
+        "text": "Teacher classroom language function: “That’s right, he’s wearing a jacket. Are jackets normally long or short?”",
         "options": [
-          "monitoring",
-          "nominating a learner",
-          "conveying meaning"
+          "Clarifying",
+          "Giving instructions",
+          "Narrating",
+          "Modelling",
+          "Prompting a learner to continue",
+          "Eliciting language",
+          "Checking understanding"
+        ],
+        "correct": 6,
+        "passage": ""
+      },
+      {
+        "text": "Teacher classroom language function: “Then the three friends woke up and continued their journey.”",
+        "options": [
+          "Clarifying",
+          "Giving instructions",
+          "Narrating",
+          "Modelling",
+          "Prompting a learner to continue",
+          "Eliciting language",
+          "Checking understanding"
+        ],
+        "correct": 2,
+        "passage": ""
+      },
+      {
+        "text": "Teacher classroom language function: “You like that picture. Can you tell your partner why you like it?”",
+        "options": [
+          "Clarifying",
+          "Giving instructions",
+          "Narrating",
+          "Modelling",
+          "Prompting a learner to continue",
+          "Eliciting language",
+          "Checking understanding"
+        ],
+        "correct": 4,
+        "passage": ""
+      },
+      {
+        "text": "Teacher classroom language function: “Stop writing now and pass your paper to the person on your left.”",
+        "options": [
+          "Clarifying",
+          "Giving instructions",
+          "Narrating",
+          "Modelling",
+          "Prompting a learner to continue",
+          "Eliciting language",
+          "Checking understanding"
+        ],
+        "correct": 1,
+        "passage": ""
+      },
+      {
+        "text": "Teacher classroom language function: “A quarter past three is the same as three fifteen.”",
+        "options": [
+          "Clarifying",
+          "Giving instructions",
+          "Narrating",
+          "Modelling",
+          "Prompting a learner to continue",
+          "Eliciting language",
+          "Checking understanding"
         ],
         "correct": 0,
         "passage": ""
       },
       {
-        "text": "A teacher asks “What did the character do after she missed the bus?” What is the main purpose?",
+        "text": "Teacher classroom language function: “What clothes do you normally only wear in cold weather? Any suggestions?”",
         "options": [
-          "checking understanding of a specific detail",
-          "prompting pronunciation",
-          "setting up pair work"
+          "Clarifying",
+          "Giving instructions",
+          "Narrating",
+          "Modelling",
+          "Prompting a learner to continue",
+          "Eliciting language",
+          "Checking understanding"
+        ],
+        "correct": 5,
+        "passage": ""
+      },
+      {
+        "text": "A teacher asks learners to look at a text after a short pre-reading task. Which is NOT appropriate?",
+        "options": [
+          "Read carefully and tell me the gist.",
+          "Check whether your predictions were correct.",
+          "Read quickly and choose the best title."
+        ],
+        "correct": 1,
+        "passage": ""
+      },
+      {
+        "text": "A teacher uses a picture to interest elementary learners in a topic. Which suggestion is NOT appropriate?",
+        "options": [
+          "Say where you think the picture is.",
+          "Answer questions with a partner.",
+          "Speculate about what the people have been doing."
+        ],
+        "correct": 2,
+        "passage": ""
+      },
+      {
+        "text": "A pre-intermediate learner asks if she can express a sentence another way. Which response is NOT appropriate?",
+        "options": [
+          "It is highly unlikely anyone would express it that way.",
+          "It will not be very clear what you mean.",
+          "You can, but it sounds too formal."
         ],
         "correct": 0,
         "passage": ""
       },
       {
-        "text": "A learner says “He go yesterday.” The teacher replies “He … yesterday?” What technique is used?",
+        "text": "A teacher checks whether learners remember “safe”. Which question is NOT appropriate?",
         "options": [
-          "recasting silently",
-          "prompting self-correction",
-          "giving an instruction"
+          "Give a word opposite in meaning to safe.",
+          "Where did we see safe yesterday?",
+          "You have all seen safe before. Do you understand it?"
+        ],
+        "correct": 1,
+        "passage": ""
+      },
+      {
+        "text": "Learners write a complaint to a bank manager. Which advice is NOT appropriate?",
+        "options": [
+          "Check paragraphs and linking words in the final draft.",
+          "Register is unimportant if the complaint is clear.",
+          "Focus on communicating the complaint in the first draft."
+        ],
+        "correct": 1,
+        "passage": ""
+      },
+      {
+        "text": "Learners struggle to say “atmosphere”. Which support is NOT appropriate?",
+        "options": [
+          "Listen and identify the word stress.",
+          "Notice that ph is pronounced /f/, as in enough.",
+          "Guess how to spell the word because it is difficult."
+        ],
+        "correct": 2,
+        "passage": ""
+      },
+      {
+        "text": "A teacher focuses on vocabulary learners will meet in a text. Which is NOT an appropriate activity?",
+        "options": [
+          "Guess meanings and create definitions.",
+          "Match words in the text to meanings below.",
+          "Underline unknown words and check whether context or a partner helps."
+        ],
+        "correct": 1,
+        "passage": ""
+      },
+      {
+        "text": "Teacher activity: Focus learners on the topic before they listen to an interview.",
+        "options": [
+          "A. Asking concept questions",
+          "B. Brainstorming",
+          "C. Monitoring"
+        ],
+        "correct": 1,
+        "passage": ""
+      },
+      {
+        "text": "Teacher activity: Check that learners understand grammar points during a presentation.",
+        "options": [
+          "A. Asking concept questions",
+          "B. Brainstorming",
+          "C. Monitoring"
         ],
         "correct": 0,
         "passage": ""
       },
       {
-        "text": "Which instruction is clearest for a pair speaking task?",
+        "text": "Teacher activity: Get learners to share ideas before a speaking activity.",
         "options": [
-          "Discuss the questions with your partner for three minutes.",
-          "You know, perhaps do something with these questions.",
-          "This is an interesting activity."
+          "A. Asking concept questions",
+          "B. Brainstorming",
+          "C. Monitoring"
+        ],
+        "correct": 1,
+        "passage": ""
+      },
+      {
+        "text": "Teacher activity: Check learners are following the instructions given.",
+        "options": [
+          "A. Asking concept questions",
+          "B. Brainstorming",
+          "C. Monitoring"
+        ],
+        "correct": 2,
+        "passage": ""
+      },
+      {
+        "text": "Teacher activity: Help learners understand key words before they read a text.",
+        "options": [
+          "A. Asking concept questions",
+          "B. Brainstorming",
+          "C. Monitoring"
+        ],
+        "correct": 1,
+        "passage": ""
+      },
+      {
+        "text": "Teacher activity: Observe learners so you can give feedback after a speaking activity.",
+        "options": [
+          "A. Asking concept questions",
+          "B. Brainstorming",
+          "C. Monitoring"
+        ],
+        "correct": 2,
+        "passage": ""
+      },
+      {
+        "text": "Type of writing error: “I like to introduce my town to you.”",
+        "options": [
+          "A. Verb form",
+          "B. Spelling",
+          "C. Articles",
+          "D. Punctuation"
         ],
         "correct": 0,
         "passage": ""
       },
       {
-        "text": "A teacher asks learners to skim a text and say what it is mainly about. This is reading for:",
+        "text": "Type of writing error: “the huge park in centre”",
         "options": [
-          "grammar analysis",
-          "gist",
-          "detail"
+          "A. Verb form",
+          "B. Spelling",
+          "C. Articles",
+          "D. Punctuation"
+        ],
+        "correct": 2,
+        "passage": ""
+      },
+      {
+        "text": "Type of writing error: “for most of the year, so everybody ...” (the missing comma after year)",
+        "options": [
+          "A. Verb form",
+          "B. Spelling",
+          "C. Articles",
+          "D. Punctuation"
+        ],
+        "correct": 3,
+        "passage": ""
+      },
+      {
+        "text": "Type of writing error: “some of children’s games”",
+        "options": [
+          "A. Verb form",
+          "B. Spelling",
+          "C. Articles",
+          "D. Punctuation"
+        ],
+        "correct": 2,
+        "passage": ""
+      },
+      {
+        "text": "Type of writing error: “its nice that ice-cream is available”",
+        "options": [
+          "A. Verb form",
+          "B. Spelling",
+          "C. Articles",
+          "D. Punctuation"
+        ],
+        "correct": 3,
+        "passage": ""
+      },
+      {
+        "text": "Type of writing error: “the park authoritys”",
+        "options": [
+          "A. Verb form",
+          "B. Spelling",
+          "C. Articles",
+          "D. Punctuation"
+        ],
+        "correct": 1,
+        "passage": ""
+      },
+      {
+        "text": "Type of writing error: “Now I’m to busy to go to the park”",
+        "options": [
+          "A. Verb form",
+          "B. Spelling",
+          "C. Articles",
+          "D. Punctuation"
+        ],
+        "correct": 1,
+        "passage": ""
+      },
+      {
+        "text": "Function of learner language: “We are going to write a description, right? But now we have to just talk and brainstorm ideas.”",
+        "options": [
+          "A. Asking for clarification",
+          "B. Giving an example",
+          "C. Giving yourself time to think",
+          "D. Including someone",
+          "E. Interrupting to make a point",
+          "F. Accepting a different opinion",
+          "G. Prioritising a task",
+          "H. Disagreeing"
+        ],
+        "correct": 6,
+        "passage": ""
+      },
+      {
+        "text": "Function of learner language: “We could use headings, like buildings, shops, restaurants and sightseeing.”",
+        "options": [
+          "A. Asking for clarification",
+          "B. Giving an example",
+          "C. Giving yourself time to think",
+          "D. Including someone",
+          "E. Interrupting to make a point",
+          "F. Accepting a different opinion",
+          "G. Prioritising a task",
+          "H. Disagreeing"
+        ],
+        "correct": 1,
+        "passage": ""
+      },
+      {
+        "text": "Function of learner language: “Are we supposed to talk about our home town or the town we study in?”",
+        "options": [
+          "A. Asking for clarification",
+          "B. Giving an example",
+          "C. Giving yourself time to think",
+          "D. Including someone",
+          "E. Interrupting to make a point",
+          "F. Accepting a different opinion",
+          "G. Prioritising a task",
+          "H. Disagreeing"
         ],
         "correct": 0,
         "passage": ""
       },
       {
-        "text": "Why might a teacher nominate a learner after asking a question to the whole class?",
+        "text": "Function of learner language: “The teacher said we could choose, but I think the town we study in, so we can all contribute.”",
         "options": [
-          "to check spelling in a text",
-          "to give every learner more planning time",
-          "to invite a particular learner to respond"
+          "A. Asking for clarification",
+          "B. Giving an example",
+          "C. Giving yourself time to think",
+          "D. Including someone",
+          "E. Interrupting to make a point",
+          "F. Accepting a different opinion",
+          "G. Prioritising a task",
+          "H. Disagreeing"
+        ],
+        "correct": 2,
+        "passage": ""
+      },
+      {
+        "text": "Function of learner language: “Actually, I think it would be better to talk about our home towns. We would have more to say.”",
+        "options": [
+          "A. Asking for clarification",
+          "B. Giving an example",
+          "C. Giving yourself time to think",
+          "D. Including someone",
+          "E. Interrupting to make a point",
+          "F. Accepting a different opinion",
+          "G. Prioritising a task",
+          "H. Disagreeing"
+        ],
+        "correct": 6,
+        "passage": ""
+      },
+      {
+        "text": "Function of learner language: “Umm, I suppose so. We’ll talk about our home towns.”",
+        "options": [
+          "A. Asking for clarification",
+          "B. Giving an example",
+          "C. Giving yourself time to think",
+          "D. Including someone",
+          "E. Interrupting to make a point",
+          "F. Accepting a different opinion",
+          "G. Prioritising a task",
+          "H. Disagreeing"
+        ],
+        "correct": 5,
+        "passage": ""
+      },
+      {
+        "text": "Function of learner language: “What are the main attractions in your town, Suzanne?”",
+        "options": [
+          "A. Asking for clarification",
+          "B. Giving an example",
+          "C. Giving yourself time to think",
+          "D. Including someone",
+          "E. Interrupting to make a point",
+          "F. Accepting a different opinion",
+          "G. Prioritising a task",
+          "H. Disagreeing"
+        ],
+        "correct": 3,
+        "passage": ""
+      },
+      {
+        "text": "Function of written learner language: “As you know, we are having a party for Martin on Saturday, at my house in the garden.”",
+        "options": [
+          "A. Requesting information",
+          "B. Giving advice",
+          "C. Asking for an opinion",
+          "D. Confirming facts",
+          "E. Speculating",
+          "F. Negotiating",
+          "G. Offering a solution",
+          "H. Suggesting a sequence"
+        ],
+        "correct": 3,
+        "passage": ""
+      },
+      {
+        "text": "Function of written learner language: “It would be a good idea to bring a sweater.”",
+        "options": [
+          "A. Requesting information",
+          "B. Giving advice",
+          "C. Asking for an opinion",
+          "D. Confirming facts",
+          "E. Speculating",
+          "F. Negotiating",
+          "G. Offering a solution",
+          "H. Suggesting a sequence"
+        ],
+        "correct": 1,
+        "passage": ""
+      },
+      {
+        "text": "Function of written learner language: “We can go shopping, decorate the house and then prepare the food.”",
+        "options": [
+          "A. Requesting information",
+          "B. Giving advice",
+          "C. Asking for an opinion",
+          "D. Confirming facts",
+          "E. Speculating",
+          "F. Negotiating",
+          "G. Offering a solution",
+          "H. Suggesting a sequence"
+        ],
+        "correct": 7,
+        "passage": ""
+      },
+      {
+        "text": "Function of written learner language: “That rice dish is delicious; I expect everyone will love it.”",
+        "options": [
+          "A. Requesting information",
+          "B. Giving advice",
+          "C. Asking for an opinion",
+          "D. Confirming facts",
+          "E. Speculating",
+          "F. Negotiating",
+          "G. Offering a solution",
+          "H. Suggesting a sequence"
+        ],
+        "correct": 4,
+        "passage": ""
+      },
+      {
+        "text": "Function of written learner language: “We will not have enough plates, but we can buy paper ones.”",
+        "options": [
+          "A. Requesting information",
+          "B. Giving advice",
+          "C. Asking for an opinion",
+          "D. Confirming facts",
+          "E. Speculating",
+          "F. Negotiating",
+          "G. Offering a solution",
+          "H. Suggesting a sequence"
+        ],
+        "correct": 6,
+        "passage": ""
+      },
+      {
+        "text": "Function of written learner language: “I have lots of CDs. Is that enough, do you think? Mark is bringing music too.”",
+        "options": [
+          "A. Requesting information",
+          "B. Giving advice",
+          "C. Asking for an opinion",
+          "D. Confirming facts",
+          "E. Speculating",
+          "F. Negotiating",
+          "G. Offering a solution",
+          "H. Suggesting a sequence"
+        ],
+        "correct": 2,
+        "passage": ""
+      },
+      {
+        "text": "Function of written learner language: “What time does your gym lesson finish on Saturday?”",
+        "options": [
+          "A. Requesting information",
+          "B. Giving advice",
+          "C. Asking for an opinion",
+          "D. Confirming facts",
+          "E. Speculating",
+          "F. Negotiating",
+          "G. Offering a solution",
+          "H. Suggesting a sequence"
         ],
         "correct": 0,
         "passage": ""
       },
       {
-        "text": "While pairs do a fluency activity, the teacher notes recurring errors and does not interrupt. What is the teacher doing?",
+        "text": "Why can a quiet period in a lesson be useful? Choose the trainee response that is NOT appropriate.",
         "options": [
-          "modelling",
-          "monitoring",
-          "drilling"
+          "A change of pace can help learning.",
+          "Learners need quiet time to consolidate learning.",
+          "The teacher can prepare the next activity."
+        ],
+        "correct": 2,
+        "passage": ""
+      },
+      {
+        "text": "Are definitions always the best way to explain vocabulary? Choose the trainee response that is NOT appropriate.",
+        "options": [
+          "They can be more complex than the word.",
+          "They may not be memorable.",
+          "Learners can be encouraged to write their own definitions."
         ],
         "correct": 0,
         "passage": ""
       },
       {
-        "text": "Which feedback is most formative?",
+        "text": "Why should learners personalise new language? Choose the trainee response that is NOT appropriate.",
         "options": [
-          "Your examples are clear; add a past-time phrase to make the order clearer.",
-          "You are the best student.",
-          "Wrong. Try again."
+          "They dislike unfamiliar topics.",
+          "They remember language when it relates to real life.",
+          "Personalising can be more motivating."
         ],
         "correct": 0,
         "passage": ""
       },
       {
-        "text": "A teacher claps twice to regain attention. This is mainly a way of:",
+        "text": "Why should teachers learn about their learners? Choose the trainee response that is NOT appropriate.",
         "options": [
-          "eliciting vocabulary",
-          "checking comprehension",
-          "managing the class"
+          "To be aware of sensitive areas.",
+          "To treat them as individuals.",
+          "To discuss personal issues in class."
+        ],
+        "correct": 2,
+        "passage": ""
+      },
+      {
+        "text": "Should feedback be given after every task? Choose the trainee response that is NOT appropriate.",
+        "options": [
+          "Feedback can make the task more meaningful.",
+          "Go through answers even when you know they are correct.",
+          "Feedback can give learners a sense of progress."
+        ],
+        "correct": 1,
+        "passage": ""
+      },
+      {
+        "text": "Do teachers need to follow everything in a lesson plan? Choose the trainee response that is NOT appropriate.",
+        "options": [
+          "An activity may no longer be necessary.",
+          "Unpredicted problems may need attention.",
+          "Learners may find controlled practice boring."
+        ],
+        "correct": 2,
+        "passage": ""
+      },
+      {
+        "text": "Why vary the tone and speed of your voice? Choose the trainee response that is NOT appropriate.",
+        "options": [
+          "It prevents learners becoming bored and stopping listening.",
+          "It makes it easier for learners to copy you.",
+          "Changes in voice can support meaning."
         ],
         "correct": 0,
         "passage": ""
       },
       {
-        "text": "Learners work in pairs, each with different information needed to complete a schedule. What is this?",
+        "text": "Classroom management response: Some learners find it difficult to speak in front of the whole class.",
         "options": [
-          "an information-gap activity",
-          "a pronunciation drill",
-          "a dictation"
+          "A. Ask learners to demonstrate the task.",
+          "B. Nominate monitors to ensure turn-taking.",
+          "C. Group learners of similar ability.",
+          "D. Prepare a seating plan.",
+          "E. Explain that learners can learn from each other.",
+          "F. Use pair work to encourage less confident learners.",
+          "G. Plan board work in advance.",
+          "H. Bring a backup game or quiz."
+        ],
+        "correct": 5,
+        "passage": ""
+      },
+      {
+        "text": "Classroom management response: Some learners fail group activities because they have not listened carefully to instructions.",
+        "options": [
+          "A. Ask learners to demonstrate the task.",
+          "B. Nominate monitors to ensure turn-taking.",
+          "C. Group learners of similar ability.",
+          "D. Prepare a seating plan.",
+          "E. Explain that learners can learn from each other.",
+          "F. Use pair work to encourage less confident learners.",
+          "G. Plan board work in advance.",
+          "H. Bring a backup game or quiz."
         ],
         "correct": 0,
         "passage": ""
       },
       {
-        "text": "Which teacher action best supports learner autonomy?",
+        "text": "Classroom management response: A neighbouring teacher complains that your class is too noisy.",
         "options": [
-          "translating every new word for them",
-          "correcting every spoken error immediately",
-          "showing learners how to use a dictionary independently"
+          "A. Ask learners to demonstrate the task.",
+          "B. Nominate monitors to ensure turn-taking.",
+          "C. Group learners of similar ability.",
+          "D. Prepare a seating plan.",
+          "E. Explain that learners can learn from each other.",
+          "F. Use pair work to encourage less confident learners.",
+          "G. Plan board work in advance.",
+          "H. Bring a backup game or quiz."
+        ],
+        "correct": 1,
+        "passage": ""
+      },
+      {
+        "text": "Classroom management response: Learners do not see the point of student-centred activities.",
+        "options": [
+          "A. Ask learners to demonstrate the task.",
+          "B. Nominate monitors to ensure turn-taking.",
+          "C. Group learners of similar ability.",
+          "D. Prepare a seating plan.",
+          "E. Explain that learners can learn from each other.",
+          "F. Use pair work to encourage less confident learners.",
+          "G. Plan board work in advance.",
+          "H. Bring a backup game or quiz."
+        ],
+        "correct": 4,
+        "passage": ""
+      },
+      {
+        "text": "Classroom management response: Stronger learners are not challenged enough in group work.",
+        "options": [
+          "A. Ask learners to demonstrate the task.",
+          "B. Nominate monitors to ensure turn-taking.",
+          "C. Group learners of similar ability.",
+          "D. Prepare a seating plan.",
+          "E. Explain that learners can learn from each other.",
+          "F. Use pair work to encourage less confident learners.",
+          "G. Plan board work in advance.",
+          "H. Bring a backup game or quiz."
+        ],
+        "correct": 2,
+        "passage": ""
+      },
+      {
+        "text": "Classroom management response: Learners finish tasks early and there is time before the lesson ends.",
+        "options": [
+          "A. Ask learners to demonstrate the task.",
+          "B. Nominate monitors to ensure turn-taking.",
+          "C. Group learners of similar ability.",
+          "D. Prepare a seating plan.",
+          "E. Explain that learners can learn from each other.",
+          "F. Use pair work to encourage less confident learners.",
+          "G. Plan board work in advance.",
+          "H. Bring a backup game or quiz."
+        ],
+        "correct": 7,
+        "passage": ""
+      },
+      {
+        "text": "Classroom management response: You cannot remember all the learners’ names.",
+        "options": [
+          "A. Ask learners to demonstrate the task.",
+          "B. Nominate monitors to ensure turn-taking.",
+          "C. Group learners of similar ability.",
+          "D. Prepare a seating plan.",
+          "E. Explain that learners can learn from each other.",
+          "F. Use pair work to encourage less confident learners.",
+          "G. Plan board work in advance.",
+          "H. Bring a backup game or quiz."
+        ],
+        "correct": 3,
+        "passage": ""
+      },
+      {
+        "text": "Teacher role: After class, the teacher talks to individual learners about their progress.",
+        "options": [
+          "A. Planner",
+          "B. Manager",
+          "C. Assessor",
+          "D. Contributor"
+        ],
+        "correct": 2,
+        "passage": ""
+      },
+      {
+        "text": "Teacher role: While monitoring pair work, the teacher explains why she agrees with learners’ opinions.",
+        "options": [
+          "A. Planner",
+          "B. Manager",
+          "C. Assessor",
+          "D. Contributor"
+        ],
+        "correct": 3,
+        "passage": ""
+      },
+      {
+        "text": "Teacher role: The teacher stops controlled practice when learners start using L1.",
+        "options": [
+          "A. Planner",
+          "B. Manager",
+          "C. Assessor",
+          "D. Contributor"
+        ],
+        "correct": 1,
+        "passage": ""
+      },
+      {
+        "text": "Teacher role: The teacher asks a learner to repeat the instructions.",
+        "options": [
+          "A. Planner",
+          "B. Manager",
+          "C. Assessor",
+          "D. Contributor"
+        ],
+        "correct": 2,
+        "passage": ""
+      },
+      {
+        "text": "Teacher role: The teacher invites learners to ask for his views in a discussion.",
+        "options": [
+          "A. Planner",
+          "B. Manager",
+          "C. Assessor",
+          "D. Contributor"
+        ],
+        "correct": 3,
+        "passage": ""
+      },
+      {
+        "text": "Teacher role: The teacher checks that noisy groups do not distract others.",
+        "options": [
+          "A. Planner",
+          "B. Manager",
+          "C. Assessor",
+          "D. Contributor"
+        ],
+        "correct": 1,
+        "passage": ""
+      },
+      {
+        "text": "Teacher role: The teacher brings photocopied news articles to class.",
+        "options": [
+          "A. Planner",
+          "B. Manager",
+          "C. Assessor",
+          "D. Contributor"
         ],
         "correct": 0,
         "passage": ""
       },
       {
-        "text": "A teacher says “First read alone. Then compare answers with a partner.” Why is this order useful?",
+        "text": "Purpose of interaction pattern: Learners individually brainstorm words for city and countryside.",
         "options": [
-          "it avoids setting a task",
-          "it makes the task sequence clear",
-          "it checks learners’ written accuracy"
+          "A. Assess negotiating skills",
+          "B. Encourage peer feedback",
+          "C. Build confidence in functional language",
+          "D. Competitive language review",
+          "E. Build rapport",
+          "F. Quiet thinking time",
+          "G. Share known language"
+        ],
+        "correct": 5,
+        "passage": ""
+      },
+      {
+        "text": "Purpose of interaction pattern: The class chorally drills advice structures before a role-play.",
+        "options": [
+          "A. Assess negotiating skills",
+          "B. Encourage peer feedback",
+          "C. Build confidence in functional language",
+          "D. Competitive language review",
+          "E. Build rapport",
+          "F. Quiet thinking time",
+          "G. Share known language"
+        ],
+        "correct": 2,
+        "passage": ""
+      },
+      {
+        "text": "Purpose of interaction pattern: The class brainstorms vocabulary for describing people before describing family photos.",
+        "options": [
+          "A. Assess negotiating skills",
+          "B. Encourage peer feedback",
+          "C. Build confidence in functional language",
+          "D. Competitive language review",
+          "E. Build rapport",
+          "F. Quiet thinking time",
+          "G. Share known language"
+        ],
+        "correct": 6,
+        "passage": ""
+      },
+      {
+        "text": "Purpose of interaction pattern: Learners show written work to a partner and discuss it before handing it in.",
+        "options": [
+          "A. Assess negotiating skills",
+          "B. Encourage peer feedback",
+          "C. Build confidence in functional language",
+          "D. Competitive language review",
+          "E. Build rapport",
+          "F. Quiet thinking time",
+          "G. Share known language"
+        ],
+        "correct": 1,
+        "passage": ""
+      },
+      {
+        "text": "Purpose of interaction pattern: Two teams compete in a quiz on job vocabulary.",
+        "options": [
+          "A. Assess negotiating skills",
+          "B. Encourage peer feedback",
+          "C. Build confidence in functional language",
+          "D. Competitive language review",
+          "E. Build rapport",
+          "F. Quiet thinking time",
+          "G. Share known language"
+        ],
+        "correct": 3,
+        "passage": ""
+      },
+      {
+        "text": "Purpose of interaction pattern: The teacher uses many mingling activities in the first lessons with a new class.",
+        "options": [
+          "A. Assess negotiating skills",
+          "B. Encourage peer feedback",
+          "C. Build confidence in functional language",
+          "D. Competitive language review",
+          "E. Build rapport",
+          "F. Quiet thinking time",
+          "G. Share known language"
+        ],
+        "correct": 4,
+        "passage": ""
+      },
+      {
+        "text": "Correction strategy: The teacher uses fingers to show where a mistake was made.",
+        "options": [
+          "A. Remedial practice",
+          "B. Prompting self-correction",
+          "C. Explaining the error"
+        ],
+        "correct": 1,
+        "passage": ""
+      },
+      {
+        "text": "Correction strategy: The teacher drills words containing the target sounds.",
+        "options": [
+          "A. Remedial practice",
+          "B. Prompting self-correction",
+          "C. Explaining the error"
         ],
         "correct": 0,
         "passage": ""
       },
       {
-        "text": "One learner answers every question. What could the teacher do to distribute participation?",
+        "text": "Correction strategy: The teacher notes errors in a role-play and explains what was wrong and why in the next lesson.",
         "options": [
-          "use pair discussion before nominating different learners",
-          "continue asking that learner only",
-          "stop asking questions"
+          "A. Remedial practice",
+          "B. Prompting self-correction",
+          "C. Explaining the error"
+        ],
+        "correct": 2,
+        "passage": ""
+      },
+      {
+        "text": "Correction strategy: The teacher uses a correction code on essays.",
+        "options": [
+          "A. Remedial practice",
+          "B. Prompting self-correction",
+          "C. Explaining the error"
+        ],
+        "correct": 1,
+        "passage": ""
+      },
+      {
+        "text": "Correction strategy: The teacher draws a timeline and reminds a learner not to use present perfect with past-time expressions.",
+        "options": [
+          "A. Remedial practice",
+          "B. Prompting self-correction",
+          "C. Explaining the error"
+        ],
+        "correct": 2,
+        "passage": ""
+      },
+      {
+        "text": "Correction strategy: The teacher echoes “I’ll give it to him when I will see him!” to prompt correction.",
+        "options": [
+          "A. Remedial practice",
+          "B. Prompting self-correction",
+          "C. Explaining the error"
+        ],
+        "correct": 1,
+        "passage": ""
+      },
+      {
+        "text": "Feedback focus: “Include a strong opening and link ideas together more.”",
+        "options": [
+          "A. Progress",
+          "B. Text organisation",
+          "C. Accuracy",
+          "D. Range"
+        ],
+        "correct": 1,
+        "passage": ""
+      },
+      {
+        "text": "Feedback focus: “A well-balanced argument; remember to allow time to check your work.”",
+        "options": [
+          "A. Progress",
+          "B. Text organisation",
+          "C. Accuracy",
+          "D. Range"
+        ],
+        "correct": 2,
+        "passage": ""
+      },
+      {
+        "text": "Feedback focus: “Good use of adverbs such as however to link paragraphs.”",
+        "options": [
+          "A. Progress",
+          "B. Text organisation",
+          "C. Accuracy",
+          "D. Range"
+        ],
+        "correct": 3,
+        "passage": ""
+      },
+      {
+        "text": "Feedback focus: “Try not to use the same adjectives too often.”",
+        "options": [
+          "A. Progress",
+          "B. Text organisation",
+          "C. Accuracy",
+          "D. Range"
+        ],
+        "correct": 1,
+        "passage": ""
+      },
+      {
+        "text": "Feedback focus: “Your handwriting is getting easier to read.”",
+        "options": [
+          "A. Progress",
+          "B. Text organisation",
+          "C. Accuracy",
+          "D. Range"
         ],
         "correct": 0,
         "passage": ""
       },
       {
-        "text": "Which is an example of delayed error correction?",
+        "text": "Feedback focus: “Use synonyms to avoid repeating the same words.”",
         "options": [
-          "giving the answer before learners speak",
-          "interrupting every sentence to correct it",
-          "writing selected errors on the board after a fluency task"
+          "A. Progress",
+          "B. Text organisation",
+          "C. Accuracy",
+          "D. Range"
         ],
-        "correct": 0,
+        "correct": 3,
         "passage": ""
       },
       {
-        "text": "A teacher demonstrates a dialogue with one learner before asking pairs to practise. The teacher is:",
+        "text": "Feedback focus: “Use the irregular verb list to check your work.”",
         "options": [
-          "conducting a test",
-          "modelling the task",
-          "setting homework"
+          "A. Progress",
+          "B. Text organisation",
+          "C. Accuracy",
+          "D. Range"
         ],
-        "correct": 0,
-        "passage": ""
-      },
-      {
-        "text": "Learners choose which of three solutions to a problem is best and explain why. This mainly practises:",
-        "options": [
-          "listening for numbers",
-          "copying and spelling",
-          "fluency and giving opinions"
-        ],
-        "correct": 0,
-        "passage": ""
-      },
-      {
-        "text": "A teacher asks “Can you give me an example?” after a learner gives a general answer. The teacher is:",
-        "options": [
-          "correcting handwriting",
-          "eliciting clarification and elaboration",
-          "setting a time limit"
-        ],
-        "correct": 0,
-        "passage": ""
-      },
-      {
-        "text": "What is the main benefit of using pair work?",
-        "options": [
-          "it increases learner talking time",
-          "it removes the need for instructions",
-          "it guarantees every answer is correct"
-        ],
-        "correct": 0,
-        "passage": ""
-      },
-      {
-        "text": "A learner cannot remember a word. The teacher says “It is a place where you borrow books.” This is:",
-        "options": [
-          "prompting through a definition",
-          "providing an answer key",
-          "repeating an instruction"
-        ],
-        "correct": 0,
-        "passage": ""
-      },
-      {
-        "text": "At the end of a lesson, learners write one thing they learned and one question they still have. This is useful for:",
-        "options": [
-          "teaching word stress",
-          "review and reflection",
-          "setting up a role-play"
-        ],
-        "correct": 0,
+        "correct": 2,
         "passage": ""
       }
     ]
   },
   {
     "module": 3,
-    "title": "TKT Module 3 · M3 V62 Source Test (20 questions)",
-    "source": "User-supplied M3 V62 PDF; questions adapted into interactive multiple-choice format and answers solved from the classroom-teaching context",
-    "duration_min": 20,
+    "title": "TKT Module 3 · M3 V62 Full Test (80 questions)",
+    "source": "User-provided M3 V62 PDF; all 80 questions adapted to interactive format and answers checked against the paper content",
+    "duration_min": 80,
     "questions": [
-      {"text":"A teacher says, “That’s right, he’s wearing a jacket. Are jackets normally long or short?” Which classroom function is illustrated?","options":["Eliciting language","Narrating","Giving instructions","Modelling"],"correct":0,"passage":""},
-      {"text":"A teacher says, “Then the three friends woke up and continued their journey.” What is the teacher doing?","options":["Checking understanding","Narrating","Clarifying","Prompting a learner to continue"],"correct":1,"passage":""},
-      {"text":"A teacher says, “OK, you like that picture. Can you tell your partner why you like it?” What is the main function?","options":["Giving instructions","Prompting a learner to continue","Clarifying","Checking understanding"],"correct":1,"passage":""},
-      {"text":"A teacher says, “Can everyone stop writing now? Pass your paper to the person on your left.” This is an example of:","options":["Narrating","Modelling","Giving instructions","Eliciting language"],"correct":2,"passage":""},
-      {"text":"A teacher explains that “a quarter past three” is the same as “three fifteen”. Which function is this?","options":["Clarifying","Checking understanding","Narrating","Prompting a learner to continue"],"correct":0,"passage":""},
-      {"text":"Before reading a text, a teacher asks learners to suggest clothes normally worn only in cold weather. What is the teacher doing?","options":["Checking understanding","Eliciting language","Giving instructions","Modelling"],"correct":1,"passage":""},
-      {"text":"Learners have completed a pre-reading task and made predictions. Which instruction best checks those predictions during reading?","options":["Read carefully and tell me the gist.","Look at the text and check whether your ideas were correct.","Read quickly and choose the best title."],"correct":1,"passage":""},
-      {"text":"A teacher wants elementary learners to become interested in a topic using a picture. Which task best invites them to speculate?","options":["Tell me where the picture is.","Answer three factual questions with a partner.","Say what you think the people have been doing."],"correct":2,"passage":""},
-      {"text":"A learner asks whether she can express a sentence in a different way. Which response is least appropriate for a pre-intermediate learner?","options":["You can, but it sounds too formal.","If you say it like that, it will not be very clear what you mean.","It’s highly unlikely you would hear anyone express it in that way."],"correct":2,"passage":""},
-      {"text":"A teacher wants to find out whether learners remember the meaning of “safe”. Which question most directly checks recall?","options":["Can anyone give a word which is the opposite of safe?","Where did we see safe yesterday?","I think you have all seen safe before. Do you understand it?"],"correct":1,"passage":""},
-      {"text":"Learners are writing a complaint to a bank manager. What is the best advice for their first draft?","options":["Concentrate on communicating the complaint; refine form later.","Register does not matter at any stage.","Only check paragraph links before writing any content."],"correct":0,"passage":""},
-      {"text":"A learner struggles to pronounce “atmosphere”. Which teacher action gives useful pronunciation support?","options":["Show the spelling and have learners identify the main stress after listening.","Say the spelling is difficult, so they should guess how to write it.","Tell them the letters ph are always pronounced /p/."],"correct":0,"passage":""},
-      {"text":"Before a listening interview, a teacher asks questions about the topic to focus learners. Which activity is this?","options":["Brainstorming","Concept-question checking","Monitoring"],"correct":1,"passage":""},
-      {"text":"Before a speaking task, learners share as many ideas as possible about the topic. What is this?","options":["Monitoring","Brainstorming","Assessing"],"correct":1,"passage":""},
-      {"text":"A teacher watches pair work to check that learners are following the task instructions. The teacher is:","options":["Brainstorming","Monitoring","Modelling"],"correct":1,"passage":""},
-      {"text":"In an essay, a learner writes “the huge park in centre”. Which area needs correction?","options":["Verb form","Spelling","Articles"],"correct":2,"passage":""},
-      {"text":"In the same essay, a learner writes “its nice that ice-cream is available”. Which error is illustrated?","options":["Punctuation","Verb form","Spelling"],"correct":0,"passage":""},
-      {"text":"In group planning, one learner says, “Are we supposed to be talking about our home town or the town we’re studying in?” What is the speaker doing?","options":["Asking for clarification","Giving an example","Including another learner","Prioritising a task"],"correct":0,"passage":""},
-      {"text":"During a fluency role-play, a teacher notes recurring errors and discusses them after the activity. This is:","options":["Immediate correction","Delayed feedback","Modelling"],"correct":1,"passage":""},
-      {"text":"A teacher uses a correction code on learners’ essays. What does this technique mainly encourage?","options":["Learners to identify and correct their own errors","The teacher to rewrite every essay","Learners to memorise model answers"],"correct":0,"passage":""}
+      {
+        "text": "Teacher classroom language function: “That’s right, he’s wearing a jacket. Are jackets normally long or short?”",
+        "options": [
+          "Clarifying",
+          "Giving instructions",
+          "Narrating",
+          "Modelling",
+          "Prompting a learner to continue",
+          "Eliciting language",
+          "Checking understanding"
+        ],
+        "correct": 6,
+        "passage": ""
+      },
+      {
+        "text": "Teacher classroom language function: “Then the three friends woke up and continued their journey.”",
+        "options": [
+          "Clarifying",
+          "Giving instructions",
+          "Narrating",
+          "Modelling",
+          "Prompting a learner to continue",
+          "Eliciting language",
+          "Checking understanding"
+        ],
+        "correct": 2,
+        "passage": ""
+      },
+      {
+        "text": "Teacher classroom language function: “You like that picture. Can you tell your partner why you like it?”",
+        "options": [
+          "Clarifying",
+          "Giving instructions",
+          "Narrating",
+          "Modelling",
+          "Prompting a learner to continue",
+          "Eliciting language",
+          "Checking understanding"
+        ],
+        "correct": 4,
+        "passage": ""
+      },
+      {
+        "text": "Teacher classroom language function: “Stop writing now and pass your paper to the person on your left.”",
+        "options": [
+          "Clarifying",
+          "Giving instructions",
+          "Narrating",
+          "Modelling",
+          "Prompting a learner to continue",
+          "Eliciting language",
+          "Checking understanding"
+        ],
+        "correct": 1,
+        "passage": ""
+      },
+      {
+        "text": "Teacher classroom language function: “A quarter past three is the same as three fifteen.”",
+        "options": [
+          "Clarifying",
+          "Giving instructions",
+          "Narrating",
+          "Modelling",
+          "Prompting a learner to continue",
+          "Eliciting language",
+          "Checking understanding"
+        ],
+        "correct": 0,
+        "passage": ""
+      },
+      {
+        "text": "Teacher classroom language function: “What clothes do you normally only wear in cold weather? Any suggestions?”",
+        "options": [
+          "Clarifying",
+          "Giving instructions",
+          "Narrating",
+          "Modelling",
+          "Prompting a learner to continue",
+          "Eliciting language",
+          "Checking understanding"
+        ],
+        "correct": 5,
+        "passage": ""
+      },
+      {
+        "text": "A teacher asks learners to look at a text after a short pre-reading task. Which is NOT appropriate?",
+        "options": [
+          "Read carefully and tell me the gist.",
+          "Check whether your predictions were correct.",
+          "Read quickly and choose the best title."
+        ],
+        "correct": 1,
+        "passage": ""
+      },
+      {
+        "text": "A teacher uses a picture to interest elementary learners in a topic. Which suggestion is NOT appropriate?",
+        "options": [
+          "Say where you think the picture is.",
+          "Answer questions with a partner.",
+          "Speculate about what the people have been doing."
+        ],
+        "correct": 2,
+        "passage": ""
+      },
+      {
+        "text": "A pre-intermediate learner asks if she can express a sentence another way. Which response is NOT appropriate?",
+        "options": [
+          "It is highly unlikely anyone would express it that way.",
+          "It will not be very clear what you mean.",
+          "You can, but it sounds too formal."
+        ],
+        "correct": 0,
+        "passage": ""
+      },
+      {
+        "text": "A teacher checks whether learners remember “safe”. Which question is NOT appropriate?",
+        "options": [
+          "Give a word opposite in meaning to safe.",
+          "Where did we see safe yesterday?",
+          "You have all seen safe before. Do you understand it?"
+        ],
+        "correct": 1,
+        "passage": ""
+      },
+      {
+        "text": "Learners write a complaint to a bank manager. Which advice is NOT appropriate?",
+        "options": [
+          "Check paragraphs and linking words in the final draft.",
+          "Register is unimportant if the complaint is clear.",
+          "Focus on communicating the complaint in the first draft."
+        ],
+        "correct": 1,
+        "passage": ""
+      },
+      {
+        "text": "Learners struggle to say “atmosphere”. Which support is NOT appropriate?",
+        "options": [
+          "Listen and identify the word stress.",
+          "Notice that ph is pronounced /f/, as in enough.",
+          "Guess how to spell the word because it is difficult."
+        ],
+        "correct": 2,
+        "passage": ""
+      },
+      {
+        "text": "A teacher focuses on vocabulary learners will meet in a text. Which is NOT an appropriate activity?",
+        "options": [
+          "Guess meanings and create definitions.",
+          "Match words in the text to meanings below.",
+          "Underline unknown words and check whether context or a partner helps."
+        ],
+        "correct": 1,
+        "passage": ""
+      },
+      {
+        "text": "Teacher activity: Focus learners on the topic before they listen to an interview.",
+        "options": [
+          "A. Asking concept questions",
+          "B. Brainstorming",
+          "C. Monitoring"
+        ],
+        "correct": 1,
+        "passage": ""
+      },
+      {
+        "text": "Teacher activity: Check that learners understand grammar points during a presentation.",
+        "options": [
+          "A. Asking concept questions",
+          "B. Brainstorming",
+          "C. Monitoring"
+        ],
+        "correct": 0,
+        "passage": ""
+      },
+      {
+        "text": "Teacher activity: Get learners to share ideas before a speaking activity.",
+        "options": [
+          "A. Asking concept questions",
+          "B. Brainstorming",
+          "C. Monitoring"
+        ],
+        "correct": 1,
+        "passage": ""
+      },
+      {
+        "text": "Teacher activity: Check learners are following the instructions given.",
+        "options": [
+          "A. Asking concept questions",
+          "B. Brainstorming",
+          "C. Monitoring"
+        ],
+        "correct": 2,
+        "passage": ""
+      },
+      {
+        "text": "Teacher activity: Help learners understand key words before they read a text.",
+        "options": [
+          "A. Asking concept questions",
+          "B. Brainstorming",
+          "C. Monitoring"
+        ],
+        "correct": 1,
+        "passage": ""
+      },
+      {
+        "text": "Teacher activity: Observe learners so you can give feedback after a speaking activity.",
+        "options": [
+          "A. Asking concept questions",
+          "B. Brainstorming",
+          "C. Monitoring"
+        ],
+        "correct": 2,
+        "passage": ""
+      },
+      {
+        "text": "Type of writing error: “I like to introduce my town to you.”",
+        "options": [
+          "A. Verb form",
+          "B. Spelling",
+          "C. Articles",
+          "D. Punctuation"
+        ],
+        "correct": 0,
+        "passage": ""
+      },
+      {
+        "text": "Type of writing error: “the huge park in centre”",
+        "options": [
+          "A. Verb form",
+          "B. Spelling",
+          "C. Articles",
+          "D. Punctuation"
+        ],
+        "correct": 2,
+        "passage": ""
+      },
+      {
+        "text": "Type of writing error: “for most of the year, so everybody ...” (the missing comma after year)",
+        "options": [
+          "A. Verb form",
+          "B. Spelling",
+          "C. Articles",
+          "D. Punctuation"
+        ],
+        "correct": 3,
+        "passage": ""
+      },
+      {
+        "text": "Type of writing error: “some of children’s games”",
+        "options": [
+          "A. Verb form",
+          "B. Spelling",
+          "C. Articles",
+          "D. Punctuation"
+        ],
+        "correct": 2,
+        "passage": ""
+      },
+      {
+        "text": "Type of writing error: “its nice that ice-cream is available”",
+        "options": [
+          "A. Verb form",
+          "B. Spelling",
+          "C. Articles",
+          "D. Punctuation"
+        ],
+        "correct": 3,
+        "passage": ""
+      },
+      {
+        "text": "Type of writing error: “the park authoritys”",
+        "options": [
+          "A. Verb form",
+          "B. Spelling",
+          "C. Articles",
+          "D. Punctuation"
+        ],
+        "correct": 1,
+        "passage": ""
+      },
+      {
+        "text": "Type of writing error: “Now I’m to busy to go to the park”",
+        "options": [
+          "A. Verb form",
+          "B. Spelling",
+          "C. Articles",
+          "D. Punctuation"
+        ],
+        "correct": 1,
+        "passage": ""
+      },
+      {
+        "text": "Function of learner language: “We are going to write a description, right? But now we have to just talk and brainstorm ideas.”",
+        "options": [
+          "A. Asking for clarification",
+          "B. Giving an example",
+          "C. Giving yourself time to think",
+          "D. Including someone",
+          "E. Interrupting to make a point",
+          "F. Accepting a different opinion",
+          "G. Prioritising a task",
+          "H. Disagreeing"
+        ],
+        "correct": 6,
+        "passage": ""
+      },
+      {
+        "text": "Function of learner language: “We could use headings, like buildings, shops, restaurants and sightseeing.”",
+        "options": [
+          "A. Asking for clarification",
+          "B. Giving an example",
+          "C. Giving yourself time to think",
+          "D. Including someone",
+          "E. Interrupting to make a point",
+          "F. Accepting a different opinion",
+          "G. Prioritising a task",
+          "H. Disagreeing"
+        ],
+        "correct": 1,
+        "passage": ""
+      },
+      {
+        "text": "Function of learner language: “Are we supposed to talk about our home town or the town we study in?”",
+        "options": [
+          "A. Asking for clarification",
+          "B. Giving an example",
+          "C. Giving yourself time to think",
+          "D. Including someone",
+          "E. Interrupting to make a point",
+          "F. Accepting a different opinion",
+          "G. Prioritising a task",
+          "H. Disagreeing"
+        ],
+        "correct": 0,
+        "passage": ""
+      },
+      {
+        "text": "Function of learner language: “The teacher said we could choose, but I think the town we study in, so we can all contribute.”",
+        "options": [
+          "A. Asking for clarification",
+          "B. Giving an example",
+          "C. Giving yourself time to think",
+          "D. Including someone",
+          "E. Interrupting to make a point",
+          "F. Accepting a different opinion",
+          "G. Prioritising a task",
+          "H. Disagreeing"
+        ],
+        "correct": 2,
+        "passage": ""
+      },
+      {
+        "text": "Function of learner language: “Actually, I think it would be better to talk about our home towns. We would have more to say.”",
+        "options": [
+          "A. Asking for clarification",
+          "B. Giving an example",
+          "C. Giving yourself time to think",
+          "D. Including someone",
+          "E. Interrupting to make a point",
+          "F. Accepting a different opinion",
+          "G. Prioritising a task",
+          "H. Disagreeing"
+        ],
+        "correct": 7,
+        "passage": ""
+      },
+      {
+        "text": "Function of learner language: “Umm, I suppose so. We’ll talk about our home towns.”",
+        "options": [
+          "A. Asking for clarification",
+          "B. Giving an example",
+          "C. Giving yourself time to think",
+          "D. Including someone",
+          "E. Interrupting to make a point",
+          "F. Accepting a different opinion",
+          "G. Prioritising a task",
+          "H. Disagreeing"
+        ],
+        "correct": 5,
+        "passage": ""
+      },
+      {
+        "text": "Function of learner language: “What are the main attractions in your town, Suzanne?”",
+        "options": [
+          "A. Asking for clarification",
+          "B. Giving an example",
+          "C. Giving yourself time to think",
+          "D. Including someone",
+          "E. Interrupting to make a point",
+          "F. Accepting a different opinion",
+          "G. Prioritising a task",
+          "H. Disagreeing"
+        ],
+        "correct": 3,
+        "passage": ""
+      },
+      {
+        "text": "Function of written learner language: “As you know, we are having a party for Martin on Saturday, at my house in the garden.”",
+        "options": [
+          "A. Requesting information",
+          "B. Giving advice",
+          "C. Asking for an opinion",
+          "D. Confirming facts",
+          "E. Speculating",
+          "F. Negotiating",
+          "G. Offering a solution",
+          "H. Suggesting a sequence"
+        ],
+        "correct": 3,
+        "passage": ""
+      },
+      {
+        "text": "Function of written learner language: “It would be a good idea to bring a sweater.”",
+        "options": [
+          "A. Requesting information",
+          "B. Giving advice",
+          "C. Asking for an opinion",
+          "D. Confirming facts",
+          "E. Speculating",
+          "F. Negotiating",
+          "G. Offering a solution",
+          "H. Suggesting a sequence"
+        ],
+        "correct": 1,
+        "passage": ""
+      },
+      {
+        "text": "Function of written learner language: “We can go shopping, decorate the house and then prepare the food.”",
+        "options": [
+          "A. Requesting information",
+          "B. Giving advice",
+          "C. Asking for an opinion",
+          "D. Confirming facts",
+          "E. Speculating",
+          "F. Negotiating",
+          "G. Offering a solution",
+          "H. Suggesting a sequence"
+        ],
+        "correct": 7,
+        "passage": ""
+      },
+      {
+        "text": "Function of written learner language: “That rice dish is delicious; I expect everyone will love it.”",
+        "options": [
+          "A. Requesting information",
+          "B. Giving advice",
+          "C. Asking for an opinion",
+          "D. Confirming facts",
+          "E. Speculating",
+          "F. Negotiating",
+          "G. Offering a solution",
+          "H. Suggesting a sequence"
+        ],
+        "correct": 4,
+        "passage": ""
+      },
+      {
+        "text": "Function of written learner language: “We will not have enough plates, but we can buy paper ones.”",
+        "options": [
+          "A. Requesting information",
+          "B. Giving advice",
+          "C. Asking for an opinion",
+          "D. Confirming facts",
+          "E. Speculating",
+          "F. Negotiating",
+          "G. Offering a solution",
+          "H. Suggesting a sequence"
+        ],
+        "correct": 6,
+        "passage": ""
+      },
+      {
+        "text": "Function of written learner language: “I have lots of CDs. Is that enough, do you think? Mark is bringing music too.”",
+        "options": [
+          "A. Requesting information",
+          "B. Giving advice",
+          "C. Asking for an opinion",
+          "D. Confirming facts",
+          "E. Speculating",
+          "F. Negotiating",
+          "G. Offering a solution",
+          "H. Suggesting a sequence"
+        ],
+        "correct": 2,
+        "passage": ""
+      },
+      {
+        "text": "Function of written learner language: “What time does your gym lesson finish on Saturday?”",
+        "options": [
+          "A. Requesting information",
+          "B. Giving advice",
+          "C. Asking for an opinion",
+          "D. Confirming facts",
+          "E. Speculating",
+          "F. Negotiating",
+          "G. Offering a solution",
+          "H. Suggesting a sequence"
+        ],
+        "correct": 0,
+        "passage": ""
+      },
+      {
+        "text": "Why can a quiet period in a lesson be useful? Choose the trainee response that is NOT appropriate.",
+        "options": [
+          "A change of pace can help learning.",
+          "Learners need quiet time to consolidate learning.",
+          "The teacher can prepare the next activity."
+        ],
+        "correct": 2,
+        "passage": ""
+      },
+      {
+        "text": "Are definitions always the best way to explain vocabulary? Choose the trainee response that is NOT appropriate.",
+        "options": [
+          "They can be more complex than the word.",
+          "They may not be memorable.",
+          "Learners can be encouraged to write their own definitions."
+        ],
+        "correct": 0,
+        "passage": ""
+      },
+      {
+        "text": "Why should learners personalise new language? Choose the trainee response that is NOT appropriate.",
+        "options": [
+          "They dislike unfamiliar topics.",
+          "They remember language when it relates to real life.",
+          "Personalising can be more motivating."
+        ],
+        "correct": 0,
+        "passage": ""
+      },
+      {
+        "text": "Why should teachers learn about their learners? Choose the trainee response that is NOT appropriate.",
+        "options": [
+          "To be aware of sensitive areas.",
+          "To treat them as individuals.",
+          "To discuss personal issues in class."
+        ],
+        "correct": 2,
+        "passage": ""
+      },
+      {
+        "text": "Should feedback be given after every task? Choose the trainee response that is NOT appropriate.",
+        "options": [
+          "Feedback can make the task more meaningful.",
+          "Go through answers even when you know they are correct.",
+          "Feedback can give learners a sense of progress."
+        ],
+        "correct": 1,
+        "passage": ""
+      },
+      {
+        "text": "Do teachers need to follow everything in a lesson plan? Choose the trainee response that is NOT appropriate.",
+        "options": [
+          "An activity may no longer be necessary.",
+          "Unpredicted problems may need attention.",
+          "Learners may find controlled practice boring."
+        ],
+        "correct": 2,
+        "passage": ""
+      },
+      {
+        "text": "Why vary the tone and speed of your voice? Choose the trainee response that is NOT appropriate.",
+        "options": [
+          "It prevents learners becoming bored and stopping listening.",
+          "It makes it easier for learners to copy you.",
+          "Changes in voice can support meaning."
+        ],
+        "correct": 0,
+        "passage": ""
+      },
+      {
+        "text": "Classroom management response: Some learners find it difficult to speak in front of the whole class.",
+        "options": [
+          "A. Ask learners to demonstrate the task.",
+          "B. Nominate monitors to ensure turn-taking.",
+          "C. Group learners of similar ability.",
+          "D. Prepare a seating plan.",
+          "E. Explain that learners can learn from each other.",
+          "F. Use pair work to encourage less confident learners.",
+          "G. Plan board work in advance.",
+          "H. Bring a backup game or quiz."
+        ],
+        "correct": 5,
+        "passage": ""
+      },
+      {
+        "text": "Classroom management response: Some learners fail group activities because they have not listened carefully to instructions.",
+        "options": [
+          "A. Ask learners to demonstrate the task.",
+          "B. Nominate monitors to ensure turn-taking.",
+          "C. Group learners of similar ability.",
+          "D. Prepare a seating plan.",
+          "E. Explain that learners can learn from each other.",
+          "F. Use pair work to encourage less confident learners.",
+          "G. Plan board work in advance.",
+          "H. Bring a backup game or quiz."
+        ],
+        "correct": 0,
+        "passage": ""
+      },
+      {
+        "text": "Classroom management response: A neighbouring teacher complains that your class is too noisy.",
+        "options": [
+          "A. Ask learners to demonstrate the task.",
+          "B. Nominate monitors to ensure turn-taking.",
+          "C. Group learners of similar ability.",
+          "D. Prepare a seating plan.",
+          "E. Explain that learners can learn from each other.",
+          "F. Use pair work to encourage less confident learners.",
+          "G. Plan board work in advance.",
+          "H. Bring a backup game or quiz."
+        ],
+        "correct": 1,
+        "passage": ""
+      },
+      {
+        "text": "Classroom management response: Learners do not see the point of student-centred activities.",
+        "options": [
+          "A. Ask learners to demonstrate the task.",
+          "B. Nominate monitors to ensure turn-taking.",
+          "C. Group learners of similar ability.",
+          "D. Prepare a seating plan.",
+          "E. Explain that learners can learn from each other.",
+          "F. Use pair work to encourage less confident learners.",
+          "G. Plan board work in advance.",
+          "H. Bring a backup game or quiz."
+        ],
+        "correct": 4,
+        "passage": ""
+      },
+      {
+        "text": "Classroom management response: Stronger learners are not challenged enough in group work.",
+        "options": [
+          "A. Ask learners to demonstrate the task.",
+          "B. Nominate monitors to ensure turn-taking.",
+          "C. Group learners of similar ability.",
+          "D. Prepare a seating plan.",
+          "E. Explain that learners can learn from each other.",
+          "F. Use pair work to encourage less confident learners.",
+          "G. Plan board work in advance.",
+          "H. Bring a backup game or quiz."
+        ],
+        "correct": 2,
+        "passage": ""
+      },
+      {
+        "text": "Classroom management response: Learners finish tasks early and there is time before the lesson ends.",
+        "options": [
+          "A. Ask learners to demonstrate the task.",
+          "B. Nominate monitors to ensure turn-taking.",
+          "C. Group learners of similar ability.",
+          "D. Prepare a seating plan.",
+          "E. Explain that learners can learn from each other.",
+          "F. Use pair work to encourage less confident learners.",
+          "G. Plan board work in advance.",
+          "H. Bring a backup game or quiz."
+        ],
+        "correct": 7,
+        "passage": ""
+      },
+      {
+        "text": "Classroom management response: You cannot remember all the learners’ names.",
+        "options": [
+          "A. Ask learners to demonstrate the task.",
+          "B. Nominate monitors to ensure turn-taking.",
+          "C. Group learners of similar ability.",
+          "D. Prepare a seating plan.",
+          "E. Explain that learners can learn from each other.",
+          "F. Use pair work to encourage less confident learners.",
+          "G. Plan board work in advance.",
+          "H. Bring a backup game or quiz."
+        ],
+        "correct": 3,
+        "passage": ""
+      },
+      {
+        "text": "Teacher role: After class, the teacher talks to individual learners about their progress.",
+        "options": [
+          "A. Planner",
+          "B. Manager",
+          "C. Assessor",
+          "D. Contributor"
+        ],
+        "correct": 2,
+        "passage": ""
+      },
+      {
+        "text": "Teacher role: While monitoring pair work, the teacher explains why she agrees with learners’ opinions.",
+        "options": [
+          "A. Planner",
+          "B. Manager",
+          "C. Assessor",
+          "D. Contributor"
+        ],
+        "correct": 3,
+        "passage": ""
+      },
+      {
+        "text": "Teacher role: The teacher stops controlled practice when learners start using L1.",
+        "options": [
+          "A. Planner",
+          "B. Manager",
+          "C. Assessor",
+          "D. Contributor"
+        ],
+        "correct": 1,
+        "passage": ""
+      },
+      {
+        "text": "Teacher role: The teacher asks a learner to repeat the instructions.",
+        "options": [
+          "A. Planner",
+          "B. Manager",
+          "C. Assessor",
+          "D. Contributor"
+        ],
+        "correct": 2,
+        "passage": ""
+      },
+      {
+        "text": "Teacher role: The teacher invites learners to ask for his views in a discussion.",
+        "options": [
+          "A. Planner",
+          "B. Manager",
+          "C. Assessor",
+          "D. Contributor"
+        ],
+        "correct": 3,
+        "passage": ""
+      },
+      {
+        "text": "Teacher role: The teacher checks that noisy groups do not distract others.",
+        "options": [
+          "A. Planner",
+          "B. Manager",
+          "C. Assessor",
+          "D. Contributor"
+        ],
+        "correct": 1,
+        "passage": ""
+      },
+      {
+        "text": "Teacher role: The teacher brings photocopied news articles to class.",
+        "options": [
+          "A. Planner",
+          "B. Manager",
+          "C. Assessor",
+          "D. Contributor"
+        ],
+        "correct": 0,
+        "passage": ""
+      },
+      {
+        "text": "Purpose of interaction pattern: Learners individually brainstorm words for city and countryside.",
+        "options": [
+          "A. Assess negotiating skills",
+          "B. Encourage peer feedback",
+          "C. Build confidence in functional language",
+          "D. Competitive language review",
+          "E. Build rapport",
+          "F. Quiet thinking time",
+          "G. Share known language"
+        ],
+        "correct": 5,
+        "passage": ""
+      },
+      {
+        "text": "Purpose of interaction pattern: The class chorally drills advice structures before a role-play.",
+        "options": [
+          "A. Assess negotiating skills",
+          "B. Encourage peer feedback",
+          "C. Build confidence in functional language",
+          "D. Competitive language review",
+          "E. Build rapport",
+          "F. Quiet thinking time",
+          "G. Share known language"
+        ],
+        "correct": 2,
+        "passage": ""
+      },
+      {
+        "text": "Purpose of interaction pattern: The class brainstorms vocabulary for describing people before describing family photos.",
+        "options": [
+          "A. Assess negotiating skills",
+          "B. Encourage peer feedback",
+          "C. Build confidence in functional language",
+          "D. Competitive language review",
+          "E. Build rapport",
+          "F. Quiet thinking time",
+          "G. Share known language"
+        ],
+        "correct": 6,
+        "passage": ""
+      },
+      {
+        "text": "Purpose of interaction pattern: Learners show written work to a partner and discuss it before handing it in.",
+        "options": [
+          "A. Assess negotiating skills",
+          "B. Encourage peer feedback",
+          "C. Build confidence in functional language",
+          "D. Competitive language review",
+          "E. Build rapport",
+          "F. Quiet thinking time",
+          "G. Share known language"
+        ],
+        "correct": 1,
+        "passage": ""
+      },
+      {
+        "text": "Purpose of interaction pattern: Two teams compete in a quiz on job vocabulary.",
+        "options": [
+          "A. Assess negotiating skills",
+          "B. Encourage peer feedback",
+          "C. Build confidence in functional language",
+          "D. Competitive language review",
+          "E. Build rapport",
+          "F. Quiet thinking time",
+          "G. Share known language"
+        ],
+        "correct": 3,
+        "passage": ""
+      },
+      {
+        "text": "Purpose of interaction pattern: The teacher uses many mingling activities in the first lessons with a new class.",
+        "options": [
+          "A. Assess negotiating skills",
+          "B. Encourage peer feedback",
+          "C. Build confidence in functional language",
+          "D. Competitive language review",
+          "E. Build rapport",
+          "F. Quiet thinking time",
+          "G. Share known language"
+        ],
+        "correct": 4,
+        "passage": ""
+      },
+      {
+        "text": "Correction strategy: The teacher uses fingers to show where a mistake was made.",
+        "options": [
+          "A. Remedial practice",
+          "B. Prompting self-correction",
+          "C. Explaining the error"
+        ],
+        "correct": 1,
+        "passage": ""
+      },
+      {
+        "text": "Correction strategy: The teacher drills words containing the target sounds.",
+        "options": [
+          "A. Remedial practice",
+          "B. Prompting self-correction",
+          "C. Explaining the error"
+        ],
+        "correct": 0,
+        "passage": ""
+      },
+      {
+        "text": "Correction strategy: The teacher notes errors in a role-play and explains what was wrong and why in the next lesson.",
+        "options": [
+          "A. Remedial practice",
+          "B. Prompting self-correction",
+          "C. Explaining the error"
+        ],
+        "correct": 2,
+        "passage": ""
+      },
+      {
+        "text": "Correction strategy: The teacher uses a correction code on essays.",
+        "options": [
+          "A. Remedial practice",
+          "B. Prompting self-correction",
+          "C. Explaining the error"
+        ],
+        "correct": 1,
+        "passage": ""
+      },
+      {
+        "text": "Correction strategy: The teacher draws a timeline and reminds a learner not to use present perfect with past-time expressions.",
+        "options": [
+          "A. Remedial practice",
+          "B. Prompting self-correction",
+          "C. Explaining the error"
+        ],
+        "correct": 2,
+        "passage": ""
+      },
+      {
+        "text": "Correction strategy: The teacher echoes “I’ll give it to him when I will see him!” to prompt correction.",
+        "options": [
+          "A. Remedial practice",
+          "B. Prompting self-correction",
+          "C. Explaining the error"
+        ],
+        "correct": 1,
+        "passage": ""
+      },
+      {
+        "text": "Feedback focus: “Include a strong opening and link ideas together more.”",
+        "options": [
+          "A. Progress",
+          "B. Text organisation",
+          "C. Accuracy",
+          "D. Range"
+        ],
+        "correct": 1,
+        "passage": ""
+      },
+      {
+        "text": "Feedback focus: “A well-balanced argument; remember to allow time to check your work.”",
+        "options": [
+          "A. Progress",
+          "B. Text organisation",
+          "C. Accuracy",
+          "D. Range"
+        ],
+        "correct": 2,
+        "passage": ""
+      },
+      {
+        "text": "Feedback focus: “Good use of adverbs such as however to link paragraphs.”",
+        "options": [
+          "A. Progress",
+          "B. Text organisation",
+          "C. Accuracy",
+          "D. Range"
+        ],
+        "correct": 3,
+        "passage": ""
+      },
+      {
+        "text": "Feedback focus: “Try not to use the same adjectives too often.”",
+        "options": [
+          "A. Progress",
+          "B. Text organisation",
+          "C. Accuracy",
+          "D. Range"
+        ],
+        "correct": 1,
+        "passage": ""
+      },
+      {
+        "text": "Feedback focus: “Your handwriting is getting easier to read.”",
+        "options": [
+          "A. Progress",
+          "B. Text organisation",
+          "C. Accuracy",
+          "D. Range"
+        ],
+        "correct": 0,
+        "passage": ""
+      },
+      {
+        "text": "Feedback focus: “Use synonyms to avoid repeating the same words.”",
+        "options": [
+          "A. Progress",
+          "B. Text organisation",
+          "C. Accuracy",
+          "D. Range"
+        ],
+        "correct": 3,
+        "passage": ""
+      },
+      {
+        "text": "Feedback focus: “Use the irregular verb list to check your work.”",
+        "options": [
+          "A. Progress",
+          "B. Text organisation",
+          "C. Accuracy",
+          "D. Range"
+        ],
+        "correct": 2,
+        "passage": ""
+      }
     ]
   }
 ]

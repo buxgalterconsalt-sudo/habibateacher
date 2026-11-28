@@ -1473,7 +1473,7 @@ function importInteractiveTktModuleTwoTests() {
 importInteractiveTktModuleTwoTests();
 
 function importAdditionalTktPracticeTests() {
-  const migrationKey = "tkt_additional_practice_tests_2026_11_v2";
+  const migrationKey = "tkt_additional_practice_tests_2026_11_v3";
   if (metaGet(migrationKey, "") === "1") return;
   const quizzes = JSON.parse(fs.readFileSync(path.join(__dirname, "seed-data", "tkt-practice-tests.json"), "utf8"));
   const insertLesson = db.prepare(`INSERT INTO lessons
@@ -1509,10 +1509,10 @@ function importAdditionalTktPracticeTests() {
     }
     // The earlier generic Module 3 set used distractors as correct answers in places.
     // Remove it so learners only see the source-based Module 3 paper below.
-    const oldModule3 = db.prepare("SELECT id FROM lessons WHERE course_id = (SELECT id FROM courses WHERE title = 'TKT MODULE 3' AND category = 'tkt' ORDER BY id LIMIT 1) AND title = 'TKT Module 3 · Additional Practice Test (20 questions)' AND type = 'test'").get();
-    if (oldModule3) {
-      db.prepare("DELETE FROM questions WHERE lesson_id = ?").run(oldModule3.id);
-      db.prepare("DELETE FROM lessons WHERE id = ?").run(oldModule3.id);
+    const oldModule3 = db.prepare("SELECT id FROM lessons WHERE course_id = (SELECT id FROM courses WHERE title = 'TKT MODULE 3' AND category = 'tkt' ORDER BY id LIMIT 1) AND title IN ('TKT Module 3 · Additional Practice Test (20 questions)', 'TKT Module 3 · M3 V62 Source Test (20 questions)') AND type = 'test'").all();
+    for (const oldLesson of oldModule3) {
+      db.prepare("DELETE FROM questions WHERE lesson_id = ?").run(oldLesson.id);
+      db.prepare("DELETE FROM lessons WHERE id = ?").run(oldLesson.id);
     }
     metaSet(migrationKey, "1");
     db.exec("COMMIT");
