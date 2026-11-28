@@ -6053,11 +6053,11 @@ const server = http.createServer(async (req, res) => {
   <input type="hidden" name="tg_init_data" value="">
   ${alertBox("Botga a'zo bo'ling va duelda bo'ladigan qiziqarli o'yinlar haqidagi xabarlarni oling.", "success")}
   <div class="field"><a class="btn btn-primary" href="${h(botStartLink(`register_${registrationToken}`))}" target="_blank" rel="noopener">🤖 Telegram botga o'tish va /start bosish</a></div>
-  <div class="field"><label>Ismingiz</label><input name="name" required maxlength="40" autocomplete="off" placeholder="Habiba..."></div>
-  <div class="field"><label>Familiyangiz</label><input name="surname" required maxlength="60" autocomplete="off" placeholder="Qoraboyeva..."></div>
-  <div class="field"><label>Otangizning ismi (otchestvo)</label><input name="father_name" required maxlength="60" autocomplete="off" placeholder="Muminjonovna... / yoki / vich / qizi / o'g'li"></div>
+  <div class="field"><label>Ismingiz</label><input name="name" required maxlength="40" autocomplete="off" placeholder="Ism..."></div>
+  <div class="field"><label>Familiyangiz</label><input name="surname" required maxlength="60" autocomplete="off" placeholder="Familiya..."></div>
+  <div class="field"><label>Otangizning ismi (otchestvo)</label><input name="father_name" required maxlength="60" autocomplete="off" placeholder="Otasining ismi..."></div>
   <div class="field"><label>Tug'ilgan kun.oy.yil</label><input name="birth_date" data-birth-date required inputmode="numeric" maxlength="10" autocomplete="off" pattern="[0-9]{2}\\.[0-9]{2}\\.[0-9]{4}" placeholder="kun.oy.yil, masalan 05.09.1995"></div>
-  <div class="field"><label>Telefon raqamingiz</label><input name="phone" data-phone required inputmode="tel" autocomplete="username" placeholder="+998 93 568 00 91..."></div>
+  <div class="field"><label>Telefon raqamingiz</label><input name="phone" data-phone required inputmode="tel" autocomplete="username" placeholder="+998 90 123 45 67..."></div>
   <div class="field"><label>Parol</label>${registrationPasswordInput("password", "new-password")}${passwordRequirementsMarkup()}</div>
   <div class="field"><label>Parolni qayta tasdiqlang</label>${registrationPasswordInput("password_confirm", "new-password", "Parolni qayta kiriting")}</div>
   <button class="btn btn-primary" type="submit">Ro'yxatdan o'tish</button>
