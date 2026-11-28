@@ -3860,7 +3860,7 @@ function autoEnrollTournament(tournament) {
 }
 
 function autoEnrollAll() {
-  if (tashkentClock().minutes >= 1080) return;
+  if (tashkentClock().minutes >= 1320) return;
   const day = todayKey();
   const enrolledToday = new Set(
     db
@@ -4318,8 +4318,8 @@ ${entries.length} ishtirokchi
  <b>Kun jadvali</b>
 09:00   start
 ${schedule}
-17:15   g'olib
-18:00   yakun
+21:15   g'olib
+22:00   yakun
 
 <b>${tournamentRoundName(tournament.size, 1)} juftliklari</b>
 ${tournamentPairingLines(tournament.id, 1)}
@@ -4351,7 +4351,7 @@ async function sendTournamentWinner(tournament) {
 .prepare("SELECT * FROM tournament_matches WHERE tournament_id = ? AND round = ?")
 .get(tournament.id, rounds);
   if (!final || !final.winner) {
-  await notifyTelegram(`<b>Bugungi duel kubogi</b>\nFinal hali yakunlanmagan. 18:00 gacha davom etadi.`);
+  await notifyTelegram(`<b>Bugungi duel kubogi</b>\nFinal hali yakunlanmagan. 22:00 gacha davom etadi.`);
   return;
   }
   const winner = db.prepare("SELECT name, telegram_username FROM users WHERE id = ?").get(final.winner);
@@ -4387,7 +4387,7 @@ async function tournamentTick() {
 
   if (tournament.status === "open") autoEnrollAll();
 
-  if (tournament.status === "open" && clock.minutes >= 540 && clock.minutes < 1080) {
+  if (tournament.status === "open" && clock.minutes >= 540 && clock.minutes < 1320) {
   const entries = tournamentEntries(tournament.id);
   if (entries.length >= 2) {
   if (startTournament(tournament.id)) {
@@ -4428,23 +4428,23 @@ async function tournamentTick() {
   for (const match of matches) await notifyTournamentMatchPlayers(tournament.id, r, match.id, "started");
   }
   }
-  if (clock.minutes >= 1035 && metaGet(flag("winner")) !== "1") {
+  if (clock.minutes >= 1275 && metaGet(flag("winner")) !== "1") {
   metaSet(flag("winner"), "1");
   await sendTournamentWinner(tournament);
   }
   }
 
-  if (clock.minutes >= 1080 && tournament.status !== "finished") {
+  if (clock.minutes >= 1320 && tournament.status !== "finished") {
   const winnerId = await closeTournament(tournament);
   metaSet(flag("closed"), "1");
   if (winnerId) {
   const winner = db.prepare("SELECT name, telegram_username FROM users WHERE id = ?").get(winnerId);
   await notifyTelegram(
-  `<b>Kunlik duel yakunlandi${label}</b>\nG'olib: <b>${telegramPublicName(winner?.name, winner?.telegram_username, "?")}</b>\n18:00 da turnir yopildi.`
+  `<b>Kunlik duel yakunlandi${label}</b>\nG'olib: <b>${telegramPublicName(winner?.name, winner?.telegram_username, "?")}</b>\n22:00 da turnir yopildi.`
   );
   } else {
   await notifyTelegram(
-  `<b>Kunlik duel yakunlandi${label}</b>\n18:00 da turnir yopildi. Bugun g'olib aniqlanmadi.`
+  `<b>Kunlik duel yakunlandi${label}</b>\n22:00 da turnir yopildi. Bugun g'olib aniqlanmadi.`
   );
   }
   }
@@ -4530,7 +4530,7 @@ async function reminderTick() {
   if (!list.length) return;
   await send(
   list,
-  (u) => `<b>Assalomu alaykum, ${telegramPublicName(u.name, u.telegram_username)}!</b>\n\nBugungi bosqich boshlandi va soat <b>18:00</b> gacha davom etadi.\nBugun allaqachon <b>${active.size}</b> kishi qatnashdi.\n\nBosqichni hoziroq boshlang!`,
+  (u) => `<b>Assalomu alaykum, ${telegramPublicName(u.name, u.telegram_username)}!</b>\n\nBugungi bosqich boshlandi va soat <b>22:00</b> gacha davom etadi.\nBugun allaqachon <b>${active.size}</b> kishi qatnashdi.\n\nBosqichni hoziroq boshlang!`,
   "/duel/tournament",
   "Bosqichni boshlash"
   );
@@ -4542,19 +4542,19 @@ async function reminderTick() {
   if (!list.length) return;
   await send(
   list,
-  (u) => `<b>${telegramPublicName(u.name, u.telegram_username)}</b>, bugun hali qatnashmadingiz.\n\nBosqich <b>18:00</b> gacha ochiq.\nBugun <b>${active.size}</b> kishi allaqachon qatnashdi.\n\nVaqtni boy bermang!`,
+  (u) => `<b>${telegramPublicName(u.name, u.telegram_username)}</b>, bugun hali qatnashmadingiz.\n\nBosqich <b>22:00</b> gacha ochiq.\nBugun <b>${active.size}</b> kishi allaqachon qatnashdi.\n\nVaqtni boy bermang!`,
   "/duel/tournament",
   "Bosqichni ochish"
   );
   });
 
-  await reminderStep("17", 1020, async () => {
+  await reminderStep("21", 1260, async () => {
   const active = activeUserIdsToday(day);
   const list = telegramUsers.filter((u) => !active.has(u.id));
   if (!list.length) return;
   await send(
   list,
-  (u) => `<b>${telegramPublicName(u.name, u.telegram_username)}</b>, bugungi bosqich hali bajarilmagan!\n\nBosqich <b>18:00</b> da yopiladi — atigi <b>1 soat</b> qoldi.\nBugun <b>${active.size}</b> kishi qatnashdi.\n\nHoziroq qo'shiling!`,
+  (u) => `<b>${telegramPublicName(u.name, u.telegram_username)}</b>, bugungi bosqich hali bajarilmagan!\n\nBosqich <b>22:00</b> da yopiladi — atigi <b>1 soat</b> qoldi.\nBugun <b>${active.size}</b> kishi qatnashdi.\n\nHoziroq qo'shiling!`,
   "/duel/tournament",
   "Bosqichni ochish"
   );
