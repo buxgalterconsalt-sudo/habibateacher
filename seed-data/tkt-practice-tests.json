@@ -622,5 +622,33 @@
         "passage": ""
       }
     ]
+  },
+  {
+    "module": 3,
+    "title": "TKT Module 3 · M3 V62 Source Test (20 questions)",
+    "source": "User-supplied M3 V62 PDF; questions adapted into interactive multiple-choice format and answers solved from the classroom-teaching context",
+    "duration_min": 20,
+    "questions": [
+      {"text":"A teacher says, “That’s right, he’s wearing a jacket. Are jackets normally long or short?” Which classroom function is illustrated?","options":["Eliciting language","Narrating","Giving instructions","Modelling"],"correct":0,"passage":""},
+      {"text":"A teacher says, “Then the three friends woke up and continued their journey.” What is the teacher doing?","options":["Checking understanding","Narrating","Clarifying","Prompting a learner to continue"],"correct":1,"passage":""},
+      {"text":"A teacher says, “OK, you like that picture. Can you tell your partner why you like it?” What is the main function?","options":["Giving instructions","Prompting a learner to continue","Clarifying","Checking understanding"],"correct":1,"passage":""},
+      {"text":"A teacher says, “Can everyone stop writing now? Pass your paper to the person on your left.” This is an example of:","options":["Narrating","Modelling","Giving instructions","Eliciting language"],"correct":2,"passage":""},
+      {"text":"A teacher explains that “a quarter past three” is the same as “three fifteen”. Which function is this?","options":["Clarifying","Checking understanding","Narrating","Prompting a learner to continue"],"correct":0,"passage":""},
+      {"text":"Before reading a text, a teacher asks learners to suggest clothes normally worn only in cold weather. What is the teacher doing?","options":["Checking understanding","Eliciting language","Giving instructions","Modelling"],"correct":1,"passage":""},
+      {"text":"Learners have completed a pre-reading task and made predictions. Which instruction best checks those predictions during reading?","options":["Read carefully and tell me the gist.","Look at the text and check whether your ideas were correct.","Read quickly and choose the best title."],"correct":1,"passage":""},
+      {"text":"A teacher wants elementary learners to become interested in a topic using a picture. Which task best invites them to speculate?","options":["Tell me where the picture is.","Answer three factual questions with a partner.","Say what you think the people have been doing."],"correct":2,"passage":""},
+      {"text":"A learner asks whether she can express a sentence in a different way. Which response is least appropriate for a pre-intermediate learner?","options":["You can, but it sounds too formal.","If you say it like that, it will not be very clear what you mean.","It’s highly unlikely you would hear anyone express it in that way."],"correct":2,"passage":""},
+      {"text":"A teacher wants to find out whether learners remember the meaning of “safe”. Which question most directly checks recall?","options":["Can anyone give a word which is the opposite of safe?","Where did we see safe yesterday?","I think you have all seen safe before. Do you understand it?"],"correct":1,"passage":""},
+      {"text":"Learners are writing a complaint to a bank manager. What is the best advice for their first draft?","options":["Concentrate on communicating the complaint; refine form later.","Register does not matter at any stage.","Only check paragraph links before writing any content."],"correct":0,"passage":""},
+      {"text":"A learner struggles to pronounce “atmosphere”. Which teacher action gives useful pronunciation support?","options":["Show the spelling and have learners identify the main stress after listening.","Say the spelling is difficult, so they should guess how to write it.","Tell them the letters ph are always pronounced /p/."],"correct":0,"passage":""},
+      {"text":"Before a listening interview, a teacher asks questions about the topic to focus learners. Which activity is this?","options":["Brainstorming","Concept-question checking","Monitoring"],"correct":1,"passage":""},
+      {"text":"Before a speaking task, learners share as many ideas as possible about the topic. What is this?","options":["Monitoring","Brainstorming","Assessing"],"correct":1,"passage":""},
+      {"text":"A teacher watches pair work to check that learners are following the task instructions. The teacher is:","options":["Brainstorming","Monitoring","Modelling"],"correct":1,"passage":""},
+      {"text":"In an essay, a learner writes “the huge park in centre”. Which area needs correction?","options":["Verb form","Spelling","Articles"],"correct":2,"passage":""},
+      {"text":"In the same essay, a learner writes “its nice that ice-cream is available”. Which error is illustrated?","options":["Punctuation","Verb form","Spelling"],"correct":0,"passage":""},
+      {"text":"In group planning, one learner says, “Are we supposed to be talking about our home town or the town we’re studying in?” What is the speaker doing?","options":["Asking for clarification","Giving an example","Including another learner","Prioritising a task"],"correct":0,"passage":""},
+      {"text":"During a fluency role-play, a teacher notes recurring errors and discusses them after the activity. This is:","options":["Immediate correction","Delayed feedback","Modelling"],"correct":1,"passage":""},
+      {"text":"A teacher uses a correction code on learners’ essays. What does this technique mainly encourage?","options":["Learners to identify and correct their own errors","The teacher to rewrite every essay","Learners to memorise model answers"],"correct":0,"passage":""}
+    ]
   }
 ]
