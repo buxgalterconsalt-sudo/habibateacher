@@ -806,7 +806,7 @@ db.exec(`
   INSERT OR IGNORE INTO user_activity (user_id, action, details, created_at, source_key)
     SELECT id, 'Ro''yxatdan o''tdi', '', created_at, 'register:' || id FROM users WHERE created_at <> '';
   INSERT OR IGNORE INTO user_activity (user_id, action, details, created_at, source_key)
-    SELECT user_id, 'Kursni ochdi', c.title, created_at, 'enrollment:' || user_id || ':' || course_id
+    SELECT e.user_id, 'Kursni ochdi', c.title, e.created_at, 'enrollment:' || e.user_id || ':' || e.course_id
     FROM enrollments e JOIN courses c ON c.id = e.course_id;
   INSERT OR IGNORE INTO user_activity (user_id, action, details, created_at, source_key)
     SELECT a.user_id, 'Testni boshladi', COALESCE(l.title, 'Test'), a.created_at, 'test-start:' || a.id
